@@ -1,1 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>gurmie keuangan | Sales & Accounting Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f1f5f9;
+    }
+
+    .tab-active {
+      border-bottom: 3px solid #2563eb;
+      color: #2563eb;
+      font-weight: 800;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04);
+      padding: 1.5rem;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.98);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #2563eb;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+  <div id="loading">
+    <div class="spinner mb-4"></div>
+    <h2 class="text-xl font-bold text-gray-800">Menyinkronkan Semua Data...</h2>
+  </div>
+
+  <div class="max-w-7xl mx-auto space-y-6">
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex items-center gap-4">
+        <a href="index.html"
+          class="bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 p-2.5 rounded-xl transition-all shadow-sm"
+          title="Kembali ke Index">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+            </path>
+          </svg>
+        </a>
+        <div>
+          <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">gurmie keuangan</h1>
+          <p class="text-slate-500 font-medium">Integrasi Akuntansi Berpasangan & Analisis Produk</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <select id="dateFilter" onchange="fetchData()"
+          class="bg-white border-2 border-slate-200 p-2 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="today">Hari Ini</option>
+          <option value="week">Minggu Ini</option>
+          <option value="month" selected>Bulan Ini</option>
+          <option value="year">Tahun Ini</option>
+        </select>
+        <button onclick="generateFinancialPDF()"
+          class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-100">
+          Export Laporan
+        </button>
+      </div>
+    </header>
+
+    <nav class="flex space-x-6 md:space-x-12 border-b border-slate-200 overflow-x-auto whitespace-nowrap">
+      <button onclick="switchTab('tab-summary')" id="btn-summary" class="py-4 px-1 text-sm tab-active">Ringkasan
+        Utama</button>
+      <button onclick="switchTab('tab-products')" id="btn-products"
+        class="py-4 px-1 text-sm text-slate-500 hover:text-blue-600 font-semibold">Analisis Produk</button>
+      <button onclick="switchTab('tab-accounting')" id="btn-accounting"
+        class="py-4 px-1 text-sm text-slate-500 hover:text-blue-600 font-semibold">Buku Besar</button>
+      <button onclick="switchTab('tab-reports')" id="btn-reports"
+        class="py-4 px-1 text-sm text-slate-500 hover:text-blue-600 font-semibold">Laporan Keuangan</button>
+    </nav>
+
+    <div id="tab-summary" class="tab-content space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="card bg-blue-600 text-white">
+          <p class="text-blue-100 text-xs font-bold uppercase tracking-widest">Total Sales</p>
+          <h3 class="text-2xl font-black mt-1" id="dashRev">Rp 0</h3>
+        </div>
+        <div class="card bg-emerald-600 text-white">
+          <p class="text-emerald-100 text-xs font-bold uppercase tracking-widest">Net Profit</p>
+          <h3 class="text-2xl font-black mt-1" id="dashProf">Rp 0</h3>
+        </div>
+        <div class="card border-l-4 border-slate-900">
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Cash & Bank</p>
+          <h3 class="text-2xl font-black mt-1 text-slate-800" id="dashCash">Rp 0</h3>
+        </div>
+        <div class="card border-l-4 border-slate-900">
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Total Transaksi</p>
+          <h3 class="text-2xl font-black mt-1 text-slate-800" id="dashTrx">0</h3>
+        </div>
+      </div>
+      <div id="summaryAlerts" class="space-y-3"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card">
+          <h4 class="font-bold text-slate-700 mb-4">Cash Flow (In vs Out)</h4>
+          <div class="h-64"><canvas id="cashFlowChart"></canvas></div>
+        </div>
+        <div class="card">
+          <h4 class="font-bold text-slate-700 mb-4">Metode Pembayaran</h4>
+          <div class="h-64"><canvas id="paymentChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-products" class="tab-content hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="card lg:col-span-2">
+          <h4 class="font-bold text-slate-700 mb-4 text-center">Top 5 Produk Berdasarkan Profit</h4>
+          <div class="h-64"><canvas id="topProdChart"></canvas></div>
+        </div>
+        <div class="card flex flex-col justify-center bg-slate-900 text-white">
+          <h4 class="text-slate-400 font-bold uppercase text-xs mb-4">Health Check Produk</h4>
+          <div id="productInsights" class="space-y-4"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex justify-between items-center mb-6">
+          <h4 class="font-black text-red-600 flex items-center gap-2">
+            <span class="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+            ACTION SECTION: EVALUASI PRODUK & MARGIN
+          </h4>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+              <tr>
+                <th class="p-4">Nama Produk</th>
+                <th class="p-4">Qty</th>
+                <th class="p-4">Revenue</th>
+                <th class="p-4">Profit</th>
+                <th class="p-4">Margin</th>
+                <th class="p-4">Rekomendasi</th>
+              </tr>
+            </thead>
+            <tbody id="productActionBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-accounting" class="tab-content hidden space-y-6">
+      <div class="card">
+        <h4 class="font-bold text-slate-800 mb-4 uppercase text-xs tracking-widest">Chart of Accounts (Saldo Aktif)</h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="p-3">Kode</th>
+                <th class="p-3">Akun</th>
+                <th class="p-3">Kategori</th>
+                <th class="p-3 text-right">Saldo</th>
+              </tr>
+            </thead>
+            <tbody id="coaBody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex justify-between items-center mb-4">
+          <h4 class="font-bold text-slate-800 uppercase text-xs tracking-widest">Buku Besar (Double-Entry Journal)</h4>
+          <div id="balanceCheck" class="text-xs font-black"></div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-900 text-white">
+              <tr>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">Deskripsi</th>
+                <th class="p-3">Akun</th>
+                <th class="p-3 text-right">Debit</th>
+                <th class="p-3 text-right">Kredit</th>
+              </tr>
+            </thead>
+            <tbody id="journalBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-reports" class="tab-content hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="card">
+        <h4 class="font-bold text-center border-b pb-3 mb-4 uppercase text-sm">Laporan Laba Rugi</h4>
+        <div id="plReport" class="space-y-3 text-sm"></div>
+      </div>
+      <div class="card">
+        <h4 class="font-bold text-center border-b pb-3 mb-4 uppercase text-sm">Neraca Keuangan</h4>
+        <div id="bsReport" class="space-y-3 text-sm"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // SUPABASE REAL API KEY
+    const supabaseUrl = 'https://jariewywijsmjxxbgpvi.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmlld3l3aWpzbWp4eGJncHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzEzMjUsImV4cCI6MjA5MzEwNzMyNX0.yaO9StT8hScwdHgmwkh9STXCXCO7VvnMvBG6eHThljM';
+    const db = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    let accountingCore = {
+      coa: {
+        "1001": { name: "Kas & Bank", cat: "Aset Lancar", bal: 0 },
+        "1101": { name: "Persediaan", cat: "Aset Lancar", bal: 0 },
+        "4001": { name: "Penjualan", cat: "Pendapatan", bal: 0 },
+        "5001": { name: "HPP", cat: "Beban Pokok", bal: 0 },
+        "6001": { name: "Beban Operasional", cat: "Biaya", bal: 0 }
+      },
+      journal: [],
+      productAnalysis: []
+    };
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+      document.querySelectorAll('nav button').forEach(b => {
+        b.classList.remove('tab-active');
+        b.classList.add('text-slate-500');
+      });
+      document.getElementById('btn-' + tabId.replace('tab-', '')).classList.add('tab-active');
+    }
+
+    async function fetchData() {
+      document.getElementById('loading').style.display = 'flex';
+      const filter = document.getElementById('dateFilter').value;
+      let start = new Date(); start.setHours(0, 0, 0, 0);
+      if (filter === 'week') start.setDate(start.getDate() - 7);
+      if (filter === 'month') start.setDate(1);
+      if (filter === 'year') start.setMonth(0, 1);
+
+      try {
+        const [salesRes, expRes, recRes, prodRes] = await Promise.all([
+          db.from('transactions').select('*, transaction_items(*)').gte('created_at', start.toISOString()),
+          db.from('expenses').select('*').gte('created_at', start.toISOString()),
+          db.from('recipes').select('*'),
+          db.from('products').select('*')
+        ]);
+
+        const hppMap = {}; recRes.data?.forEach(r => hppMap[r.product_id] = r.total_hpp || 0);
+        const prodNameMap = {}; prodRes.data?.forEach(p => prodNameMap[p.id] = p.name);
+
+        buildAccountingAndAnalysis(salesRes.data || [], expRes.data || [], hppMap, prodNameMap);
+        updateUI();
+        renderCharts();
+
+      } catch (err) { console.error(err); } finally { document.getElementById('loading').style.display = 'none'; }
+    }
+
+    function buildAccountingAndAnalysis(sales, expenses, hppMap, prodNameMap) {
+      Object.keys(accountingCore.coa).forEach(k => accountingCore.coa[k].bal = 0);
+      accountingCore.journal = [];
+      const pStats = {};
+      const payStats = {};
+
+      sales.forEach(s => {
+        const total = parseFloat(s.total_price);
+        const method = s.payment_method || 'Tunai';
+        payStats[method] = (payStats[method] || 0) + total;
+
+        addJournal(s.created_at, `Sales #${s.id.slice(0, 5)}`, "1001", total, 0);
+        addJournal(s.created_at, `Sales #${s.id.slice(0, 5)}`, "4001", 0, total);
+
+        let saleHpp = 0;
+        s.transaction_items.forEach(item => {
+          const cost = (hppMap[item.product_id] || 0) * item.quantity;
+          const rev = item.price * item.quantity;
+          saleHpp += cost;
+
+          const name = prodNameMap[item.product_id] || 'Unknown';
+          if (!pStats[name]) pStats[name] = { name, r: 0, p: 0, q: 0 };
+          pStats[name].r += rev; pStats[name].p += (rev - cost); pStats[name].q += item.quantity;
+        });
+
+        if (saleHpp > 0) {
+          addJournal(s.created_at, `COGS Sales #${s.id.slice(0, 5)}`, "5001", saleHpp, 0);
+          addJournal(s.created_at, `Inv Decrease #${s.id.slice(0, 5)}`, "1101", 0, saleHpp);
+        }
+      });
+
+      expenses.forEach(e => {
+        const amt = parseFloat(e.amount);
+        addJournal(e.created_at, `Expense: ${e.name}`, "6001", amt, 0);
+        addJournal(e.created_at, `Expense: ${e.name}`, "1001", 0, amt);
+      });
+
+      accountingCore.productAnalysis = Object.values(pStats).map(p => ({ ...p, m: p.r > 0 ? (p.p / p.r) * 100 : 0 })).sort((a, b) => a.m - b.m);
+      accountingCore.paymentStats = payStats;
+      accountingCore.totalTrx = sales.length;
+    }
+
+    function addJournal(date, desc, acc, d, c) {
+      accountingCore.journal.push({ date: date.split('T')[0], desc, acc, d, c });
+      const type = acc[0];
+      if (type === '1' || type === '5' || type === '6') accountingCore.coa[acc].bal += (d - c);
+      else accountingCore.coa[acc].bal += (c - d);
+    }
+
+    function updateUI() {
+      document.getElementById('dashRev').innerText = formatIDR(accountingCore.coa["4001"].bal);
+      const netProfit = accountingCore.coa["4001"].bal - accountingCore.coa["5001"].bal - accountingCore.coa["6001"].bal;
+      document.getElementById('dashProf').innerText = formatIDR(netProfit);
+      document.getElementById('dashCash').innerText = formatIDR(accountingCore.coa["1001"].bal);
+      document.getElementById('dashTrx').innerText = accountingCore.totalTrx;
+
+      const pBody = document.getElementById('productActionBody');
+      pBody.innerHTML = accountingCore.productAnalysis.slice(0, 15).map(p => {
+        let reco = p.p < 0 ? "⚠️ RUGI: STOP / AUDIT" : (p.m < 15 ? "⚠️ MARGIN RENDAH: NAIKKAN HARGA" : "✅ STABIL");
+        return `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="p-4 font-bold text-slate-800">${p.name}</td>
+                    <td class="p-4">${p.q}</td>
+                    <td class="p-4">${formatIDR(p.r)}</td>
+                    <td class="p-4 font-semibold ${p.p < 0 ? 'text-red-600' : ''}">${formatIDR(p.p)}</td>
+                    <td class="p-4 font-black ${p.m < 15 ? 'text-red-600' : 'text-emerald-600'}">${p.m.toFixed(1)}%</td>
+                    <td class="p-4 font-bold text-xs uppercase tracking-tighter">${reco}</td>
+                </tr>`;
+      }).join('');
+
+      document.getElementById('coaBody').innerHTML = Object.keys(accountingCore.coa).map(k => `<tr><td class="p-3 font-mono">${k}</td><td class="p-3 font-bold">${accountingCore.coa[k].name}</td><td class="p-3 text-slate-500">${accountingCore.coa[k].cat}</td><td class="p-3 text-right font-black">${formatIDR(accountingCore.coa[k].bal)}</td></tr>`).join('');
+      document.getElementById('journalBody').innerHTML = accountingCore.journal.slice(-20).reverse().map(j => `<tr><td class="p-3 text-xs">${j.date}</td><td class="p-3 text-xs font-bold">${j.desc}</td><td class="p-3">${accountingCore.coa[j.acc].name}</td><td class="p-3 text-right text-emerald-600">${j.d > 0 ? formatIDR(j.d) : '-'}</td><td class="p-3 text-right text-blue-600">${j.c > 0 ? formatIDR(j.c) : '-'}</td></tr>`).join('');
+
+      const pl = document.getElementById('plReport');
+      pl.innerHTML = `<div class="flex justify-between font-bold"><span>Pendapatan</span><span>${formatIDR(accountingCore.coa["4001"].bal)}</span></div><div class="flex justify-between text-red-600"><span>HPP</span><span>(${formatIDR(accountingCore.coa["5001"].bal)})</span></div><div class="flex justify-between text-red-600 border-b pb-2"><span>Beban Ops</span><span>(${formatIDR(accountingCore.coa["6001"].bal)})</span></div><div class="flex justify-between font-black text-lg pt-2 ${netProfit > 0 ? 'text-emerald-600' : 'text-red-600'}"><span>LABA BERSIH</span><span>${formatIDR(netProfit)}</span></div>`;
+
+      const bs = document.getElementById('bsReport');
+      bs.innerHTML = `<div class="font-bold text-blue-600 mb-2">AKTIVA (ASET)</div><div class="flex justify-between border-b pb-2"><span>Kas & Bank + Persediaan</span><span>${formatIDR(accountingCore.coa["1001"].bal + accountingCore.coa["1101"].bal)}</span></div><div class="font-bold text-purple-600 mt-4 mb-2">PASIVA (MODAL)</div><div class="flex justify-between font-black border-t pt-2"><span>Modal + Laba Berjalan</span><span>${formatIDR(netProfit)}</span></div>`;
+    }
+
+    function renderCharts() {
+      if (charts.cf) charts.cf.destroy();
+      if (charts.pay) charts.pay.destroy();
+      if (charts.tp) charts.tp.destroy();
+
+      const common = { responsive: true, maintainAspectRatio: false };
+      charts.cf = new Chart(document.getElementById('cashFlowChart'), {
+        type: 'bar',
+        data: { labels: ['Sales (In)', 'Cost/Exp (Out)'], datasets: [{ data: [accountingCore.coa["4001"].bal, accountingCore.coa["5001"].bal + accountingCore.coa["6001"].bal], backgroundColor: ['#10b981', '#ef4444'] }] },
+        options: common
+      });
+
+      charts.pay = new Chart(document.getElementById('paymentChart'), {
+        type: 'doughnut',
+        data: { labels: Object.keys(accountingCore.paymentStats), datasets: [{ data: Object.values(accountingCore.paymentStats), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'] }] },
+        options: common
+      });
+
+      const top5 = [...accountingCore.productAnalysis].sort((a, b) => b.p - a.p).slice(0, 5);
+      charts.tp = new Chart(document.getElementById('topProdChart'), {
+        type: 'bar',
+        data: { labels: top5.map(p => p.name), datasets: [{ label: 'Profit (Rp)', data: top5.map(p => p.p), backgroundColor: '#10b981' }] },
+        options: common
+      });
+    }
+
+    function formatIDR(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
+
+    async function generateFinancialPDF() {
+      const { jsPDF } = window.jspdf; const doc = new jsPDF();
+      doc.setFontSize(20).text("GURMIE KEUANGAN: LAPORAN EKSEKUTIF", 15, 20);
+      doc.setFontSize(10).text(`Periode: ${document.getElementById('dateFilter').value} | Dicetak: ${new Date().toLocaleString()}`, 15, 28);
+      doc.autoTable({ startY: 35, head: [['Kode', 'Akun', 'Saldo']], body: Object.keys(accountingCore.coa).map(k => [k, accountingCore.coa[k].name, formatIDR(accountingCore.coa[k].bal)]) });
+      doc.addPage();
+      doc.text("Analisis Produk & Margin", 15, 20);
+      doc.autoTable({ startY: 25, head: [['Produk', 'Rev', 'Profit', 'Margin']], body: accountingCore.productAnalysis.map(p => [p.name, formatIDR(p.r), formatIDR(p.p), `${p.m.toFixed(1)}%`]) });
+      doc.save(`Laporan_Gurmie_Keuangan_${Date.now()}.pdf`);
+    }
+
+    let charts = {};
+    window.onload = fetchData;
+  </script>
+</body>
+
+</html>
