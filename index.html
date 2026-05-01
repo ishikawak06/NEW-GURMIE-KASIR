@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GurmieKasir | Ultimate Dashboard</title>
 
-  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     // Cek LocalStorage untuk Tema (Light/Dark) sebelum merender untuk mencegah flash
@@ -28,7 +27,6 @@
     }
   </script>
 
-  <!-- Libraries -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -123,7 +121,6 @@
 <body
   class="bg-gray-50 dark:bg-dark text-gray-800 dark:text-gray-200 font-sans h-screen flex overflow-hidden selection:bg-blue-500 dark:selection:bg-neon-cyan selection:text-white transition-colors duration-300">
 
-  <!-- Global Loading Overlay -->
   <div id="global-loader"
     class="fixed inset-0 bg-white/90 dark:bg-dark/90 backdrop-blur-md z-[100] flex items-center justify-center hidden">
     <div class="flex flex-col items-center gap-4">
@@ -132,7 +129,6 @@
     </div>
   </div>
 
-  <!-- SIDEBAR -->
   <aside
     class="w-20 md:w-64 bg-white dark:bg-panel border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 z-40">
     <div
@@ -170,6 +166,15 @@
         <i data-lucide="history" class="w-5 h-5 md:mr-3"></i>
         <span class="hidden md:block font-medium">Riwayat Transaksi</span>
       </button>
+
+      <hr class="border-gray-200 dark:border-gray-800 my-2">
+
+      <a href="analysis.html" id="nav-analysis"
+        class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
+        <i data-lucide="pie-chart" class="w-5 h-5 md:mr-3"></i>
+        <span class="hidden md:block font-medium">Buku Besar & Analisis</span>
+      </a>
+
     </nav>
     <div class="p-4 border-t border-gray-200 dark:border-gray-800">
       <button onclick="toggleTheme()"
@@ -180,12 +185,9 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="flex-1 flex flex-col relative overflow-hidden">
 
-    <!-- ==================== VIEW: KASIR ==================== -->
     <section id="view-kasir" class="h-full flex flex-col md:flex-row w-full animate-fade-in">
-      <!-- Product Section -->
       <div class="flex-1 p-6 flex flex-col h-full overflow-hidden">
         <div class="flex justify-between items-center mb-6 gap-4">
           <h2 class="text-2xl font-bold hidden lg:block text-gray-900 dark:text-white">Terminal Kasir</h2>
@@ -214,7 +216,6 @@
         </div>
       </div>
 
-      <!-- Cart Section -->
       <div
         class="w-full md:w-80 lg:w-96 bg-white dark:bg-panel border-l border-gray-200 dark:border-gray-800 flex flex-col h-full z-10 shadow-xl dark:shadow-2xl">
         <div
@@ -249,7 +250,6 @@
       </div>
     </section>
 
-    <!-- ==================== VIEW: PRODUK ==================== -->
     <section id="view-produk" class="h-full p-6 flex-col hidden overflow-y-auto">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Manajemen Produk</h2>
@@ -259,7 +259,6 @@
         </button>
       </div>
 
-      <!-- Form Produk -->
       <div id="product-form-container"
         class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 p-5 rounded-xl mb-6 shadow-sm hidden animate-fade-in">
         <h3 id="form-title" class="font-bold mb-4 text-blue-600 dark:text-neon-cyan">Tambah Produk</h3>
@@ -329,7 +328,6 @@
       </div>
     </section>
 
-    <!-- ==================== VIEW: BAHAN & RESEP ==================== -->
     <section id="view-bahan" class="h-full p-6 flex-col hidden overflow-y-auto">
       <div class="flex justify-between items-center mb-6">
         <div>
@@ -338,7 +336,6 @@
         </div>
       </div>
 
-      <!-- Tab Navigation -->
       <div class="flex gap-2 border-b border-gray-200 dark:border-gray-800 mb-6 overflow-x-auto">
         <button onclick="switchBahanTab('dasar')" id="btn-tab-dasar"
           class="px-4 py-3 font-bold text-sm border-b-2 border-blue-600 dark:border-neon-cyan text-blue-600 dark:text-neon-cyan whitespace-nowrap">Bahan
@@ -351,7 +348,6 @@
           Produk Final</button>
       </div>
 
-      <!-- TAB 1: BAHAN DASAR -->
       <div id="tab-dasar" class="tab-content active flex-1">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-gray-800 dark:text-gray-200">Daftar Bahan Dasar</h3>
@@ -378,7 +374,6 @@
         </div>
       </div>
 
-      <!-- TAB 2: BAHAN OLAHAN -->
       <div id="tab-olahan" class="tab-content flex-1">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-gray-800 dark:text-gray-200">Daftar Bahan Olahan (Semi-Finished)</h3>
@@ -404,7 +399,6 @@
         </div>
       </div>
 
-      <!-- TAB 3: RESEP PRODUK -->
       <div id="tab-resep" class="tab-content flex-1">
         <div class="flex justify-between items-center mb-4">
           <h3 class="font-bold text-gray-800 dark:text-gray-200">Mapping Resep & Kalkulasi HPP Produk</h3>
@@ -432,7 +426,6 @@
       </div>
     </section>
 
-    <!-- ==================== VIEW: LAPORAN & LABA ==================== -->
     <section id="view-laporan" class="h-full p-6 flex-col hidden overflow-y-auto">
       <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Laporan & Analitik</h2>
@@ -461,15 +454,10 @@
               class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2 rounded-lg text-sm flex items-center text-red-500 dark:text-red-400 font-medium transition-colors shadow-sm">
               <i data-lucide="file-down" class="w-4 h-4 mr-2"></i> Export Laba Rugi
             </button>
-            <button onclick="exportJurnalPDF()"
-              class="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 px-4 py-2 rounded-lg text-sm flex items-center text-purple-600 dark:text-purple-400 font-medium transition-colors shadow-sm">
-              <i data-lucide="book-open" class="w-4 h-4 mr-2"></i> Export Jurnal Umum
-            </button>
           </div>
         </div>
       </div>
 
-      <!-- Stats -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div
           class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 p-5 rounded-xl border-t-4 border-t-blue-500 dark:border-t-neon-cyan shadow-sm relative overflow-hidden">
@@ -499,14 +487,12 @@
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <!-- Chart -->
         <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
           <h3 class="font-bold text-sm text-gray-700 dark:text-gray-400 mb-4">Trend Penjualan</h3>
           <div class="relative w-full h-[250px]">
             <canvas id="salesChart"></canvas>
           </div>
         </div>
-        <!-- Expenses Entry -->
         <div
           class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col shadow-sm max-h-[320px]">
           <div
@@ -524,7 +510,6 @@
         </div>
       </div>
 
-      <!-- Dead Stock -->
       <div class="bg-red-50 dark:bg-panel border border-red-200 dark:border-red-900/50 rounded-xl p-5 shadow-sm mb-6">
         <h3 class="font-bold text-sm text-red-600 dark:text-red-400 mb-4 flex items-center"><i
             data-lucide="alert-octagon" class="w-4 h-4 mr-2"></i> Peringatan Stok Mati (Dead Stock) / Belum Terjual</h3>
@@ -533,34 +518,8 @@
         </div>
       </div>
 
-      <!-- Jurnal Umum Preview -->
-      <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-5 shadow-sm">
-        <div class="flex justify-between items-center mb-4">
-          <h3 class="font-bold text-sm text-gray-700 dark:text-gray-300 flex items-center"><i data-lucide="book"
-              class="w-4 h-4 mr-2 text-purple-600 dark:text-neon-purple"></i> Buku Jurnal Umum (Otomatis)</h3>
-        </div>
-        <div class="overflow-y-auto max-h-[400px] border border-gray-200 dark:border-gray-800 rounded-lg">
-          <table class="w-full text-left text-sm">
-            <thead
-              class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase text-[10px] sticky top-0 z-10 border-b border-gray-200 dark:border-gray-800">
-              <tr>
-                <th class="p-3">Tanggal</th>
-                <th class="p-3">Nama Akun (Keterangan)</th>
-                <th class="p-3 text-center">Ref</th>
-                <th class="p-3 text-right">Debit (Rp)</th>
-                <th class="p-3 text-right">Kredit (Rp)</th>
-              </tr>
-            </thead>
-            <tbody id="jurnal-table-body" class="divide-y divide-gray-100 dark:divide-gray-800 text-xs">
-              <!-- Diisi oleh JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
     </section>
 
-    <!-- ==================== VIEW: RIWAYAT TRANSAKSI ==================== -->
     <section id="view-riwayat" class="h-full p-6 flex-col hidden overflow-y-auto">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Transaksi</h2>
@@ -586,16 +545,12 @@
               </tr>
             </thead>
             <tbody id="history-table-body" class="divide-y divide-gray-200 dark:divide-gray-800">
-              <!-- Diisi oleh JS -->
-            </tbody>
+              </tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- ==================== MODALS ==================== -->
-
-    <!-- Modal: Bahan Dasar -->
     <div id="modal-bd"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -657,7 +612,6 @@
       </div>
     </div>
 
-    <!-- Modal: Bahan Olahan & Resep Produk (General Composition Form) -->
     <div id="modal-composition"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -670,10 +624,8 @@
               class="w-5 h-5"></i></button>
         </div>
         <div class="flex-1 overflow-y-auto p-5 space-y-4">
-          <input type="hidden" id="comp-mode"> <!-- 'olahan' atau 'resep' -->
-          <input type="hidden" id="comp-id">
+          <input type="hidden" id="comp-mode"> <input type="hidden" id="comp-id">
 
-          <!-- Header Dynamic -->
           <div id="comp-header-olahan"
             class="grid grid-cols-1 md:grid-cols-3 gap-4 pb-4 border-b border-gray-200 dark:border-gray-800 hidden">
             <div>
@@ -704,11 +656,9 @@
             <label class="block text-xs font-medium text-gray-500 mb-1">Pilih Produk Final</label>
             <select id="comp-rs-product"
               class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
-              <!-- Diisi via JS -->
-            </select>
+              </select>
           </div>
 
-          <!-- Composition Table -->
           <div>
             <div class="flex justify-between items-center mb-2">
               <h4 class="font-bold text-sm text-gray-800 dark:text-gray-300">Komposisi Bahan</h4>
@@ -726,8 +676,7 @@
                 </thead>
                 <tbody id="comp-items-body"
                   class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel">
-                  <!-- Render via JS -->
-                </tbody>
+                  </tbody>
               </table>
               <div
                 class="bg-gray-50 dark:bg-gray-900 p-2 flex justify-center border-t border-gray-200 dark:border-gray-800">
@@ -738,7 +687,6 @@
             </div>
           </div>
 
-          <!-- Footer Calculation -->
           <div
             class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 space-y-2">
             <div class="flex justify-between items-center">
@@ -761,7 +709,6 @@
       </div>
     </div>
 
-    <!-- 1. Checkout Modal (Updated untuk Pembayaran Custom) -->
     <div id="modal-checkout"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -776,7 +723,6 @@
         </div>
         <div class="p-6 space-y-4">
           
-          <!-- Box Total Harga & Penyesuaian Custom -->
           <div class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 relative">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan (Subtotal: <span id="co-subtotal-display">Rp 0</span>)</p>
             <h1 id="co-total" class="text-4xl font-bold text-blue-600 dark:text-neon-cyan transition-colors">Rp 0</h1>
@@ -859,7 +805,6 @@
       </div>
     </div>
 
-    <!-- 2. Edit Cart Item Modal -->
     <div id="modal-cart-edit"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -894,7 +839,6 @@
       </div>
     </div>
 
-    <!-- 3. Hold Orders Modal -->
     <div id="modal-held-orders"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -911,7 +855,6 @@
       </div>
     </div>
 
-    <!-- 4. Barcode Scanner Modal -->
     <div id="modal-scanner"
       class="fixed inset-0 bg-gray-900/90 dark:bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -927,7 +870,6 @@
       </div>
     </div>
 
-    <!-- 5. Advanced Expense Modal -->
     <div id="modal-expense"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -1022,7 +964,6 @@
       </div>
     </div>
 
-    <!-- 6. Edit Transaction Modal -->
     <div id="modal-edit-trx"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -1090,7 +1031,6 @@
       </div>
     </div>
 
-    <!-- Toast -->
     <div id="toast"
       class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white px-4 py-3 rounded-lg shadow-xl flex items-center z-[110]">
       <i id="toast-icon" data-lucide="info" class="w-5 h-5 mr-3"></i>
@@ -1122,7 +1062,6 @@
       expenseItems: [],
 
       reportPeriodText: '7 Hari Terakhir',
-      jurnalUmum: [], 
 
       rawMaterials: [],
       processedMaterials: [],
@@ -2145,29 +2084,6 @@
         document.getElementById('stat-expenses').innerText = formatRp(opex);
         document.getElementById('stat-profit').innerText = formatRp(estProfit);
 
-        let jurnalEntries = [];
-        (trxData || []).forEach(t => {
-          const d = new Date(t.created_at);
-          const amt = parseFloat(t.total_price);
-          jurnalEntries.push({ date: d, dateStr: d.toLocaleString('id-ID'), desc: 'Kas', ref: 'TRX', debit: amt, kredit: 0 });
-          jurnalEntries.push({ date: d, dateStr: '', desc: '    Pendapatan Penjualan', ref: '', debit: 0, kredit: amt });
-        });
-
-        (expData || []).forEach(e => {
-          const d = new Date(e.expense_date + 'T12:00:00');
-          const amt = parseFloat(e.amount);
-          const debitAcc = e.affects_profit ? 'Persediaan Bahan Baku (HPP)' : 'Beban ' + e.name;
-          const creditAcc = e.is_personal ? 'Modal Pemilik' : 'Kas';
-
-          jurnalEntries.push({ date: d, dateStr: d.toLocaleDateString('id-ID'), desc: debitAcc, ref: 'EXP', debit: amt, kredit: 0 });
-          jurnalEntries.push({ date: d, dateStr: '', desc: '    ' + creditAcc, ref: '', debit: 0, kredit: amt });
-        });
-
-        jurnalEntries.sort((a, b) => a.date - b.date);
-        state.jurnalUmum = jurnalEntries;
-
-        renderJurnalTable();
-
         const chartData = {};
         const daysDiff = Math.round((endD - startD) / (1000 * 60 * 60 * 24));
 
@@ -2350,44 +2266,6 @@
       }
     }
 
-    function renderJurnalTable() {
-      const tbody = document.getElementById('jurnal-table-body');
-      tbody.innerHTML = '';
-
-      if (state.jurnalUmum.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-500 font-medium">Tidak ada entri jurnal pada periode ini.</td></tr>`;
-        return;
-      }
-
-      let totalDebit = 0;
-      let totalKredit = 0;
-
-      state.jurnalUmum.forEach(e => {
-        totalDebit += e.debit;
-        totalKredit += e.kredit;
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors';
-        tr.innerHTML = `
-                    <td class="p-3 align-top font-medium text-gray-700 dark:text-gray-300">${e.dateStr}</td>
-                    <td class="p-3 whitespace-pre text-gray-900 dark:text-gray-100 font-mono">${e.desc}</td>
-                    <td class="p-3 text-center text-gray-500 dark:text-gray-400">${e.ref}</td>
-                    <td class="p-3 text-right font-medium text-blue-600 dark:text-blue-400">${e.debit > 0 ? formatRp(e.debit) : '-'}</td>
-                    <td class="p-3 text-right font-medium text-purple-600 dark:text-purple-400">${e.kredit > 0 ? formatRp(e.kredit) : '-'}</td>
-                `;
-        tbody.appendChild(tr);
-      });
-
-      const trTotal = document.createElement('tr');
-      trTotal.className = 'bg-gray-100 dark:bg-gray-800 font-bold border-t-2 border-gray-200 dark:border-gray-700';
-      trTotal.innerHTML = `
-                <td colspan="3" class="p-3 text-right text-gray-800 dark:text-white">TOTAL SALDO</td>
-                <td class="p-3 text-right text-blue-600 dark:text-neon-cyan">${formatRp(totalDebit)}</td>
-                <td class="p-3 text-right text-purple-600 dark:text-neon-purple">${formatRp(totalKredit)}</td>
-            `;
-      tbody.appendChild(trTotal);
-    }
-
     function exportToPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
@@ -2415,56 +2293,6 @@
 
       doc.save(`Laporan_Laba_Rugi_GurmieKasir_${new Date().getTime()}.pdf`);
       showToast('PDF Laba Rugi berhasil diunduh.', 'success');
-    }
-
-    function exportJurnalPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-
-      doc.setFontSize(18);
-      doc.text("GurmieKasir - Buku Jurnal Umum", 14, 20);
-      doc.setFontSize(10);
-      doc.text("Tanggal Cetak: " + new Date().toLocaleString('id-ID'), 14, 28);
-      doc.text("Periode Laporan: " + state.reportPeriodText, 14, 34);
-
-      const tableBody = [];
-      let totalDebit = 0;
-      let totalKredit = 0;
-
-      state.jurnalUmum.forEach(e => {
-        totalDebit += e.debit;
-        totalKredit += e.kredit;
-        const descStr = e.desc.replace(/    /g, '\u00A0\u00A0\u00A0\u00A0');
-
-        tableBody.push([
-          e.dateStr, descStr, e.ref,
-          e.debit > 0 ? formatRp(e.debit) : '-',
-          e.kredit > 0 ? formatRp(e.kredit) : '-'
-        ]);
-      });
-
-      tableBody.push([
-        { content: 'TOTAL SALDO', colSpan: 3, styles: { halign: 'right', fontStyle: 'bold' } },
-        { content: formatRp(totalDebit), styles: { fontStyle: 'bold', textColor: [41, 128, 185] } },
-        { content: formatRp(totalKredit), styles: { fontStyle: 'bold', textColor: [142, 68, 173] } }
-      ]);
-
-      doc.autoTable({
-        startY: 40,
-        head: [['Tanggal', 'Nama Akun / Keterangan', 'Ref', 'Debit', 'Kredit']],
-        body: tableBody,
-        styles: { fontSize: 9, cellPadding: 3 },
-        columnStyles: {
-          0: { cellWidth: 35 },
-          1: { cellWidth: 70, font: 'courier' },
-          2: { cellWidth: 15, halign: 'center' },
-          3: { halign: 'right', cellWidth: 35 },
-          4: { halign: 'right', cellWidth: 35 }
-        }
-      });
-
-      doc.save(`Jurnal_Umum_GurmieKasir_${new Date().getTime()}.pdf`);
-      showToast('PDF Jurnal Umum berhasil diunduh.', 'success');
     }
 
     // ==========================================
