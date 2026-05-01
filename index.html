@@ -545,7 +545,7 @@
               </tr>
             </thead>
             <tbody id="history-table-body" class="divide-y divide-gray-200 dark:divide-gray-800">
-              </tbody>
+            </tbody>
           </table>
         </div>
       </div>
@@ -656,7 +656,7 @@
             <label class="block text-xs font-medium text-gray-500 mb-1">Pilih Produk Final</label>
             <select id="comp-rs-product"
               class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
-              </select>
+            </select>
           </div>
 
           <div>
@@ -676,7 +676,7 @@
                 </thead>
                 <tbody id="comp-items-body"
                   class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel">
-                  </tbody>
+                </tbody>
               </table>
               <div
                 class="bg-gray-50 dark:bg-gray-900 p-2 flex justify-center border-t border-gray-200 dark:border-gray-800">
@@ -722,21 +722,28 @@
               class="w-5 h-5"></i></button>
         </div>
         <div class="p-6 space-y-4">
-          
-          <div class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 relative">
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan (Subtotal: <span id="co-subtotal-display">Rp 0</span>)</p>
+
+          <div
+            class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 relative">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan (Subtotal: <span
+                id="co-subtotal-display">Rp 0</span>)</p>
             <h1 id="co-total" class="text-4xl font-bold text-blue-600 dark:text-neon-cyan transition-colors">Rp 0</h1>
-            
+
             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 text-left">Penyesuaian Harga Custom (Opsional)</label>
-                <div class="flex items-center gap-2">
-                    <select id="co-adj-type" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white" onchange="calcCheckoutTotal()">
-                        <option value="none">-- Pilih --</option>
-                        <option value="discount">Diskon (-)</option>
-                        <option value="fee">Biaya Tambahan (+)</option>
-                    </select>
-                    <input type="number" id="co-custom-adjustment" placeholder="Nominal Rp" min="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white hidden" oninput="calcCheckoutTotal()">
-                </div>
+              <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 text-left">Penyesuaian Harga
+                Custom (Opsional)</label>
+              <div class="flex items-center gap-2">
+                <select id="co-adj-type"
+                  class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  onchange="calcCheckoutTotal()">
+                  <option value="none">-- Pilih --</option>
+                  <option value="discount">Diskon (-)</option>
+                  <option value="fee">Biaya Tambahan (+)</option>
+                </select>
+                <input type="number" id="co-custom-adjustment" placeholder="Nominal Rp" min="0"
+                  class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white hidden"
+                  oninput="calcCheckoutTotal()">
+              </div>
             </div>
           </div>
 
@@ -1104,7 +1111,7 @@
       renderKasirProducts();
       renderProductTable();
       checkDeadStock();
-      if (document.getElementById('view-bahan').classList.contains('flex')) renderResepTab(); 
+      if (document.getElementById('view-bahan').classList.contains('flex')) renderResepTab();
     }
 
     function checkDeadStock() {
@@ -1252,8 +1259,8 @@
 
     function clearCart() { state.cart = []; renderCart(); }
 
-    function getCartTotal() { 
-      return state.cart.reduce((s, i) => s + ((i.customPrice || i.price) * i.qty), 0); 
+    function getCartTotal() {
+      return state.cart.reduce((s, i) => s + ((i.customPrice || i.price) * i.qty), 0);
     }
 
     function renderCart() {
@@ -1366,63 +1373,63 @@
 
     // --- LOGIKA PEMBAYARAN CUSTOM (CHECKOUT) ---
     function getCheckoutFinalTotal() {
-        const baseTotal = getCartTotal();
-        const adjType = document.getElementById('co-adj-type').value;
-        const adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
-        
-        let finalTotal = baseTotal;
-        if (adjType === 'discount') finalTotal -= adjVal;
-        else if (adjType === 'fee') finalTotal += adjVal;
-        
-        return finalTotal < 0 ? 0 : finalTotal;
+      const baseTotal = getCartTotal();
+      const adjType = document.getElementById('co-adj-type').value;
+      const adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
+
+      let finalTotal = baseTotal;
+      if (adjType === 'discount') finalTotal -= adjVal;
+      else if (adjType === 'fee') finalTotal += adjVal;
+
+      return finalTotal < 0 ? 0 : finalTotal;
     }
 
     function calcCheckoutTotal() {
-        const baseTotal = getCartTotal();
-        document.getElementById('co-subtotal-display').innerText = formatRp(baseTotal);
-        
-        const adjType = document.getElementById('co-adj-type');
-        const adjInput = document.getElementById('co-custom-adjustment');
-        
-        if (adjType.value === 'none') {
-            adjInput.classList.add('hidden');
-            adjInput.value = '';
-        } else {
-            adjInput.classList.remove('hidden');
-        }
-        
-        const finalTotal = getCheckoutFinalTotal();
-        document.getElementById('co-total').innerText = formatRp(finalTotal);
-        
-        // Update split amount if active
-        const split = parseInt(document.getElementById('co-split').value) || 1;
-        if (split > 1) {
-            document.getElementById('co-split-amount').innerText = formatRp(finalTotal / split);
-        }
-        
-        calcChange();
+      const baseTotal = getCartTotal();
+      document.getElementById('co-subtotal-display').innerText = formatRp(baseTotal);
+
+      const adjType = document.getElementById('co-adj-type');
+      const adjInput = document.getElementById('co-custom-adjustment');
+
+      if (adjType.value === 'none') {
+        adjInput.classList.add('hidden');
+        adjInput.value = '';
+      } else {
+        adjInput.classList.remove('hidden');
+      }
+
+      const finalTotal = getCheckoutFinalTotal();
+      document.getElementById('co-total').innerText = formatRp(finalTotal);
+
+      // Update split amount if active
+      const split = parseInt(document.getElementById('co-split').value) || 1;
+      if (split > 1) {
+        document.getElementById('co-split-amount').innerText = formatRp(finalTotal / split);
+      }
+
+      calcChange();
     }
 
     function toggleCustomMethod() {
-        const method = document.getElementById('co-method').value;
-        const customNameInput = document.getElementById('co-method-custom-name');
-        if (method === 'Custom') {
-            customNameInput.classList.remove('hidden');
-            customNameInput.focus();
-        } else {
-            customNameInput.classList.add('hidden');
-            customNameInput.value = '';
-        }
+      const method = document.getElementById('co-method').value;
+      const customNameInput = document.getElementById('co-method-custom-name');
+      if (method === 'Custom') {
+        customNameInput.classList.remove('hidden');
+        customNameInput.focus();
+      } else {
+        customNameInput.classList.add('hidden');
+        customNameInput.value = '';
+      }
     }
 
     function openCheckoutModal() {
       if (state.cart.length === 0) return;
-      
+
       document.getElementById('co-tendered').value = '';
       document.getElementById('co-change').innerText = 'Rp 0';
       document.getElementById('co-split').value = 1;
       document.getElementById('co-split-info').classList.add('hidden');
-      
+
       // Reset Modal Fields
       document.getElementById('co-adj-type').value = 'none';
       document.getElementById('co-custom-adjustment').value = '';
@@ -1432,7 +1439,7 @@
       document.getElementById('co-method-custom-name').classList.add('hidden');
 
       calcCheckoutTotal();
-      
+
       toggleModal('modal-checkout', true);
       setTimeout(() => document.getElementById('co-tendered').focus(), 100);
     }
@@ -1442,24 +1449,24 @@
       const tendered = parseFloat(document.getElementById('co-tendered').value) || 0;
       const change = tendered - finalTotal;
       const el = document.getElementById('co-change');
-      
-      if (change < 0) { 
-        el.innerText = 'Kurang: ' + formatRp(Math.abs(change)); 
-        el.className = "text-2xl font-bold text-red-500 dark:text-red-400"; 
-      } else { 
-        el.innerText = formatRp(change); 
-        el.className = "text-2xl font-bold text-green-600 dark:text-green-400"; 
+
+      if (change < 0) {
+        el.innerText = 'Kurang: ' + formatRp(Math.abs(change));
+        el.className = "text-2xl font-bold text-red-500 dark:text-red-400";
+      } else {
+        el.innerText = formatRp(change);
+        el.className = "text-2xl font-bold text-green-600 dark:text-green-400";
       }
     }
 
-    function setUangPas() { 
-      document.getElementById('co-tendered').value = getCheckoutFinalTotal(); 
-      calcChange(); 
+    function setUangPas() {
+      document.getElementById('co-tendered').value = getCheckoutFinalTotal();
+      calcChange();
     }
-    
+
     function addTendered(val) {
       const curr = parseFloat(document.getElementById('co-tendered').value) || 0;
-      document.getElementById('co-tendered').value = curr + val; 
+      document.getElementById('co-tendered').value = curr + val;
       calcChange();
     }
 
@@ -1479,26 +1486,26 @@
     }
 
     async function submitPayment() {
-      const totalFinal = getCheckoutFinalTotal(); 
+      const totalFinal = getCheckoutFinalTotal();
       const methodSelect = document.getElementById('co-method').value;
       const method = methodSelect === 'Custom' ? (document.getElementById('co-method-custom-name').value || 'Custom') : methodSelect;
       const tendered = parseFloat(document.getElementById('co-tendered').value) || 0;
       const split = parseInt(document.getElementById('co-split').value) || 1;
 
       if (methodSelect === 'Tunai' && tendered < totalFinal) {
-          return showToast('Nominal pembayaran kurang!', 'error');
+        return showToast('Nominal pembayaran kurang!', 'error');
       }
 
       showLoading(true);
       toggleModal('modal-checkout', false);
 
       try {
-        let trxPayload = { 
-            total_price: totalFinal, 
-            payment_method: method, 
-            cash_tendered: methodSelect === 'Tunai' ? tendered : totalFinal, 
-            change_amount: methodSelect === 'Tunai' ? tendered - totalFinal : 0, 
-            split_count: split 
+        let trxPayload = {
+          total_price: totalFinal,
+          payment_method: method,
+          cash_tendered: methodSelect === 'Tunai' ? tendered : totalFinal,
+          change_amount: methodSelect === 'Tunai' ? tendered - totalFinal : 0,
+          split_count: split
         };
 
         let trxRes = await supabaseClient.from('transactions').insert([trxPayload]).select().single();
@@ -1956,7 +1963,7 @@
     async function saveComposition() {
       const mode = document.getElementById('comp-mode').value;
       const validItems = state.compItems.filter(i => i.id !== '' && i.qty > 0);
-      
+
       if (validItems.length === 0) return showToast('Harap masukkan minimal 1 bahan dengan kuantitas > 0', 'warning');
 
       const totalModal = validItems.reduce((s, i) => s + i.cost, 0);
@@ -1986,7 +1993,7 @@
 
           const payload = { product_id: prodId, total_hpp: totalModal, items: validItems };
           const existing = state.recipes.find(r => r.productId === prodId);
-          
+
           let res;
           if (existing) res = await supabaseClient.from('recipes').update(payload).eq('id', existing.id);
           else res = await supabaseClient.from('recipes').insert([payload]);
@@ -2006,6 +2013,43 @@
     // ==========================================
     // 6. LAPORAN & LABA RUGI & CHART & BIAYA
     // ==========================================
+    function openExpenseModal(id = null) {
+      state.editingExpenseId = id;
+      const title = document.querySelector('#modal-expense h3');
+
+      if (id) {
+        // Mode Edit Pengeluaran
+        title.innerHTML = `<i data-lucide="edit" class="w-5 h-5 mr-2"></i> Edit Pengeluaran`;
+        const exp = state.expensesList.find(e => e.id === id);
+        if (exp) {
+          document.getElementById('exp-id').value = exp.id;
+          document.getElementById('exp-date').value = exp.expense_date ? exp.expense_date.split('T')[0] : '';
+          document.getElementById('exp-name').value = exp.name;
+          document.getElementById('exp-personal').checked = exp.is_personal;
+          document.getElementById('exp-profit').checked = exp.affects_profit;
+          state.expenseItems = exp.items ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items) : [];
+        }
+      } else {
+        // Mode Tambah Pengeluaran Baru
+        title.innerHTML = `<i data-lucide="receipt" class="w-5 h-5 mr-2"></i> Form Catat Pengeluaran`;
+        document.getElementById('exp-id').value = '';
+
+        // Format tanggal hari ini sesuai zona waktu lokal
+        const today = new Date();
+        const localDate = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        document.getElementById('exp-date').value = localDate;
+
+        document.getElementById('exp-name').value = '';
+        document.getElementById('exp-personal').checked = false;
+        document.getElementById('exp-profit').checked = false;
+        state.expenseItems = [];
+        addExpenseItem(); // Otomatis tambahkan 1 baris input kosong
+      }
+
+      renderExpenseItemRows();
+      toggleModal('modal-expense', true);
+      lucide.createIcons();
+    }
     function handleReportFilterChange() {
       const val = document.getElementById('report-filter').value;
       const customContainer = document.getElementById('custom-date-container');
