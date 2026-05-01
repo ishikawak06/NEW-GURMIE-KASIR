@@ -761,8 +761,7 @@
       </div>
     </div>
 
-    <!-- Other Modals (Checkout, Edit Cart, Expense, History) remains from original -->
-    <!-- 1. Checkout Modal -->
+    <!-- 1. Checkout Modal (Updated untuk Pembayaran Custom) -->
     <div id="modal-checkout"
       class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
       <div
@@ -776,20 +775,36 @@
               class="w-5 h-5"></i></button>
         </div>
         <div class="p-6 space-y-4">
-          <div
-            class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan</p>
-            <h1 id="co-total" class="text-4xl font-bold text-blue-600 dark:text-neon-cyan">Rp 0</h1>
+          
+          <!-- Box Total Harga & Penyesuaian Custom -->
+          <div class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 relative">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan (Subtotal: <span id="co-subtotal-display">Rp 0</span>)</p>
+            <h1 id="co-total" class="text-4xl font-bold text-blue-600 dark:text-neon-cyan transition-colors">Rp 0</h1>
+            
+            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 text-left">Penyesuaian Harga Custom (Opsional)</label>
+                <div class="flex items-center gap-2">
+                    <select id="co-adj-type" class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white" onchange="calcCheckoutTotal()">
+                        <option value="none">-- Pilih --</option>
+                        <option value="discount">Diskon (-)</option>
+                        <option value="fee">Biaya Tambahan (+)</option>
+                    </select>
+                    <input type="number" id="co-custom-adjustment" placeholder="Nominal Rp" min="0" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white hidden" oninput="calcCheckoutTotal()">
+                </div>
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Metode Pembayaran</label>
-              <select id="co-method"
-                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3 focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white">
+              <select id="co-method" onchange="toggleCustomMethod()"
+                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white">
                 <option value="Tunai">Tunai / Cash</option>
                 <option value="Transfer">Transfer Bank / QRIS</option>
+                <option value="Custom">Custom Lainnya...</option>
               </select>
+              <input type="text" id="co-method-custom-name" placeholder="Misal: GoPay, OVO, dll"
+                class="mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white hidden">
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Bagi Tagihan (Split
@@ -1107,14 +1122,12 @@
       expenseItems: [],
 
       reportPeriodText: '7 Hari Terakhir',
-      jurnalUmum: [], // State tambahan untuk menyimpan array jurnal umum
+      jurnalUmum: [], 
 
-      // STATE BARU: Modul Bahan & Resep (Supabase Cloud)
       rawMaterials: [],
       processedMaterials: [],
       recipes: [],
 
-      // Temporary state for composition modal
       compItems: []
     };
 
@@ -1152,14 +1165,13 @@
       renderKasirProducts();
       renderProductTable();
       checkDeadStock();
-      if (document.getElementById('view-bahan').classList.contains('flex')) renderResepTab(); // update table recipe
+      if (document.getElementById('view-bahan').classList.contains('flex')) renderResepTab(); 
     }
 
     function checkDeadStock() {
       const container = document.getElementById('dead-stock-container');
       if (!container) return;
 
-      // Analisa sederhana: Mengambil 5 produk fisik dengan stok terbanyak (kurang bergerak)
       const dead = state.products.filter(p => !p.is_bundle && p.stock > 0).sort((a, b) => b.stock - a.stock).slice(0, 5);
 
       if (dead.length === 0) {
@@ -1181,10 +1193,7 @@
           supabaseClient.from('recipes').select('*')
         ]);
 
-        if (rm.error || pm.error || rc.error) {
-          console.warn("Tabel BOM belum dibuat di Supabase. Menunggu setup SQL.");
-          return;
-        }
+        if (rm.error || pm.error || rc.error) return;
 
         state.rawMaterials = (rm.data || []).map(r => ({
           id: r.id, name: r.name, unit: r.unit, capacity: r.capacity,
@@ -1210,9 +1219,7 @@
             if (activeView.id === 'tab-resep') renderResepTab();
           }
         }
-      } catch (err) {
-        console.error("Error fetching BOM:", err);
-      }
+      } catch (err) { }
     }
 
     // ==========================================
@@ -1305,6 +1312,10 @@
     }
 
     function clearCart() { state.cart = []; renderCart(); }
+
+    function getCartTotal() { 
+      return state.cart.reduce((s, i) => s + ((i.customPrice || i.price) * i.qty), 0); 
+    }
 
     function renderCart() {
       const container = document.getElementById('cart-items');
@@ -1414,34 +1425,103 @@
       updateHeldBadge();
     }
 
-    // --- CHECKOUT LOGIC ---
-    function getCartTotal() { return state.cart.reduce((s, i) => s + ((i.customPrice || i.price) * i.qty), 0); }
+    // --- LOGIKA PEMBAYARAN CUSTOM (CHECKOUT) ---
+    function getCheckoutFinalTotal() {
+        const baseTotal = getCartTotal();
+        const adjType = document.getElementById('co-adj-type').value;
+        const adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
+        
+        let finalTotal = baseTotal;
+        if (adjType === 'discount') finalTotal -= adjVal;
+        else if (adjType === 'fee') finalTotal += adjVal;
+        
+        return finalTotal < 0 ? 0 : finalTotal;
+    }
+
+    function calcCheckoutTotal() {
+        const baseTotal = getCartTotal();
+        document.getElementById('co-subtotal-display').innerText = formatRp(baseTotal);
+        
+        const adjType = document.getElementById('co-adj-type');
+        const adjInput = document.getElementById('co-custom-adjustment');
+        
+        if (adjType.value === 'none') {
+            adjInput.classList.add('hidden');
+            adjInput.value = '';
+        } else {
+            adjInput.classList.remove('hidden');
+        }
+        
+        const finalTotal = getCheckoutFinalTotal();
+        document.getElementById('co-total').innerText = formatRp(finalTotal);
+        
+        // Update split amount if active
+        const split = parseInt(document.getElementById('co-split').value) || 1;
+        if (split > 1) {
+            document.getElementById('co-split-amount').innerText = formatRp(finalTotal / split);
+        }
+        
+        calcChange();
+    }
+
+    function toggleCustomMethod() {
+        const method = document.getElementById('co-method').value;
+        const customNameInput = document.getElementById('co-method-custom-name');
+        if (method === 'Custom') {
+            customNameInput.classList.remove('hidden');
+            customNameInput.focus();
+        } else {
+            customNameInput.classList.add('hidden');
+            customNameInput.value = '';
+        }
+    }
 
     function openCheckoutModal() {
       if (state.cart.length === 0) return;
-      const total = getCartTotal();
-      document.getElementById('co-total').innerText = formatRp(total);
+      
       document.getElementById('co-tendered').value = '';
       document.getElementById('co-change').innerText = 'Rp 0';
       document.getElementById('co-split').value = 1;
       document.getElementById('co-split-info').classList.add('hidden');
+      
+      // Reset Modal Fields
+      document.getElementById('co-adj-type').value = 'none';
+      document.getElementById('co-custom-adjustment').value = '';
+      document.getElementById('co-custom-adjustment').classList.add('hidden');
+      document.getElementById('co-method').value = 'Tunai';
+      document.getElementById('co-method-custom-name').value = '';
+      document.getElementById('co-method-custom-name').classList.add('hidden');
+
+      calcCheckoutTotal();
+      
       toggleModal('modal-checkout', true);
       setTimeout(() => document.getElementById('co-tendered').focus(), 100);
     }
 
     function calcChange() {
-      const total = getCartTotal();
+      const finalTotal = getCheckoutFinalTotal();
       const tendered = parseFloat(document.getElementById('co-tendered').value) || 0;
-      const change = tendered - total;
+      const change = tendered - finalTotal;
       const el = document.getElementById('co-change');
-      if (change < 0) { el.innerText = 'Kurang: ' + formatRp(Math.abs(change)); el.className = "text-2xl font-bold text-red-500 dark:text-red-400"; }
-      else { el.innerText = formatRp(change); el.className = "text-2xl font-bold text-green-600 dark:text-green-400"; }
+      
+      if (change < 0) { 
+        el.innerText = 'Kurang: ' + formatRp(Math.abs(change)); 
+        el.className = "text-2xl font-bold text-red-500 dark:text-red-400"; 
+      } else { 
+        el.innerText = formatRp(change); 
+        el.className = "text-2xl font-bold text-green-600 dark:text-green-400"; 
+      }
     }
 
-    function setUangPas() { document.getElementById('co-tendered').value = getCartTotal(); calcChange(); }
+    function setUangPas() { 
+      document.getElementById('co-tendered').value = getCheckoutFinalTotal(); 
+      calcChange(); 
+    }
+    
     function addTendered(val) {
       const curr = parseFloat(document.getElementById('co-tendered').value) || 0;
-      document.getElementById('co-tendered').value = curr + val; calcChange();
+      document.getElementById('co-tendered').value = curr + val; 
+      calcChange();
     }
 
     function adjustSplit(val) {
@@ -1453,29 +1533,38 @@
       const info = document.getElementById('co-split-info');
       if (v > 1) {
         info.classList.remove('hidden');
-        document.getElementById('co-split-amount').innerText = formatRp(getCartTotal() / v);
+        document.getElementById('co-split-amount').innerText = formatRp(getCheckoutFinalTotal() / v);
       } else {
         info.classList.add('hidden');
       }
     }
 
     async function submitPayment() {
-      const total = getCartTotal();
-      const method = document.getElementById('co-method').value;
+      const totalFinal = getCheckoutFinalTotal(); 
+      const methodSelect = document.getElementById('co-method').value;
+      const method = methodSelect === 'Custom' ? (document.getElementById('co-method-custom-name').value || 'Custom') : methodSelect;
       const tendered = parseFloat(document.getElementById('co-tendered').value) || 0;
       const split = parseInt(document.getElementById('co-split').value) || 1;
 
-      if (method === 'Tunai' && tendered < total) return showToast('Nominal pembayaran kurang!', 'error');
+      if (methodSelect === 'Tunai' && tendered < totalFinal) {
+          return showToast('Nominal pembayaran kurang!', 'error');
+      }
 
       showLoading(true);
       toggleModal('modal-checkout', false);
 
       try {
-        let trxPayload = { total_price: total, payment_method: method, cash_tendered: method === 'Tunai' ? tendered : total, change_amount: method === 'Tunai' ? tendered - total : 0, split_count: split };
+        let trxPayload = { 
+            total_price: totalFinal, 
+            payment_method: method, 
+            cash_tendered: methodSelect === 'Tunai' ? tendered : totalFinal, 
+            change_amount: methodSelect === 'Tunai' ? tendered - totalFinal : 0, 
+            split_count: split 
+        };
 
         let trxRes = await supabaseClient.from('transactions').insert([trxPayload]).select().single();
         if (trxRes.error && trxRes.error.message.includes('column')) {
-          trxRes = await supabaseClient.from('transactions').insert([{ total_price: total }]).select().single();
+          trxRes = await supabaseClient.from('transactions').insert([{ total_price: totalFinal }]).select().single();
         }
         if (trxRes.error) throw trxRes.error;
 
@@ -1512,7 +1601,6 @@
         if (document.getElementById('view-riwayat').classList.contains('flex')) loadHistory();
 
       } catch (error) {
-        console.error("Payment error:", error);
         showToast('Gagal memproses.', 'error');
       } finally {
         showLoading(false);
@@ -1591,7 +1679,6 @@
           delete payload.barcode; delete payload.is_bundle;
           if (id) await supabaseClient.from('products').update(payload).eq('id', id);
           else await supabaseClient.from('products').insert([payload]);
-          showToast('Disimpan dengan Skema Lama.', 'warning');
         } else if (res.error) throw res.error;
         else showToast('Produk tersimpan!', 'success');
 
@@ -1624,7 +1711,7 @@
     }
 
     // ==========================================
-    // FITUR BARU: MANAJEMEN BAHAN & RESEP
+    // 5. MANAJEMEN BAHAN & RESEP
     // ==========================================
     function switchBahanTab(tabName) {
       ['dasar', 'olahan', 'resep'].forEach(t => {
@@ -1641,7 +1728,6 @@
       if (tabName === 'resep') renderResepTab();
     }
 
-    // --- BAHAN DASAR ---
     function renderBahanDasar() {
       const tbody = document.getElementById('table-bahan-dasar');
       tbody.innerHTML = '';
@@ -1721,7 +1807,6 @@
       showLoading(false);
     }
 
-    // --- KOMPOSISI (BAHAN OLAHAN & RESEP) ---
     function getMaterialSelectHTML(index, selectedId = '') {
       let opts = `<option value="">-- Pilih Bahan --</option>`;
       if (state.rawMaterials.length > 0) {
@@ -1812,12 +1897,10 @@
         const hpp = totalModal / yieldVal;
         document.getElementById('comp-hpp-satuan').innerText = formatRp(hpp);
       } else {
-        // Untuk resep produk, HPP ya total modal komposisi itu sendiri (karena hitungannya per 1 produk)
         document.getElementById('comp-hpp-satuan').innerText = formatRp(totalModal);
       }
     }
 
-    // --- BAHAN OLAHAN ---
     function renderBahanOlahan() {
       const tbody = document.getElementById('table-bahan-olahan');
       tbody.innerHTML = '';
@@ -1852,7 +1935,7 @@
       document.getElementById('comp-ol-yield').value = '1';
 
       state.compItems = [];
-      addCompRow(); // Add 1 empty row
+      addCompRow();
       toggleModal('modal-composition', true);
     }
 
@@ -1870,7 +1953,6 @@
       showLoading(false);
     }
 
-    // --- RESEP PRODUK ---
     function renderResepTab() {
       const tbody = document.getElementById('table-resep');
       tbody.innerHTML = '';
@@ -1932,12 +2014,10 @@
       showLoading(false);
     }
 
-    // --- SAVE KOMPOSISI (GLOBAL HANDLER) ---
     async function saveComposition() {
       const mode = document.getElementById('comp-mode').value;
-
-      // Validasi data tabel kosong
       const validItems = state.compItems.filter(i => i.id !== '' && i.qty > 0);
+      
       if (validItems.length === 0) return showToast('Harap masukkan minimal 1 bahan dengan kuantitas > 0', 'warning');
 
       const totalModal = validItems.reduce((s, i) => s + i.cost, 0);
@@ -1966,9 +2046,8 @@
           if (!prodId) { showLoading(false); return showToast('Harap pilih produk!', 'error'); }
 
           const payload = { product_id: prodId, total_hpp: totalModal, items: validItems };
-
-          // Cek jika sudah ada resepnya, update (biar ga double)
           const existing = state.recipes.find(r => r.productId === prodId);
+          
           let res;
           if (existing) res = await supabaseClient.from('recipes').update(payload).eq('id', existing.id);
           else res = await supabaseClient.from('recipes').insert([payload]);
@@ -1986,7 +2065,7 @@
     }
 
     // ==========================================
-    // 5. LAPORAN & LABA RUGI & CHART & BIAYA
+    // 6. LAPORAN & LABA RUGI & CHART & BIAYA
     // ==========================================
     function handleReportFilterChange() {
       const val = document.getElementById('report-filter').value;
@@ -2039,12 +2118,10 @@
       document.getElementById('title-profit').innerText = `Estimasi Laba Bersih (${periodText})`;
 
       try {
-        // Fetch Transaksi berdasar range
         const { data: trxData } = await supabaseClient.from('transactions')
           .select('total_price, created_at')
           .gte('created_at', startISO).lte('created_at', endISO);
 
-        // Fetch Pengeluaran berdasar range
         let { data: expData, error: expErr } = await supabaseClient.from('expenses')
           .select('*')
           .gte('expense_date', startISO).lte('expense_date', endISO);
@@ -2068,10 +2145,7 @@
         document.getElementById('stat-expenses').innerText = formatRp(opex);
         document.getElementById('stat-profit').innerText = formatRp(estProfit);
 
-        // --- PEMBUATAN JURNAL UMUM OTOMATIS ---
         let jurnalEntries = [];
-
-        // 1. Jurnal Penjualan
         (trxData || []).forEach(t => {
           const d = new Date(t.created_at);
           const amt = parseFloat(t.total_price);
@@ -2079,12 +2153,9 @@
           jurnalEntries.push({ date: d, dateStr: '', desc: '    Pendapatan Penjualan', ref: '', debit: 0, kredit: amt });
         });
 
-        // 2. Jurnal Pengeluaran & Biaya
         (expData || []).forEach(e => {
-          // expense_date itu string DATE 'YYYY-MM-DD', kita gabung jam 12 siang agar tidak kena masalah zona waktu
           const d = new Date(e.expense_date + 'T12:00:00');
           const amt = parseFloat(e.amount);
-
           const debitAcc = e.affects_profit ? 'Persediaan Bahan Baku (HPP)' : 'Beban ' + e.name;
           const creditAcc = e.is_personal ? 'Modal Pemilik' : 'Kas';
 
@@ -2092,13 +2163,11 @@
           jurnalEntries.push({ date: d, dateStr: '', desc: '    ' + creditAcc, ref: '', debit: 0, kredit: amt });
         });
 
-        // Sortir jurnal berdasarkan tanggal
         jurnalEntries.sort((a, b) => a.date - b.date);
         state.jurnalUmum = jurnalEntries;
 
         renderJurnalTable();
 
-        // --- PEMBUATAN CHART ---
         const chartData = {};
         const daysDiff = Math.round((endD - startD) / (1000 * 60 * 60 * 24));
 
@@ -2244,13 +2313,9 @@
       const total = validItems.reduce((s, i) => s + (i.qty * i.price), 0);
 
       const payload = {
-        name: nameStr,
-        amount: total,
-        expense_date: dateStr,
-        is_personal: isPersonal,
-        affects_profit: isProfit,
-        notes: '',
-        items: validItems
+        name: nameStr, amount: total, expense_date: dateStr,
+        is_personal: isPersonal, affects_profit: isProfit,
+        notes: '', items: validItems
       };
 
       btn.disabled = true;
@@ -2285,7 +2350,6 @@
       }
     }
 
-    // --- RENDER JURNAL UMUM ---
     function renderJurnalTable() {
       const tbody = document.getElementById('jurnal-table-body');
       tbody.innerHTML = '';
@@ -2314,7 +2378,6 @@
         tbody.appendChild(tr);
       });
 
-      // Row Total
       const trTotal = document.createElement('tr');
       trTotal.className = 'bg-gray-100 dark:bg-gray-800 font-bold border-t-2 border-gray-200 dark:border-gray-700';
       trTotal.innerHTML = `
@@ -2325,7 +2388,6 @@
       tbody.appendChild(trTotal);
     }
 
-    // --- EXPORT LABA RUGI PDF ---
     function exportToPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
@@ -2355,7 +2417,6 @@
       showToast('PDF Laba Rugi berhasil diunduh.', 'success');
     }
 
-    // --- EXPORT JURNAL UMUM PDF ---
     function exportJurnalPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
@@ -2373,14 +2434,10 @@
       state.jurnalUmum.forEach(e => {
         totalDebit += e.debit;
         totalKredit += e.kredit;
-
-        // Gunakan non-breaking space khusus untuk pdf agar indentasi akun kredit ter-render
         const descStr = e.desc.replace(/    /g, '\u00A0\u00A0\u00A0\u00A0');
 
         tableBody.push([
-          e.dateStr,
-          descStr,
-          e.ref,
+          e.dateStr, descStr, e.ref,
           e.debit > 0 ? formatRp(e.debit) : '-',
           e.kredit > 0 ? formatRp(e.kredit) : '-'
         ]);
@@ -2399,7 +2456,7 @@
         styles: { fontSize: 9, cellPadding: 3 },
         columnStyles: {
           0: { cellWidth: 35 },
-          1: { cellWidth: 70, font: 'courier' }, // Font monospace agar spasi tab terlihat lurus
+          1: { cellWidth: 70, font: 'courier' },
           2: { cellWidth: 15, halign: 'center' },
           3: { halign: 'right', cellWidth: 35 },
           4: { halign: 'right', cellWidth: 35 }
@@ -2411,9 +2468,8 @@
     }
 
     // ==========================================
-    // 6. RIWAYAT TRANSAKSI & EDIT
+    // 7. RIWAYAT TRANSAKSI & EDIT
     // ==========================================
-    // ... (Fungsi Riwayat Transaksi tetap utuh di bawah) ...
     async function loadHistory() {
       showLoading(true);
       try {
@@ -2621,41 +2677,14 @@
         loadHistory();
 
       } catch (e) {
-        console.error(e);
         showToast('Gagal menyimpan perubahan transaksi.', 'error');
       } finally {
         btn.innerHTML = `Simpan Perubahan`;
       }
     }
 
-    function openExpenseModal(id = null) {
-      state.editingExpenseId = id;
-      if (id) {
-        const exp = state.expensesList.find(e => e.id === id);
-        if (!exp) return;
-        document.getElementById('exp-name').value = exp.name || '';
-        document.getElementById('exp-date').value = exp.expense_date || new Date().toISOString().split('T')[0];
-        document.getElementById('exp-personal').checked = exp.is_personal || false;
-        document.getElementById('exp-profit').checked = exp.affects_profit || false;
-
-        try {
-          state.expenseItems = exp.items ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items) : [{ name: exp.name, qty: 1, price: exp.amount }];
-        } catch (err) {
-          state.expenseItems = [{ name: exp.name, qty: 1, price: exp.amount }];
-        }
-      } else {
-        document.getElementById('exp-name').value = '';
-        document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
-        document.getElementById('exp-personal').checked = false;
-        document.getElementById('exp-profit').checked = false;
-        state.expenseItems = [{ name: '', qty: 1, price: 0 }];
-      }
-      renderExpenseItemRows();
-      toggleModal('modal-expense', true);
-    }
-
     // ==========================================
-    // 7. UTILITIES
+    // 8. UTILITIES
     // ==========================================
     function toggleModal(id, show) {
       const el = document.getElementById(id);
@@ -2688,7 +2717,7 @@
       activeNav.className = "nav-btn w-full flex items-center p-3 rounded-xl bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan shadow-sm dark:shadow-[0_0_10px_rgba(6,182,212,0.1)] transition-colors font-medium";
 
       if (viewName === 'kasir') document.getElementById('search-product').focus();
-      else if (viewName === 'bahan') { switchBahanTab('dasar'); } // default sub-tab
+      else if (viewName === 'bahan') { switchBahanTab('dasar'); }
       else if (viewName === 'laporan') loadReports();
       else if (viewName === 'riwayat') loadHistory();
     }
