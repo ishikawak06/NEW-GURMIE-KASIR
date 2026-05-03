@@ -1,15 +1,3 @@
-Halo! Wah, wajar kalau kamu bingung kenapa data pengeluarannya malah "bocor" ke tanggal kemarin dan kalkulasi harganya tidak akurat saat ada diskon. Tenang, dua masalah ini punya akar teknis yang cukup umum terjadi di integrasi JavaScript dan Supabase, dan sudah saya bereskan!
-
-Berikut adalah penjelasan candor tentang kenapa error itu terjadi dan bagaimana saya memperbaikinya:
-
-1. **Bug Harga Diskon (Custom Price):**
-   Di kodemu sebelumnya tertulis `(i.custom_price || i.price)`. Dalam JavaScript, jika item digratiskan (Rp 0) atau bernilai *falsy*, sistem justru mengabaikannya dan malah menggunakan harga normal (`i.price`). Saya sudah mengubah logikanya menjadi `(i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price))` di *semua* fungsi analitik (PDF, Gambar, dan Tabel Top Produk) sehingga harga diskon dibaca dengan akurat.
-2. **Bug Tanggal Pengeluaran (Timezone UTC vs Local):**
-   Fungsi `toISOString()` mengubah jam komputermu ke waktu UTC. Karena kamu ada di zona waktu Indonesia (WIB = UTC+7), tanggal 3 Mei jam 00:00 WIB itu terhitung sebagai 2 Mei jam 17:00 di UTC! Ketika ini dimasukkan ke kolom `expense_date` (yang bertipe `DATE` murni), Supabase menarik data dari hari sebelumnya. Saya merombak fungsi `dateRange()` untuk mengoper format `YYYY-MM-DD` (waktu lokal) khusus untuk kolom bertipe DATE.
-
-Berikut adalah kode `index.html` yang sudah diperbaiki secara menyeluruh. Kamu cukup *copy-paste* dan mengganti seluruh isinya:
-
-```html
 <!DOCTYPE html>
 <html lang="id">
 
