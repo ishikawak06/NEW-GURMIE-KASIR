@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GurmieKasir — Business Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- PENGGANTI HTML2PDF: jsPDF & jsPDF-AutoTable (Data-Driven PDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;600;700&family=Instrument+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f0e8;
+            --cream: #ede8dc;
+            --accent: #c84b31;
+            --gold: #d4a843;
+            --sage: #4a7c59;
+            --slate: #3d4a5c;
+            --muted: #8a8070;
+            --border: rgba(10, 10, 15, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+            background: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
+            background-image: radial-gradient(ellipse at 0% 0%, rgba(212, 168, 67, 0.08) 0%, transparent 60%), radial-gradient(ellipse at 100% 100%, rgba(200, 75, 49, 0.06) 0%, transparent 50%)
+        }
+
+        .site-header {
+            border-bottom: 2px solid var(--ink);
+            background: var(--paper);
+            padding: 0 2.5rem;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100
+        }
+
+        .back-btn {
+            text-decoration: none;
+            background: transparent;
+            border: 1.5px solid var(--border);
+            padding: 4px 10px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--ink);
+            border-radius: 2px;
+            transition: background 0.2s, border-color 0.2s;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn:hover {
+            background: var(--cream);
+            border-color: var(--ink);
+        }
+
+        .brand {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.25rem;
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem
+        }
+
+        .brand-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 2s ease-in-out infinite
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7
+            }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--muted)
+        }
+
+        .live-badge {
+            background: var(--sage);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 2px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase
+        }
+
+        .main {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2rem 2.5rem 4rem
+        }
+
+        .page-title-section {
+            padding: 2rem 0 2.5rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end
+        }
+
+        .page-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 2.75rem;
+            line-height: 1;
+            letter-spacing: -0.02em
+        }
+
+        .page-title em {
+            font-style: italic;
+            color: var(--accent)
+        }
+
+        .page-subtitle {
+            font-size: 0.85rem;
+            color: var(--muted);
+            margin-top: 0.5rem;
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .filter-bar {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.4rem 1rem;
+            border: 1.5px solid var(--border);
+            background: transparent;
+            border-radius: 2px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all 0.15s
+        }
+
+        .filter-btn:hover {
+            border-color: var(--ink);
+            color: var(--ink)
+        }
+
+        .filter-btn.active {
+            background: var(--ink);
+            color: var(--paper);
+            border-color: var(--ink)
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            border: 2px solid var(--ink);
+            margin-bottom: 2.5rem
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+            border-right: 1.5px solid var(--ink);
+            position: relative;
+            overflow: hidden;
+            background: var(--paper);
+            transition: background 0.2s
+        }
+
+        .stat-card:last-child {
+            border-right: none
+        }
+
+        .stat-card:hover {
+            background: var(--cream)
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px
+        }
+
+        .stat-card.revenue::before {
+            background: var(--sage)
+        }
+
+        .stat-card.profit::before {
+            background: var(--gold)
+        }
+
+        .stat-card.expense::before {
+            background: var(--accent)
+        }
+
+        .stat-card.transactions::before {
+            background: var(--slate)
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            font-family: 'JetBrains Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            margin-bottom: 0.75rem
+        }
+
+        .stat-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.9rem;
+            line-height: 1;
+            letter-spacing: -0.02em
+        }
+
+        .stat-value.positive {
+            color: var(--sage)
+        }
+
+        .stat-value.negative {
+            color: var(--accent)
+        }
+
+        .stat-sub {
+            margin-top: 0.5rem;
+            font-size: 0.72rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .section-header {
+            display: flex;
+            align-items: baseline;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem
+        }
+
+        .section-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.3rem;
+            letter-spacing: -0.01em
+        }
+
+        .section-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 2px 6px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            border-radius: 2px
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem
+        }
+
+        .panel {
+            background: var(--paper);
+            border: 1.5px solid var(--ink);
+            padding: 1.5rem;
+            position: relative
+        }
+
+        .panel.tall {
+            min-height: 360px
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 220px;
+            margin-top: 1rem
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem
+        }
+
+        .data-table th {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+            border-bottom: 1.5px solid var(--border)
+        }
+
+        .data-table td {
+            padding: 0.65rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--ink)
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none
+        }
+
+        .data-table tr:hover td {
+            background: var(--cream)
+        }
+
+        .rank-num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.1rem;
+            color: var(--muted);
+            min-width: 24px;
+            display: inline-block
+        }
+
+        .bar-track {
+            height: 4px;
+            background: var(--cream);
+            overflow: hidden;
+            margin-top: 3px
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: var(--slate);
+            transition: width 0.8s ease
+        }
+
+        .risk-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2.5rem
+        }
+
+        .risk-card {
+            border: 1.5px solid;
+            padding: 1.25rem;
+            position: relative;
+        }
+
+        .risk-card.high {
+            border-color: var(--accent);
+            background: rgba(200, 75, 49, 0.04)
+        }
+
+        .risk-card.medium {
+            border-color: var(--gold);
+            background: rgba(212, 168, 67, 0.04)
+        }
+
+        .risk-card.low {
+            border-color: var(--sage);
+            background: rgba(74, 124, 89, 0.04)
+        }
+
+        .risk-level {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.5rem
+        }
+
+        .risk-card.high .risk-level {
+            color: var(--accent)
+        }
+
+        .risk-card.medium .risk-level {
+            color: var(--gold)
+        }
+
+        .risk-card.low .risk-level {
+            color: var(--sage)
+        }
+
+        .risk-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem
+        }
+
+        .risk-desc {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.5
+        }
+
+        .sql-guide {
+            background: var(--ink);
+            color: var(--paper);
+            border: 2px solid var(--ink);
+            padding: 2rem;
+            margin-bottom: 2.5rem
+        }
+
+        .sql-guide h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.4rem;
+            color: var(--gold);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem
+        }
+
+        .sql-guide h2::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.15)
+        }
+
+        .sql-guide h3 {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--gold);
+            margin: 1.25rem 0 0.5rem
+        }
+
+        .sql-guide p,
+        .sql-guide li {
+            font-size: 0.82rem;
+            line-height: 1.7;
+            color: rgba(245, 240, 232, 0.8)
+        }
+
+        .sql-guide ul {
+            list-style: none;
+            padding: 0
+        }
+
+        .sql-guide ul li::before {
+            content: '→  ';
+            color: var(--gold)
+        }
+
+        .sql-guide pre {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            line-height: 1.8;
+            color: rgba(245, 240, 232, 0.9);
+            overflow-x: auto;
+            margin: 0.75rem 0
+        }
+
+        .sql-comment {
+            color: #6a8f6a
+        }
+
+        .sql-keyword {
+            color: #e8a87c
+        }
+
+        .sql-fn {
+            color: #7ec8e3
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1rem
+        }
+
+        .state-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--muted);
+            gap: 0.5rem
+        }
+
+        .state-icon {
+            font-size: 2rem
+        }
+
+        .state-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem
+        }
+
+        .state-error {
+            color: var(--accent)
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--ink);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg)
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.62rem;
+            font-weight: 700;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em
+        }
+
+        .badge-green {
+            background: rgba(74, 124, 89, 0.15);
+            color: var(--sage)
+        }
+
+        .badge-red {
+            background: rgba(200, 75, 49, 0.12);
+            color: var(--accent)
+        }
+
+        .badge-gold {
+            background: rgba(212, 168, 67, 0.15);
+            color: #9a7520
+        }
+
+        .badge-slate {
+            background: rgba(61, 74, 92, 0.12);
+            color: var(--slate)
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem
+        }
+
+        .metric-row:last-child {
+            border-bottom: none
+        }
+
+        .metric-label {
+            color: var(--muted);
+            font-size: 0.75rem
+        }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+            font-size: 0.8rem
+        }
+
+        .expense-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .expense-row:last-child {
+            border-bottom: none
+        }
+
+        .expense-name {
+            font-size: 0.82rem;
+            font-weight: 500
+        }
+
+        .expense-meta {
+            font-size: 0.65rem;
+            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 2px
+        }
+
+        .expense-amount {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1rem;
+            color: var(--accent);
+            white-space: nowrap;
+            margin-left: 1rem
+        }
+
+        .profit-meter {
+            margin-top: 1rem;
+            height: 8px;
+            background: var(--cream);
+            border: 1px solid var(--border);
+            overflow: hidden
+        }
+
+        .profit-bar {
+            height: 100%;
+            background: var(--sage);
+            transition: width 1s ease
+        }
+
+        .profit-bar.negative {
+            background: var(--accent)
+        }
+
+        .labeled-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2.5rem 0 2rem
+        }
+
+        .labeled-divider span {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--muted);
+            white-space: nowrap;
+            padding: 4px 8px;
+            border: 1px solid var(--border)
+        }
+
+        .labeled-divider::before,
+        .labeled-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border)
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(5px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .count-anim {
+            animation: countUp 0.4s ease forwards
+        }
+
+        #last-updated {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--muted)
+        }
+
+        .overflow-panel {
+            max-height: 320px;
+            overflow-y: auto
+        }
+
+        .overflow-panel::-webkit-scrollbar {
+            width: 3px
+        }
+
+        .overflow-panel::-webkit-scrollbar-thumb {
+            background: var(--border)
+        }
+
+        /* MODAL STYLES */
+        .btn-primary {
+            background: var(--ink);
+            color: var(--paper);
+            border: 1.5px solid var(--ink);
+            padding: 0.5rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 2px;
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--ink);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--ink);
+            border: 1.5px solid var(--ink);
+            padding: 0.5rem 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.2s;
+            border-radius: 2px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--cream);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 10, 15, 0.7);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 8px 8px 0 rgba(10, 10, 15, 0.1);
+        }
+
+        .modal-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            margin-bottom: 0.4rem;
+            color: var(--slate);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            font-family: 'Instrument Sans', sans-serif;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+            border-radius: 2px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--ink);
+        }
+
+        textarea.form-input {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .decision-eval-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--ink);
+            color: var(--paper);
+            padding: 4px 10px;
+            font-size: 0.65rem;
+            border: none;
+            font-family: 'JetBrains Mono';
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .decision-eval-btn:hover {
+            opacity: 0.8;
+        }
+
+        .insight-box {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1.25rem;
+            border: 1.5px solid var(--border);
+        }
+
+        .insight-val {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-top: 0.5rem;
+        }
+
+        @media(max-width:1100px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .stat-card:nth-child(2) {
+                border-right: none
+            }
+
+            .stat-card:nth-child(3),
+            .stat-card:nth-child(4) {
+                border-top: 1.5px solid var(--ink)
+            }
+
+            .stat-card:nth-child(4) {
+                border-right: none
+            }
+
+            .grid-3 {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .guide-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:768px) {
+            .main {
+                padding: 1rem 1rem 3rem
+            }
+
+            .site-header {
+                padding: 0 1rem;
+                flex-wrap: wrap;
+                height: auto;
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr
+            }
+
+            .stat-card {
+                border-right: none;
+                border-top: 1.5px solid var(--ink)
+            }
+
+            .stat-card:first-child {
+                border-top: none
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr
+            }
+
+            .page-title {
+                font-size: 2rem
+            }
+
+            .page-title-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <a href="index.html" class="back-btn">← INDEX</a>
+            <div class="brand">
+                <div class="brand-dot"></div>
+                GurmieKasir <span style="font-style:italic;color:var(--muted);font-size:0.9rem;">Intelligence</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="live-badge">● LIVE</span>
+            <span id="last-updated">—</span>
+
+            <button id="btn-download-pdf" onclick="downloadPDF()"
+                style="background:transparent;border:1.5px solid var(--border);padding:4px 10px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);border-radius:2px;transition:0.2s;"
+                onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='transparent'">
+                📄 PDF
+            </button>
+
+            <!-- TOMBOL BARU UNTUK GAMBAR HPP & BAHAN DASAR -->
+            <button id="btn-download-hpp" onclick="downloadHPPImage()"
+                style="background:transparent;border:1.5px solid var(--border);padding:4px 10px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);border-radius:2px;transition:0.2s;"
+                onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='transparent'">
+                🖼️ GAMBAR HPP
+            </button>
+
+            <button id="btn-download-img" onclick="downloadImage()"
+                style="background:transparent;border:1.5px solid var(--border);padding:4px 10px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);border-radius:2px;transition:0.2s;"
+                onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='transparent'">
+                🖼️ GAMBAR KINERJA
+            </button>
+
+            <button onclick="loadAllData()"
+                style="background:transparent;border:1.5px solid var(--border);padding:4px 10px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);border-radius:2px;transition:0.2s;"
+                onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='transparent'">↻
+                REFRESH</button>
+        </div>
+    </header>
+
+    <div class="main">
+
+        <div class="page-title-section">
+            <div>
+                <h1 class="page-title">Business <em>Profit</em> &<br>Operations Dashboard</h1>
+                <p class="page-subtitle">// connected to Supabase · real-time data only</p>
+            </div>
+            <!-- FILTER PERIODE DENGAN TAMBAHAN HARI INI DAN CUSTOM -->
+            <div class="filter-bar">
+                <button class="filter-btn" onclick="setPeriod('today',this)">HARI INI</button>
+                <button class="filter-btn active" onclick="setPeriod('7D',this)">7D</button>
+                <button class="filter-btn" onclick="setPeriod('30D',this)">30D</button>
+                <button class="filter-btn" onclick="setPeriod('90D',this)">90D</button>
+                <button class="filter-btn" onclick="setPeriod('1Y',this)">1Y</button>
+                <button class="filter-btn" onclick="openCustomDateModal(this)" id="btn-custom">CUSTOM</button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card revenue">
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-value" id="kpi-revenue">—</div>
+                <div class="stat-sub" id="kpi-trx-count">0 transaksi</div>
+            </div>
+            <div class="stat-card profit">
+                <div class="stat-label">Estimasi Laba Bersih</div>
+                <div class="stat-value" id="kpi-profit">—</div>
+                <div class="stat-sub" id="kpi-margin">margin —%</div>
+            </div>
+            <div class="stat-card expense">
+                <div class="stat-label">Total Pengeluaran</div>
+                <div class="stat-value" id="kpi-expense">—</div>
+                <div class="stat-sub" id="kpi-exp-count">0 catatan</div>
+            </div>
+            <div class="stat-card transactions">
+                <div class="stat-label">Avg. Order Value</div>
+                <div class="stat-value" id="kpi-aov">—</div>
+                <div class="stat-sub" id="kpi-products">0 produk terdaftar</div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:2.5rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">
+                <span
+                    style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">Profit
+                    Margin Indicator</span>
+                <span id="profit-pct-label"
+                    style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;">—</span>
+            </div>
+            <div class="profit-meter">
+                <div class="profit-bar" id="profit-bar" style="width:0%"></div>
+            </div>
+            <div
+                style="display:flex;justify-content:space-between;margin-top:0.3rem;font-family:'JetBrains Mono',monospace;font-size:0.58rem;color:var(--muted);">
+                <span>0%</span><span>Rugi</span><span>Break Even</span><span>Laba Sehat</span><span>100%</span>
+            </div>
+        </div>
+
+        <!-- DECISION TRACKING SYSTEM  -->
+        <div class="labeled-divider"><span>▲ Decision Tracking System</span></div>
+        <div class="section-header" style="justify-content: space-between;">
+            <div style="display: flex; align-items: baseline; gap: 0.75rem;">
+                <h2 class="section-title">Data-Driven Decisions</h2>
+                <span class="section-tag">tracker</span>
+            </div>
+            <button class="btn-primary" onclick="openModal('create-decision-modal')">+ KEPUTUSAN BARU</button>
+        </div>
+
+        <div id="decision-insights-container" class="grid-3" style="display:none; margin-bottom:1.5rem;">
+            <div class="insight-box">
+                <div class="stat-label">Rata-Rata Success Score</div>
+                <div class="insight-val" id="insight-avg">—</div>
+            </div>
+            <div class="insight-box">
+                <div class="stat-label">Keputusan Terbaik</div>
+                <div class="insight-val" id="insight-best" style="font-size:1.1rem; color:var(--sage)">—</div>
+            </div>
+            <div class="insight-box">
+                <div class="stat-label">Pattern Detection</div>
+                <div style="font-size:0.75rem; margin-top:0.5rem; line-height:1.5" id="insight-pattern">—</div>
+            </div>
+        </div>
+
+        <div id="decisions-state" class="state-container">
+            <div class="spinner"></div><span class="state-text">memuat decisions...</span>
+        </div>
+        <div class="risk-grid" id="decisions-list" style="display:none;"></div>
+
+        <!-- Modal Custom Date -->
+        <div id="custom-date-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width: 400px;">
+                <h2 class="modal-title" style="font-size:1.5rem">Pilih Periode</h2>
+                <div class="form-group">
+                    <label class="form-label">Tanggal Mulai</label>
+                    <input type="date" id="c-start" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tanggal Akhir</label>
+                    <input type="date" id="c-end" class="form-input">
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
+                    <button class="btn-secondary" onclick="closeModal('custom-date-modal')">BATAL</button>
+                    <button class="btn-primary" onclick="applyCustomDate()">TERAPKAN</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Decision Modal -->
+        <div id="create-decision-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">Catat Keputusan Strategis</h2>
+                <p class="stat-sub" style="margin-bottom:1.5rem; margin-top:-1rem;">*Catatan wajib memiliki struktur
+                    data terukur.</p>
+                <form id="form-create-decision" onsubmit="submitDecision(event)">
+                    <div class="form-group">
+                        <label class="form-label">Judul Keputusan / Aksi</label>
+                        <input type="text" id="d-title" class="form-input"
+                            placeholder="Contoh: Promo Diskon 20% Akhir Pekan" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tujuan (Goal)</label>
+                        <textarea id="d-goal" class="form-input" placeholder="Meningkatkan penjualan di jam sepi..."
+                            required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Hipotesis (Mengapa ini akan berhasil?)</label>
+                        <textarea id="d-hypothesis" class="form-input"
+                            placeholder="Karena pelanggan sangat sensitif terhadap harga..." required></textarea>
+                    </div>
+                    <div class="grid-2" style="margin-bottom:0; gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Target Revenue (Rp)</label>
+                            <input type="number" id="d-target-rev" class="form-input" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Target Jumlah Transaksi</label>
+                            <input type="number" id="d-target-trx" class="form-input" min="1" required>
+                        </div>
+                    </div>
+                    <div class="grid-2" style="margin-bottom:0; gap:1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Tanggal Mulai</label>
+                            <input type="date" id="d-start" class="form-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tanggal Selesai</label>
+                            <input type="date" id="d-end" class="form-input" required>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
+                        <button type="button" class="btn-secondary"
+                            onclick="closeModal('create-decision-modal')">BATAL</button>
+                        <button type="submit" class="btn-primary" id="btn-save-decision">SIMPAN DECISION</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Evaluate Decision Modal -->
+        <div id="evaluate-decision-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">Evaluasi Berbasis Data</h2>
+                <div class="insight-box" style="margin-bottom:1.5rem;">
+                    <div id="eval-loading" class="stat-sub">Menarik data asli dari tabel transactions...</div>
+                    <div id="eval-results" style="display:none;">
+                        <div class="grid-2" style="margin-bottom:1rem;">
+                            <div>
+                                <span class="form-label">Actual Revenue</span>
+                                <strong id="eval-act-rev" style="font-size:1.2rem; font-family:'DM Serif Display'">Rp
+                                    0</strong>
+                                <div class="stat-sub" id="eval-tgt-rev">Target: Rp 0</div>
+                            </div>
+                            <div>
+                                <span class="form-label">Actual Transaksi</span>
+                                <strong id="eval-act-trx"
+                                    style="font-size:1.2rem; font-family:'DM Serif Display'">0</strong>
+                                <div class="stat-sub" id="eval-tgt-trx">Target: 0</div>
+                            </div>
+                        </div>
+                        <div style="border-top:1px solid var(--border); padding-top:1rem; text-align:center;">
+                            <span class="form-label">Success Score</span>
+                            <strong id="eval-score" style="font-size:2rem; font-family:'DM Serif Display'">0%</strong>
+                            <div id="eval-status-badge" style="margin-top:0.5rem;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="form-eval-decision" onsubmit="submitEvaluation(event)">
+                    <input type="hidden" id="e-id">
+                    <input type="hidden" id="e-act-rev">
+                    <input type="hidden" id="e-act-trx">
+                    <input type="hidden" id="e-score">
+                    <input type="hidden" id="e-status">
+
+                    <div class="form-group">
+                        <label class="form-label">Learning Capture (WAJIB DIISI)</label>
+                        <textarea id="e-learning" class="form-input"
+                            placeholder="Apa yang berhasil? Apa yang gagal? Apa yang akan diubah ke depannya?" required
+                            disabled></textarea>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:1rem; margin-top:1.5rem;">
+                        <button type="button" class="btn-secondary"
+                            onclick="closeModal('evaluate-decision-modal')">TUTUP</button>
+                        <button type="submit" class="btn-primary" id="btn-save-eval" disabled>SIMPAN EVALUASI</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="labeled-divider"><span>▲ Standard Analytics</span></div>
+
+        <div class="grid-3">
+            <div class="panel tall">
+                <div class="section-header">
+                    <h2 class="section-title">Trend Penjualan</h2><span class="section-tag">revenue</span>
+                </div>
+                <div id="chart-state" class="state-container" style="height:220px;">
+                    <div class="spinner"></div><span class="state-text">memuat data...</span>
+                </div>
+                <div class="chart-wrap" id="chart-wrap" style="display:none;"><canvas id="salesChart"></canvas></div>
+            </div>
+            <div class="panel tall">
+                <div class="section-header">
+                    <h2 class="section-title">Produk Terlaris</h2><span class="section-tag">qty sold</span>
+                </div>
+                <div id="top-products-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="top-products-list" style="display:none;"></div>
+            </div>
+            <div class="panel tall">
+                <div class="section-header">
+                    <h2 class="section-title">Stok Produk</h2><span class="section-tag">inventory</span>
+                </div>
+                <div id="inventory-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="inventory-list" class="overflow-panel" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="panel">
+                <div class="section-header">
+                    <h2 class="section-title">Profit &amp; Cost Breakdown</h2><span class="section-tag">P&amp;L</span>
+                </div>
+                <div id="profit-breakdown-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="profit-breakdown" style="display:none;">
+                    <div style="position:relative;height:200px;margin-bottom:1rem;"><canvas id="profitChart"></canvas>
+                    </div>
+                    <div id="profit-metrics"></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="section-header">
+                    <h2 class="section-title">Catatan Pengeluaran</h2><span class="section-tag">expenses</span>
+                </div>
+                <div id="expenses-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="expenses-list" class="overflow-panel" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="panel">
+                <div class="section-header">
+                    <h2 class="section-title">Bahan Dasar</h2><span class="section-tag">raw materials</span>
+                </div>
+                <div id="materials-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="materials-table" style="display:none;overflow-x:auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Satuan</th>
+                                <th>Kapasitas</th>
+                                <th>Harga Satuan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="materials-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="section-header">
+                    <h2 class="section-title">HPP Resep Produk</h2><span class="section-tag">COGS per item</span>
+                </div>
+                <div id="recipes-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+
+                <!-- DYNAMIC TABLE IMPLEMENTATION -->
+                <div id="recipes-table" style="display:none;overflow-x:auto;">
+                    <!-- TEKS PENJELASAN DIUBAH KE TOTAL PENGELUARAN KESELURUHAN -->
+                    <p class="stat-sub" style="margin-bottom:0.75rem;">*<strong>Penjualan per Pcs (Balik Modal
+                            Keseluruhan)</strong>
+                        = Total Pengeluaran yakni <strong id="total-expense-info">Rp 0</strong> ÷ Laba Bersih
+                        per Pcs.</p>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Produk</th>
+                                <th>HPP (Bahan)</th>
+                                <th>Harga Jual</th>
+                                <th>Laba / Pcs</th>
+                                <th>Penjualan / Pcs (Balik Modal)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recipes-tbody"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="labeled-divider"><span>▲ Risk Detection</span></div>
+        <div class="section-header">
+            <h2 class="section-title">Deteksi Risiko Bisnis</h2><span class="section-tag">auto-analysis</span>
+        </div>
+        <div id="risks-state" class="state-container">
+            <div class="spinner"></div><span class="state-text">menganalisis data...</span>
+        </div>
+        <div class="risk-grid" id="risk-grid" style="display:none;"></div>
+
+        <div class="labeled-divider"><span>▲ Documentation</span></div>
+        <div class="sql-guide">
+            <h2>📋 Panduan Setup Database (Supabase SQL Editor)</h2>
+            <div class="guide-grid">
+                <div>
+                    <h3>1. Tabel yang Dibutuhkan</h3>
+                    <ul>
+                        <li>products — daftar produk &amp; stok</li>
+                        <li>transactions — data transaksi penjualan</li>
+                        <li>transaction_items — detail item per transaksi</li>
+                        <li>expenses — catatan pengeluaran</li>
+                        <li>raw_materials — bahan dasar</li>
+                        <li>recipes — resep &amp; HPP produk</li>
+                        <li>decisions & decision_results — tracking keputusan</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Query Validasi Data</h3>
+                    <pre><span class="sql-comment">-- Total Revenue</span>
+<span class="sql-keyword">SELECT</span> <span class="sql-fn">SUM</span>(total_price) <span class="sql-keyword">FROM</span> transactions;
+
+<span class="sql-comment">-- Produk Terlaris</span>
+<span class="sql-keyword">SELECT</span> product_id,
+  <span class="sql-fn">SUM</span>(quantity) <span class="sql-keyword">as</span> total_sold
+<span class="sql-keyword">FROM</span> transaction_items
+<span class="sql-keyword">GROUP BY</span> product_id
+<span class="sql-keyword">ORDER BY</span> total_sold <span class="sql-keyword">DESC LIMIT</span> 5;</pre>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://jariewywijsmjxxbgpvi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmlld3l3aWpzbWp4eGJncHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzEzMjUsImV4cCI6MjA5MzEwNzMyNX0.yaO9StT8hScwdHgmwkh9STXCXCO7VvnMvBG6eHThljM';
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const fmt = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
+        const fmtS = n => { const a = Math.abs(n); const s = n < 0 ? '-' : ''; if (a >= 1e9) return s + 'Rp ' + (a / 1e9).toFixed(1) + 'M'; if (a >= 1e6) return s + 'Rp ' + (a / 1e6).toFixed(1) + 'jt'; if (a >= 1e3) return s + 'Rp ' + (a / 1e3).toFixed(0) + 'rb'; return fmt(n) };
+
+        // PRELOAD LOGO IMAGE
+        const LOGO_URL = 'https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/Desain%20tanpa%20judul222.png';
+        const logoImg = new Image();
+        let logoBase64 = null;
+        logoImg.crossOrigin = 'Anonymous';
+        logoImg.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = logoImg.width; c.height = logoImg.height;
+            c.getContext('2d').drawImage(logoImg, 0, 0);
+            logoBase64 = c.toDataURL('image/png');
+        };
+        logoImg.src = LOGO_URL;
+
+        // VARIABEL PERIODE DINAMIS
+        let periodType = '7D'; // 'today', '7D', '30D', '90D', '1Y', 'custom'
+        let customDates = { start: '', end: '' };
+        let chartA = null, chartB = null, S = {};
+
+        const formatD = d => new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        function getPeriodText() {
+            if (periodType === 'today') return 'Hari Ini';
+            if (periodType === 'custom') return `${formatD(customDates.start)} - ${formatD(customDates.end)}`;
+            if (periodType === '7D') return '7 Hari Terakhir';
+            if (periodType === '30D') return '30 Hari Terakhir';
+            if (periodType === '90D') return '90 Hari Terakhir';
+            if (periodType === '1Y') return '1 Tahun Terakhir';
+            return periodType;
+        }
+
+        function setPeriod(type, btn) {
+            periodType = type;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            if (type !== 'custom') loadAllData();
+        }
+
+        function openCustomDateModal(btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            openModal('custom-date-modal');
+        }
+
+        function applyCustomDate() {
+            const s = document.getElementById('c-start').value;
+            const e = document.getElementById('c-end').value;
+            if (!s || !e) return alert("Pilih tanggal mulai dan akhir.");
+            if (s > e) return alert("Tanggal akhir tidak boleh kurang dari tanggal mulai.");
+            customDates.start = s;
+            customDates.end = e;
+            periodType = 'custom';
+            closeModal('custom-date-modal');
+            loadAllData();
+        }
+
+        function dateRange() {
+            const e = new Date(); e.setHours(23, 59, 59, 999);
+            const s = new Date(); s.setHours(0, 0, 0, 0);
+
+            if (periodType === 'today') {
+                return { start: s.toISOString(), end: e.toISOString() };
+            } else if (periodType === 'custom') {
+                const cS = new Date(customDates.start); cS.setHours(0, 0, 0, 0);
+                const cE = new Date(customDates.end); cE.setHours(23, 59, 59, 999);
+                return { start: cS.toISOString(), end: cE.toISOString() };
+            } else {
+                let days = 7;
+                if (periodType === '30D') days = 30;
+                if (periodType === '90D') days = 90;
+                if (periodType === '1Y') days = 365;
+                s.setDate(s.getDate() - (days - 1));
+                return { start: s.toISOString(), end: e.toISOString() };
+            }
+        }
+
+        const $ = id => document.getElementById(id);
+        const setH = (id, h) => { const e = $(id); if (e) e.innerHTML = h };
+        const show = id => { const e = $(id); if (e) e.style.display = '' };
+        const hide = id => { const e = $(id); if (e) e.style.display = 'none' };
+        const spinner = `<div class="state-container"><div class="spinner"></div><span class="state-text">memuat...</span></div>`;
+        const empty = (ic, m) => `<div class="state-container"><span class="state-icon">${ic}</span><span class="state-text">${m}</span></div>`;
+        const err = m => `<div class="state-container"><span class="state-icon state-error">⚠</span><span class="state-text state-error">${m}</span></div>`;
+
+        const openModal = id => { $(id).style.display = 'flex'; };
+        const closeModal = id => { $(id).style.display = 'none'; };
+
+        // ==========================================
+        //  FITUR DOWNLOAD PDF (DATA-DRIVEN) + LOGO
+        // ==========================================
+        function downloadPDF() {
+            const btn = $('btn-download-pdf');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ GENERATING...';
+
+            setTimeout(() => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+                    let y = 15;
+
+                    doc.setFont("helvetica", "bold");
+
+                    // Render Logo Jika Tersedia
+                    if (logoBase64) {
+                        doc.addImage(logoBase64, 'PNG', 14, 10, 16, 16);
+                        doc.setFontSize(18);
+                        doc.text("GurmieKasir Intelligence Report", 33, 20);
+                        y = 28;
+                    } else {
+                        doc.setFontSize(18);
+                        doc.text("GurmieKasir Intelligence Report", 14, y);
+                        y += 6;
+                    }
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.setTextColor(100);
+                    doc.text(`Periode: ${getPeriodText()} | Dicetak: ${new Date().toLocaleString('id-ID')}`, 14, y);
+                    y += 12;
+
+                    doc.setTextColor(0);
+                    doc.setFontSize(12);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Ringkasan Finansial", 14, y);
+                    y += 6;
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(10);
+                    doc.text(`Total Revenue: ${$('kpi-revenue').innerText}`, 14, y);
+                    doc.text(`Total Pengeluaran: ${$('kpi-expense').innerText}`, 90, y);
+                    y += 6;
+                    doc.text(`Estimasi Laba Bersih: ${$('kpi-profit').innerText}`, 14, y);
+                    doc.text(`Avg. Order Value: ${$('kpi-aov').innerText}`, 90, y);
+                    y += 12;
+
+                    const salesCanvas = $('salesChart');
+                    if (salesCanvas) {
+                        doc.setFontSize(12);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Trend Penjualan", 14, y);
+                        y += 5;
+                        const salesImg = salesCanvas.toDataURL('image/png', 1.0);
+                        doc.addImage(salesImg, 'PNG', 14, y, 180, 50);
+                        y += 60;
+                    }
+
+                    const agg = {};
+                    S.I.forEach(i => {
+                        if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
+                        agg[i.product_id].qty += i.quantity;
+                        agg[i.product_id].rev += (i.custom_price || i.price) * i.quantity;
+                    });
+
+                    const topProductsBody = Object.entries(agg)
+                        .sort((a, b) => b[1].qty - a[1].qty)
+                        .slice(0, 10)
+                        .map(([pid, d], idx) => {
+                            const name = (S.P.find(p => p.id === pid) || { name: '(dihapus)' }).name;
+                            return [idx + 1, name, d.qty + ' unit', fmtS(d.rev)];
+                        });
+
+                    if (topProductsBody.length > 0) {
+                        doc.autoTable({
+                            startY: y,
+                            head: [['No', 'Produk Terlaris', 'Terjual', 'Estimasi Omzet']],
+                            body: topProductsBody,
+                            theme: 'grid',
+                            headStyles: { fillColor: [10, 10, 15] },
+                            styles: { fontSize: 8, font: 'helvetica' }
+                        });
+                        y = doc.lastAutoTable.finalY + 10;
+                    }
+
+                    if (y > 250) { doc.addPage(); y = 15; }
+
+                    if (S.E && S.E.length > 0) {
+                        const expensesBody = S.E.map(e => [
+                            new Date(e.expense_date || e.created_at).toLocaleDateString('id-ID'),
+                            e.name,
+                            e.affects_profit ? 'HPP / COGS' : 'OPEX',
+                            fmtS(e.amount)
+                        ]);
+
+                        doc.autoTable({
+                            startY: y,
+                            head: [['Tanggal', 'Nama Pengeluaran', 'Kategori Biaya', 'Nominal']],
+                            body: expensesBody,
+                            theme: 'grid',
+                            headStyles: { fillColor: [200, 75, 49] },
+                            styles: { fontSize: 8, font: 'helvetica' }
+                        });
+                        y = doc.lastAutoTable.finalY + 10;
+                    }
+
+                    if (y > 250) { doc.addPage(); y = 15; }
+
+                    if (S.P && S.P.length > 0) {
+                        const inventoryBody = S.P.map(p => {
+                            const status = p.is_bundle ? 'Bundle' : (p.stock === 0 ? 'Habis' : (p.stock <= 5 ? 'Kritis' : 'Aman'));
+                            return [p.name, fmtS(p.price), p.is_bundle ? 'Tak Terbatas' : p.stock, status];
+                        });
+
+                        doc.autoTable({
+                            startY: y,
+                            head: [['Nama Produk', 'Harga Jual', 'Sisa Stok', 'Status Inventori']],
+                            body: inventoryBody,
+                            theme: 'grid',
+                            headStyles: { fillColor: [74, 124, 89] },
+                            styles: { fontSize: 8, font: 'helvetica' }
+                        });
+                    }
+
+                    doc.save('GurmieKasir_Report_DataDriven.pdf');
+                    btn.innerHTML = originalText;
+
+                } catch (error) {
+                    console.error(error);
+                    alert('Gagal membuat PDF Data-Driven: ' + error.message);
+                    btn.innerHTML = originalText;
+                }
+            }, 100);
+        }
+
+        // ==========================================
+        //  FITUR DOWNLOAD GAMBAR (CANVAS API) + LOGO
+        // ==========================================
+        function downloadImage() {
+            const btn = $('btn-download-img');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ PROSES...';
+
+            setTimeout(() => {
+                try {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 800;
+                    canvas.height = 800;
+                    const ctx = canvas.getContext('2d');
+
+                    ctx.fillStyle = '#f5f0e8';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    const ink = '#0a0a0f';
+                    const muted = '#8a8070';
+                    const border = 'rgba(10, 10, 15, 0.12)';
+
+                    // Render Logo & Judul
+                    if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
+                        ctx.drawImage(logoImg, 50, 42, 38, 38);
+                        ctx.fillStyle = ink;
+                        ctx.font = 'bold 34px sans-serif';
+                        ctx.fillText('Ringkasan Kinerja Bisnis', 100, 72);
+                    } else {
+                        ctx.fillStyle = ink;
+                        ctx.font = 'bold 34px sans-serif';
+                        ctx.fillText('Ringkasan Kinerja Bisnis', 50, 72);
+                    }
+
+                    ctx.fillStyle = muted;
+                    ctx.font = '16px monospace';
+                    ctx.fillText(`Periode: ${getPeriodText()} | Dicetak: ${new Date().toLocaleString('id-ID')}`, 50, 105);
+
+                    const revText = $('kpi-revenue').innerText;
+                    const expText = $('kpi-expense').innerText;
+                    const pftText = $('kpi-profit').innerText;
+
+                    const drawBox = (x, y, label, value, accentColor) => {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillRect(x, y, 220, 110);
+                        ctx.strokeStyle = ink;
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(x, y, 220, 110);
+                        ctx.fillStyle = accentColor;
+                        ctx.fillRect(x, y, 220, 4);
+
+                        ctx.fillStyle = muted;
+                        ctx.font = 'bold 14px monospace';
+                        ctx.fillText(label.toUpperCase(), x + 20, y + 40);
+
+                        ctx.fillStyle = ink;
+                        ctx.font = 'bold 26px serif';
+                        ctx.fillText(value, x + 20, y + 80, 180);
+                    };
+
+                    drawBox(50, 150, 'Total Revenue', revText, '#4a7c59');
+                    drawBox(290, 150, 'Pengeluaran', expText, '#c84b31');
+                    drawBox(530, 150, 'Laba Bersih', pftText, '#d4a843');
+
+                    ctx.fillStyle = ink;
+                    ctx.font = 'bold 24px serif';
+                    ctx.fillText('Top 5 Produk Terlaris', 50, 330);
+
+                    ctx.strokeStyle = border;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(50, 350);
+                    ctx.lineTo(750, 350);
+                    ctx.stroke();
+
+                    const agg = {};
+                    (S.I || []).forEach(i => {
+                        if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
+                        agg[i.product_id].qty += i.quantity;
+                        agg[i.product_id].rev += (i.custom_price || i.price) * i.quantity;
+                    });
+
+                    const top5 = Object.entries(agg)
+                        .sort((a, b) => b[1].qty - a[1].qty)
+                        .slice(0, 5);
+
+                    let listY = 390;
+
+                    if (top5.length === 0) {
+                        ctx.fillStyle = muted;
+                        ctx.font = 'italic 18px sans-serif';
+                        ctx.fillText('Belum ada data penjualan produk untuk periode ini.', 50, listY);
+                    } else {
+                        top5.forEach(([pid, data], idx) => {
+                            const name = ((S.P || []).find(p => p.id === pid) || { name: '(Produk Dihapus)' }).name;
+
+                            ctx.fillStyle = muted;
+                            ctx.font = 'bold 20px serif';
+                            ctx.fillText(`#${idx + 1}`, 50, listY);
+
+                            ctx.fillStyle = ink;
+                            ctx.font = 'bold 18px sans-serif';
+                            ctx.fillText(name, 90, listY, 450);
+
+                            ctx.fillStyle = muted;
+                            ctx.font = '16px monospace';
+                            ctx.fillText(`${data.qty} unit terjual`, 90, listY + 24);
+
+                            ctx.fillStyle = '#4a7c59';
+                            ctx.font = 'bold 18px monospace';
+                            ctx.textAlign = 'right';
+                            ctx.fillText(fmtS(data.rev), 750, listY);
+                            ctx.textAlign = 'left';
+
+                            ctx.strokeStyle = border;
+                            ctx.beginPath();
+                            ctx.moveTo(50, listY + 45);
+                            ctx.lineTo(750, listY + 45);
+                            ctx.stroke();
+
+                            listY += 70;
+                        });
+                    }
+
+                    ctx.fillStyle = muted;
+                    ctx.font = '12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Dihasilkan otomatis melalui GurmieKasir Intelligence', 400, 770);
+
+                    const link = document.createElement('a');
+                    link.download = `Infografis_Kinerja.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    link.click();
+
+                    btn.innerHTML = originalText;
+
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal menghasilkan infografis gambar: ' + err.message);
+                    btn.innerHTML = originalText;
+                }
+            }, 100);
+        }
+
+        // ==========================================
+        // FITUR DOWNLOAD GAMBAR HPP & BAHAN DASAR
+        // ==========================================
+        function downloadHPPImage() {
+            const btn = $('btn-download-hpp');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ PROSES...';
+
+            setTimeout(() => {
+                try {
+                    const M = S.M || [];
+                    const R = S.R || [];
+                    const E = S.E || [];
+
+                    const rowH = 55;
+                    const maxRows = Math.max(M.length, R.length);
+                    const height = Math.max(400, 320 + maxRows * rowH);
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1600;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+
+                    // Background Warna Paper
+                    ctx.fillStyle = '#f5f0e8';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    const ink = '#0a0a0f';
+                    const muted = '#8a8070';
+                    const border = 'rgba(10, 10, 15, 0.12)';
+
+                    // ==============================
+                    // GAMBAR PANEL KIRI (BAHAN DASAR)
+                    // ==============================
+                    ctx.strokeStyle = ink;
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(40, 40, 740, height - 80);
+
+                    ctx.fillStyle = ink;
+                    ctx.font = 'bold 36px serif';
+                    ctx.fillText('Bahan Dasar', 70, 110);
+
+                    ctx.strokeStyle = border;
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(290, 85, 110, 26);
+                    ctx.fillStyle = muted;
+                    ctx.font = '12px monospace';
+                    ctx.fillText('RAW MATERIALS', 298, 103);
+
+                    ctx.fillStyle = muted;
+                    ctx.font = 'bold 11px monospace';
+                    ctx.fillText('NAMA', 70, 180);
+                    ctx.fillText('SATUAN', 300, 180);
+                    ctx.fillText('KAPASITAS', 450, 180);
+                    ctx.fillText('HARGA SATUAN', 600, 180);
+
+                    ctx.beginPath();
+                    ctx.moveTo(70, 195);
+                    ctx.lineTo(760, 195);
+                    ctx.stroke();
+
+                    let yL = 235;
+                    M.forEach(m => {
+                        ctx.fillStyle = ink;
+                        ctx.font = '16px sans-serif';
+                        ctx.fillText(m.name, 70, yL);
+
+                        // Badge background untuk Satuan
+                        ctx.fillStyle = 'rgba(61, 74, 92, 0.12)';
+                        ctx.fillRect(300, yL - 18, 90, 26);
+                        ctx.fillStyle = '#3d4a5c';
+                        ctx.font = 'bold 12px monospace';
+                        ctx.fillText((m.unit || '').toUpperCase(), 308, yL - 1);
+
+                        ctx.fillStyle = ink;
+                        ctx.font = '14px monospace';
+                        ctx.fillText(m.capacity || '-', 450, yL);
+                        ctx.fillText(fmtS(m.unit_price), 600, yL);
+
+                        ctx.strokeStyle = 'rgba(10, 10, 15, 0.06)';
+                        ctx.beginPath(); ctx.moveTo(70, yL + 15); ctx.lineTo(760, yL + 15); ctx.stroke();
+                        yL += rowH;
+                    });
+
+                    // ==============================
+                    // GAMBAR PANEL KANAN (HPP RESEP)
+                    // ==============================
+                    ctx.strokeStyle = ink;
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(820, 40, 740, height - 80);
+
+                    ctx.fillStyle = ink;
+                    ctx.font = 'bold 36px serif';
+                    ctx.fillText('HPP Resep Produk', 850, 110);
+
+                    ctx.strokeStyle = border;
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(1180, 85, 120, 26);
+                    ctx.fillStyle = muted;
+                    ctx.font = '12px monospace';
+                    ctx.fillText('COGS PER ITEM', 1188, 103);
+
+                    const totalExp = E.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+                    ctx.font = '14px monospace';
+                    ctx.fillText(`*Penjualan per Pcs (Balik Modal Keseluruhan) = Total Pengeluaran yakni ${fmtS(totalExp)} ÷ Laba`, 850, 150);
+                    ctx.fillText(` Bersih per Pcs.`, 850, 170);
+
+                    ctx.font = 'bold 11px monospace';
+                    ctx.fillText('PRODUK', 850, 220);
+                    ctx.fillText('HPP (BAHAN)', 980, 220);
+                    ctx.fillText('HARGA JUAL', 1100, 220);
+                    ctx.fillText('LABA / PCS', 1220, 220);
+                    ctx.fillText('PENJUALAN / PCS (BALIK MODAL)', 1360, 220);
+
+                    ctx.strokeStyle = border;
+                    ctx.beginPath(); ctx.moveTo(850, 235); ctx.lineTo(1540, 235); ctx.stroke();
+
+                    let yR = 275;
+                    R.forEach(r => {
+                        const name = r.products ? r.products.name : '—';
+                        const sp = r.products ? parseFloat(r.products.price) : 0;
+                        const hpp = parseFloat(r.total_hpp || 0);
+                        const laba = sp - hpp;
+                        const mgn = sp > 0 ? (laba / sp * 100).toFixed(1) : '0';
+
+                        let targetText = '—';
+                        if (laba > 0 && totalExp > 0) targetText = Math.ceil(totalExp / laba) + ' pcs';
+                        else if (totalExp === 0) targetText = 'Belum ada Exp';
+                        else if (laba <= 0) targetText = 'Rugi/Balik';
+
+                        ctx.fillStyle = ink;
+                        ctx.font = '16px sans-serif';
+                        ctx.fillText(name, 850, yR);
+
+                        ctx.fillStyle = '#c84b31';
+                        ctx.font = '14px monospace';
+                        ctx.fillText(fmtS(hpp), 980, yR);
+
+                        ctx.fillStyle = ink;
+                        ctx.fillText(fmtS(sp), 1100, yR);
+
+                        const mc = parseFloat(mgn) > 30 ? '#4a7c59' : parseFloat(mgn) > 0 ? '#d4a843' : '#c84b31';
+                        ctx.fillStyle = mc;
+                        ctx.font = 'bold 14px monospace';
+                        ctx.fillText(`${fmtS(laba)} (${mgn}%)`, 1220, yR);
+
+                        ctx.fillStyle = ink;
+                        ctx.font = 'bold 15px monospace';
+                        ctx.fillText(targetText, 1360, yR);
+
+                        ctx.strokeStyle = 'rgba(10, 10, 15, 0.06)';
+                        ctx.beginPath(); ctx.moveTo(850, yR + 15); ctx.lineTo(1540, yR + 15); ctx.stroke();
+                        yR += rowH;
+                    });
+
+                    // Trigger Download Canvas ke Gambar
+                    const link = document.createElement('a');
+                    link.download = `GurmieKasir_Bahan_HPP.png`;
+                    link.href = canvas.toDataURL('image/png', 1.0);
+                    link.click();
+
+                    btn.innerHTML = originalText;
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal menghasilkan gambar HPP: ' + err.message);
+                    btn.innerHTML = originalText;
+                }
+            }, 100);
+        }
+
+        // ==========================================
+        //  CORE LOGIC & RENDERING
+        // ==========================================
+        async function loadAllData() {
+            $('last-updated').textContent = 'memuat...';
+            ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state'].forEach(id => { setH(id, spinner); show(id) });
+            ['chart-wrap', 'top-products-list', 'inventory-list', 'profit-breakdown', 'expenses-list', 'materials-table', 'recipes-table', 'risk-grid', 'decisions-list', 'decision-insights-container'].forEach(hide);
+            ['kpi-revenue', 'kpi-profit', 'kpi-expense', 'kpi-aov'].forEach(id => { const e = $(id); if (e) e.textContent = '—' });
+
+            const r = dateRange();
+            try {
+                // MENGGABUNGKAN transaction_items langsung ke dalam transaksi 
+                // ini memastikan item produk yang ditarik HANYA milik transaksi di tanggal yang difilter.
+                const [tR, eR, pR, mR, rR, dR] = await Promise.all([
+                    sb.from('transactions').select('id,total_price,created_at, transaction_items(product_id,quantity,price,custom_price)').gte('created_at', r.start).lte('created_at', r.end),
+                    sb.from('expenses').select('*').gte('expense_date', r.start).lte('expense_date', r.end),
+                    sb.from('products').select('*').order('name'),
+                    sb.from('raw_materials').select('*').order('name'),
+                    sb.from('recipes').select('*,products(name,price)').order('total_hpp', { ascending: false }),
+                    sb.from('decisions').select('*, decision_results(*)').order('created_at', { ascending: false })
+                ]);
+
+                const T = tR.data || [];
+                const E = eR.data || [];
+                const P = pR.data || [];
+                const M = mR.data || [];
+                const R = rR.data || [];
+                const D = dR.data || [];
+
+                // Ekstrak data items murni dari transaksi yang berhasil di filter
+                const I = [];
+                T.forEach(t => {
+                    if (t.transaction_items && Array.isArray(t.transaction_items)) {
+                        I.push(...t.transaction_items);
+                    }
+                });
+
+                S = { T, E, P, I, M, R, D };
+
+                const rev = T.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
+                // Total Semua Pengeluaran (Modal yang keluar)
+                const exp = E.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+
+                const pft = rev - exp;
+                const aov = T.length > 0 ? rev / T.length : 0;
+                const mgn = rev > 0 ? (pft / rev) * 100 : 0;
+
+                const anim = id => { const e = $(id); if (!e) return; e.classList.remove('count-anim'); void e.offsetWidth; e.classList.add('count-anim') };
+
+                $('kpi-revenue').textContent = fmtS(rev); anim('kpi-revenue');
+                $('kpi-profit').textContent = fmtS(pft); anim('kpi-profit');
+                $('kpi-profit').className = 'stat-value ' + (pft >= 0 ? 'positive' : 'negative');
+                $('kpi-expense').textContent = fmtS(exp); anim('kpi-expense');
+                $('kpi-aov').textContent = fmtS(aov); anim('kpi-aov');
+                $('kpi-trx-count').textContent = T.length + ' transaksi';
+                $('kpi-exp-count').textContent = E.length + ' catatan pengeluaran';
+                $('kpi-products').textContent = P.length + ' produk terdaftar';
+                $('kpi-margin').textContent = 'margin ' + mgn.toFixed(1) + '%';
+
+                const bar = $('profit-bar'), lbl = $('profit-pct-label');
+                if (bar && lbl) { bar.style.width = Math.min(Math.max(mgn, 0), 100) + '%'; bar.className = 'profit-bar' + (pft < 0 ? ' negative' : ''); lbl.textContent = mgn.toFixed(1) + '% ' + (pft >= 0 ? '↑ Laba' : '↓ Rugi'); lbl.style.color = pft >= 0 ? 'var(--sage)' : 'var(--accent)' }
+
+                renderChart(T); renderTop(I, P); renderInv(P); renderPnL(rev, exp, pft, E); renderExp(E); renderMat(M);
+
+                // MENGIRIM VARIABEL TOTAL PENGELUARAN (exp) ALIH-ALIH OPEX
+                renderRec(R, exp);
+                renderRisk({ T, P, I, E, rev, exp, pft, mgn, R });
+                renderDecisions(D);
+
+                $('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('id-ID');
+            } catch (e) {
+                console.error(e);
+                ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state'].forEach(id => setH(id, err('Gagal memuat: ' + e.message)));
+                $('last-updated').textContent = 'Error';
+            }
+        }
+
+        async function submitDecision(e) {
+            e.preventDefault();
+            $('btn-save-decision').textContent = 'Menyimpan...';
+            $('btn-save-decision').disabled = true;
+
+            const payload = {
+                title: $('d-title').value, goal: $('d-goal').value, hypothesis: $('d-hypothesis').value,
+                expected_revenue: parseFloat($('d-target-rev').value), expected_transactions: parseInt($('d-target-trx').value),
+                start_date: $('d-start').value, end_date: $('d-end').value, status: 'executed'
+            };
+
+            const { error } = await sb.from('decisions').insert([payload]);
+            if (error) alert('Gagal menyimpan: ' + error.message);
+
+            $('form-create-decision').reset(); closeModal('create-decision-modal');
+            $('btn-save-decision').textContent = 'SIMPAN DECISION'; $('btn-save-decision').disabled = false;
+            loadAllData();
+        }
+
+        function renderDecisions(D) {
+            hide('decisions-state');
+            if (!D.length) { setH('decisions-state', empty('🧠', 'Belum ada keputusan strategis yang dicatat.')); show('decisions-state'); return; }
+
+            const today = new Date().toISOString().split('T')[0];
+            let h = '';
+
+            D.forEach(d => {
+                const isPast = d.end_date < today;
+                const isEvaluated = d.status === 'evaluated';
+                const isActive = d.start_date <= today && d.end_date >= today;
+
+                let badge = `<span class="badge badge-slate">TERENCANA</span>`;
+                if (isEvaluated) {
+                    const res = d.decision_results && d.decision_results[0] ? d.decision_results[0] : null;
+                    if (res) {
+                        const col = res.result_status === 'success' ? 'badge-green' : (res.result_status === 'partial' ? 'badge-gold' : 'badge-red');
+                        badge = `<span class="badge ${col}">EVALUATED: ${res.result_status.toUpperCase()}</span>`;
+                    }
+                } else if (isActive) {
+                    badge = `<span class="badge badge-gold">ACTIVE RUNNING</span>`;
+                }
+
+                const evalBtn = (isPast && !isEvaluated) ? `<button class="decision-eval-btn" onclick="openEvaluate(${JSON.stringify(d).replace(/"/g, '&quot;')})">EVALUASI SEKARANG</button>` : '';
+
+                h += `<div class="risk-card" style="border-color: ${isEvaluated ? 'var(--border)' : 'var(--ink)'}">
+          ${evalBtn}
+          <div class="risk-level" style="color:var(--muted)">${badge} · ${d.start_date} sd ${d.end_date}</div>
+          <div class="risk-title" style="font-size:1.1rem; margin-bottom:0.75rem">${d.title}</div>
+          <div class="risk-desc" style="margin-bottom:0.5rem"><strong>Goal:</strong> ${d.goal}</div>
+          <div class="risk-desc" style="margin-bottom:0.5rem"><strong>Target:</strong> ${fmtS(d.expected_revenue)} / ${d.expected_transactions} trx</div>
+          ${isEvaluated && d.decision_results[0] ? `<div class="risk-desc" style="background:var(--cream); padding:0.5rem; border-left:2px solid var(--sage); margin-top:0.75rem;"><strong>Learning:</strong> ${d.decision_results[0].learning}</div>` : ''}
+      </div>`;
+            });
+
+            setH('decisions-list', h); show('decisions-list');
+
+            const evaluated = D.filter(x => x.status === 'evaluated' && x.decision_results && x.decision_results.length > 0);
+            if (evaluated.length > 0) {
+                let totalScore = 0, best = evaluated[0], highestScore = -1;
+                evaluated.forEach(x => {
+                    let score = parseFloat(x.decision_results[0].success_score);
+                    totalScore += score;
+                    if (score > highestScore) { highestScore = score; best = x; }
+                });
+
+                $('insight-avg').textContent = (totalScore / evaluated.length).toFixed(1) + '%';
+                $('insight-best').textContent = best.title;
+
+                if (evaluated.length >= 3) {
+                    const promoKeys = ['diskon', 'promo', 'bundle', 'gratis', 'murah'];
+                    let promoCount = 0, promoSuccess = 0;
+                    evaluated.forEach(x => {
+                        const titleLower = x.title.toLowerCase();
+                        if (promoKeys.some(k => titleLower.includes(k))) {
+                            promoCount++;
+                            if (x.decision_results[0].result_status === 'success' || x.decision_results[0].result_status === 'partial') promoSuccess++;
+                        }
+                    });
+
+                    if (promoCount >= 2 && (promoSuccess / promoCount > 0.5)) {
+                        $('insight-pattern').textContent = "Strategi berbasis 'Promo/Diskon' menunjukkan tren keberhasilan yang positif di bisnis ini.";
+                    } else if (promoCount >= 2) {
+                        $('insight-pattern').textContent = "Strategi 'Promo/Diskon' seringkali gagal mencapai target awal. Evaluasi ulang penawaran.";
+                    } else {
+                        $('insight-pattern').textContent = "Sistem sedang mengumpulkan lebih banyak data evaluasi untuk menemukan pola yang akurat.";
+                    }
+                } else {
+                    $('insight-pattern').textContent = "Butuh minimal 3 evaluasi untuk memunculkan Auto-Pattern Detection.";
+                }
+                show('decision-insights-container');
+            }
+        }
+
+        async function openEvaluate(d) {
+            openModal('evaluate-decision-modal'); hide('eval-results'); show('eval-loading');
+            $('e-learning').disabled = true; $('btn-save-eval').disabled = true;
+
+            const { data: trx, error } = await sb.from('transactions').select('total_price').gte('created_at', d.start_date + 'T00:00:00Z').lte('created_at', d.end_date + 'T23:59:59Z');
+            if (error) { alert('Gagal menarik data transaksi: ' + error.message); closeModal('evaluate-decision-modal'); return; }
+
+            let act_rev = 0, act_trx = trx.length;
+            trx.forEach(t => act_rev += parseFloat(t.total_price));
+
+            let rev_pct = d.expected_revenue > 0 ? (act_rev / d.expected_revenue) : 0;
+            let trx_pct = d.expected_transactions > 0 ? (act_trx / d.expected_transactions) : 0;
+            let score = ((rev_pct + trx_pct) / 2) * 100;
+            let status = score >= 100 ? 'success' : (score >= 50 ? 'partial' : 'failed');
+            let color = status === 'success' ? 'var(--sage)' : (status === 'partial' ? 'var(--gold)' : 'var(--accent)');
+
+            $('eval-act-rev').textContent = fmtS(act_rev); $('eval-tgt-rev').textContent = 'Target: ' + fmtS(d.expected_revenue);
+            $('eval-act-trx').textContent = act_trx; $('eval-tgt-trx').textContent = 'Target: ' + d.expected_transactions;
+            $('eval-score').textContent = score.toFixed(1) + '%'; $('eval-score').style.color = color;
+            $('eval-status-badge').innerHTML = `<span class="badge" style="background:${color}; color:#fff">${status.toUpperCase()}</span>`;
+
+            $('e-id').value = d.id; $('e-act-rev').value = act_rev; $('e-act-trx').value = act_trx; $('e-score').value = score; $('e-status').value = status;
+            hide('eval-loading'); show('eval-results');
+            $('e-learning').disabled = false; $('e-learning').value = ''; $('btn-save-eval').disabled = false;
+        }
+
+        async function submitEvaluation(e) {
+            e.preventDefault();
+            $('btn-save-eval').textContent = 'Menyimpan...'; $('btn-save-eval').disabled = true;
+            const decision_id = $('e-id').value;
+            const payloadResult = { decision_id: decision_id, actual_revenue: parseFloat($('e-act-rev').value), actual_transactions: parseInt($('e-act-trx').value), success_score: parseFloat($('e-score').value), result_status: $('e-status').value, learning: $('e-learning').value };
+
+            const res1 = await sb.from('decision_results').insert([payloadResult]);
+            const res2 = await sb.from('decisions').update({ status: 'evaluated' }).eq('id', decision_id);
+
+            if (res1.error || res2.error) alert("Gagal menyimpan evaluasi.");
+            $('form-eval-decision').reset(); closeModal('evaluate-decision-modal');
+            $('btn-save-eval').textContent = 'SIMPAN EVALUASI'; $('btn-save-eval').disabled = false;
+            loadAllData();
+        }
+
+        function renderChart(T) {
+            hide('chart-state');
+            if (!T.length) { setH('chart-state', empty('📈', 'Belum ada data penjualan pada periode ini')); show('chart-state'); return }
+
+            const map = {};
+            const r = dateRange();
+            const curr = new Date(r.start);
+            const end = new Date(r.end);
+
+            // LOGIKA BARU: Jika perbedaan waktu start & end adalah 1 hari (24 Jam)
+            // Ini akan memicu analisa per jam untuk Hari Ini ATAU Custom Tanggal yg Sama
+            const isOneDay = (end.getTime() - curr.getTime()) <= 24 * 60 * 60 * 1000;
+
+            if (isOneDay) {
+                // Generate label x-axis per jam (00:00 - 23:00)
+                for (let i = 0; i < 24; i++) {
+                    const hour = i.toString().padStart(2, '0') + ':00';
+                    map[hour] = 0;
+                }
+
+                T.forEach(t => {
+                    // Konversi waktu UTC ke Waktu Lokal, lalu ambil jamnya
+                    const dateObj = new Date(t.created_at);
+                    const hourStr = dateObj.getHours().toString().padStart(2, '0') + ':00';
+                    if (map[hourStr] !== undefined) {
+                        map[hourStr] += parseFloat(t.total_price || 0);
+                    }
+                });
+            } else {
+                // Generate rentang x-axis otomatis dari tanggal start ke end per hari (Logika Lama)
+                let loops = 0;
+                while (curr <= end && loops < 366) {
+                    map[curr.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })] = 0;
+                    curr.setDate(curr.getDate() + 1);
+                    loops++;
+                }
+
+                T.forEach(t => {
+                    const k = new Date(t.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+                    if (map[k] !== undefined) map[k] += parseFloat(t.total_price || 0);
+                });
+            }
+
+            show('chart-wrap');
+            const ctx = $('salesChart').getContext('2d');
+            if (chartA) chartA.destroy();
+            chartA = new Chart(ctx, { type: 'line', data: { labels: Object.keys(map), datasets: [{ data: Object.values(map), borderColor: '#4a7c59', backgroundColor: 'rgba(74,124,89,0.08)', borderWidth: 1.5, pointRadius: 3, pointBackgroundColor: '#4a7c59', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + fmtS(c.raw) } } }, scales: { x: { grid: { display: false }, ticks: { font: { family: 'JetBrains Mono', size: 9 }, color: '#8a8070' } }, y: { beginAtZero: true, grid: { color: 'rgba(10,10,15,0.05)' }, ticks: { font: { family: 'JetBrains Mono', size: 9 }, color: '#8a8070', callback: v => fmtS(v) } } } } });
+        }
+
+        function renderTop(I, P) {
+            hide('top-products-state');
+            if (!I.length) { setH('top-products-state', empty('📦', 'Belum ada data item terjual')); show('top-products-state'); return }
+            const agg = {};
+            I.forEach(i => { if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 }; agg[i.product_id].qty += i.quantity; agg[i.product_id].rev += (i.custom_price || i.price) * i.quantity });
+            const sorted = Object.entries(agg).sort((a, b) => b[1].qty - a[1].qty).slice(0, 7);
+            const max = sorted[0][1].qty;
+            let h = '';
+            sorted.forEach(([pid, d], idx) => {
+                const name = (P.find(p => p.id === pid) || { name: '(dihapus)' }).name;
+                h += `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;"><span style="display:flex;align-items:baseline;gap:0.5rem;"><span class="rank-num">${idx + 1}</span><span style="font-size:0.8rem;font-weight:500;">${name}</span></span><span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--muted);">${d.qty} unit</span></div><div style="display:flex;align-items:center;gap:0.5rem;"><div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${(d.qty / max * 100).toFixed(0)}%"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--sage);min-width:60px;text-align:right;">${fmtS(d.rev)}</span></div></div>`;
+            });
+            setH('top-products-list', h); show('top-products-list');
+        }
+
+        function renderInv(P) {
+            hide('inventory-state');
+            if (!P.length) { setH('inventory-state', empty('🗃️', 'Belum ada produk terdaftar')); show('inventory-state'); return }
+            let h = '';
+            [...P].sort((a, b) => (a.stock || 0) - (b.stock || 0)).forEach(p => {
+                const isEmpty = !p.is_bundle && (p.stock || 0) === 0;
+                const isLow = !p.is_bundle && (p.stock || 0) > 0 && (p.stock || 0) <= 5;
+                const badge = isEmpty ? `<span class="badge badge-red">HABIS</span>` : isLow ? `<span class="badge badge-gold">RENDAH</span>` : p.is_bundle ? `<span class="badge badge-slate">BUNDLE</span>` : `<span class="badge badge-green">NORMAL</span>`;
+                h += `<div class="metric-row"><div><div style="font-size:0.8rem;font-weight:500;">${p.name}</div><div style="font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--muted);">${fmtS(p.price)}</div></div><div style="display:flex;align-items:center;gap:0.5rem;"><span class="metric-value">${p.is_bundle ? '∞' : (p.stock || 0)}</span>${badge}</div></div>`;
+            });
+            setH('inventory-list', h); show('inventory-list');
+        }
+
+        function renderPnL(rev, exp, pft, E) {
+            hide('profit-breakdown-state');
+            if (rev === 0 && exp === 0) { setH('profit-breakdown-state', empty('📊', 'Belum ada data untuk dianalisis')); show('profit-breakdown-state'); return }
+            const cogs = E.filter(e => e.affects_profit).reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+            const opex = E.filter(e => !e.affects_profit).reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+            const ctx = $('profitChart').getContext('2d');
+            if (chartB) chartB.destroy();
+            chartB = new Chart(ctx, { type: 'doughnut', data: { labels: ['Sisa Laba', 'HPP/COGS', 'OPEX'], datasets: [{ data: [Math.max(pft, 0), cogs, opex], backgroundColor: ['#4a7c59', '#c84b31', '#d4a843'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'JetBrains Mono', size: 9 }, padding: 12, boxWidth: 10 } }, tooltip: { callbacks: { label: c => ' ' + fmtS(c.raw) } } } } });
+            const mx = [{ l: 'Gross Revenue', v: fmtS(rev), c: 'var(--sage)' }, { l: 'HPP / COGS', v: fmtS(cogs), c: 'var(--accent)' }, { l: 'OPEX (Operasional)', v: fmtS(opex), c: 'var(--gold)' }, { l: 'Estimasi Laba Bersih', v: fmtS(pft), c: pft >= 0 ? 'var(--sage)' : 'var(--accent)' }];
+            setH('profit-metrics', mx.map(m => `<div class="metric-row"><span class="metric-label">${m.l}</span><span class="metric-value" style="color:${m.c}">${m.v}</span></div>`).join(''));
+            show('profit-breakdown');
+        }
+
+        function renderExp(E) {
+            hide('expenses-state');
+            if (!E.length) { setH('expenses-state', empty('🧾', 'Tidak ada catatan pengeluaran')); show('expenses-state'); return }
+            let h = '';
+            [...E].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).forEach(e => {
+                const dt = new Date(e.expense_date || e.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                const tags = (e.affects_profit ? `<span class="badge badge-red" style="margin-right:3px;">HPP</span>` : `<span class="badge badge-gold" style="margin-right:3px;">OPEX</span>`) + (e.is_personal ? `<span class="badge badge-slate">PRIBADI</span>` : '');
+                h += `<div class="expense-row"><div><div class="expense-name">${e.name}</div><div class="expense-meta">${dt}  ${tags}</div></div><div class="expense-amount">${fmtS(e.amount)}</div></div>`;
+            });
+            setH('expenses-list', h); show('expenses-list');
+        }
+
+        function renderMat(M) {
+            hide('materials-state');
+            if (!M.length) { setH('materials-state', empty('🌿', 'Belum ada data bahan dasar')); show('materials-state'); return }
+            $('materials-tbody').innerHTML = M.map(m => `<tr><td style="font-weight:500;">${m.name}</td><td><span class="badge badge-slate">${m.unit}</span></td><td style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;">${m.capacity}</td><td style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--slate);">${fmtS(m.unit_price)}</td></tr>`).join('');
+            show('materials-table');
+        }
+
+        function renderRec(R, totalExp) {
+            hide('recipes-state');
+            if (!R.length) { setH('recipes-state', empty('📋', 'Belum ada resep yang dikonfigurasi')); show('recipes-state'); return }
+
+            $('recipes-tbody').innerHTML = R.map(r => {
+                const name = r.products ? r.products.name : '—';
+                const sp = r.products ? parseFloat(r.products.price) : 0;
+                const hpp = parseFloat(r.total_hpp || 0);
+
+                // Kalkulasi Laba Kotor per Pcs (Harga Jual - HPP)
+                const laba = sp - hpp;
+                const mgn = sp > 0 ? (laba / sp * 100).toFixed(1) : '0';
+                const mc = parseFloat(mgn) > 30 ? 'var(--sage)' : parseFloat(mgn) > 0 ? 'var(--gold)' : 'var(--accent)';
+
+                // Kalkulasi Target Balik Modal Pcs Menggunakan TOTAL PENGELUARAN (Keseluruhan)
+                let targetText = '—';
+                if (laba > 0 && totalExp > 0) {
+                    targetText = Math.ceil(totalExp / laba) + ' pcs';
+                } else if (totalExp === 0) {
+                    targetText = '<span style="color:var(--muted); font-weight:normal;">Belum ada Pengeluaran</span>';
+                } else if (laba <= 0) {
+                    targetText = '<span style="color:var(--accent)">Rugi/Balik</span>';
+                }
+
+                return `<tr>
+                    <td style="font-weight:500;">${name}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--accent);">${fmtS(hpp)}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;">${fmtS(sp)}</td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;font-weight:600;color:${mc};">${fmtS(laba)} <span style="font-size:0.6rem;font-weight:normal">(${mgn}%)</span></td>
+                    <td style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;font-weight:700;">${targetText}</td>
+                </tr>`;
+            }).join('');
+
+            // Tampilkan total nilai PENGELUARAN KESELURUHAN agar user mengerti hitungannya dari mana
+            $('total-expense-info').textContent = fmtS(totalExp);
+            show('recipes-table');
+        }
+
+        function renderRisk({ T, P, I, E, rev, exp, pft, mgn, R }) {
+            hide('risks-state');
+            const risks = [];
+            const pText = getPeriodText();
+            if (rev === 0) risks.push({ l: 'high', t: 'Tidak Ada Penjualan', d: `Tidak ditemukan transaksi pada periode ${pText}.` });
+            if (rev > 0 && pft < 0) risks.push({ l: 'high', t: 'Laba Bersih Negatif', d: `Pengeluaran (${fmtS(exp)}) melebihi Revenue (${fmtS(rev)}). Defisit: ${fmtS(Math.abs(pft))}.` });
+            if (rev > 0 && mgn >= 0 && mgn < 15) risks.push({ l: 'medium', t: 'Margin Laba Tipis', d: `Margin ${mgn.toFixed(1)}% sangat rendah. Bisnis kuliner sehat minimal 25–35%.` });
+            const oos = P.filter(p => !p.is_bundle && (p.stock || 0) === 0);
+            if (oos.length) risks.push({ l: 'high', t: `${oos.length} Produk Stok Habis`, d: `${oos.slice(0, 3).map(p => p.name).join(', ')}${oos.length > 3 ? ` +${oos.length - 3} lainnya` : ''}.` });
+            const low = P.filter(p => !p.is_bundle && (p.stock || 0) > 0 && (p.stock || 0) <= 5);
+            if (low.length) risks.push({ l: 'medium', t: `${low.length} Produk Stok Kritis`, d: `Stok ≤5: ${low.slice(0, 3).map(p => `${p.name}(${p.stock})`).join(', ')}.` });
+            if (rev > 0) { const er = (exp / rev) * 100; if (er > 80) risks.push({ l: 'high', t: 'Rasio Pengeluaran Sangat Tinggi', d: `Pengeluaran = ${er.toFixed(1)}% dari revenue. Target di bawah 60%.` }); else if (er > 60) risks.push({ l: 'medium', t: 'Rasio Pengeluaran Tinggi', d: `Pengeluaran = ${er.toFixed(1)}% dari revenue. Evaluasi efisiensi.` }) }
+            const noH = P.filter(p => !p.is_bundle && !R.some(r => r.product_id === p.id));
+            if (noH.length) risks.push({ l: 'low', t: `${noH.length} Produk Tanpa HPP`, d: `${noH.slice(0, 2).map(p => p.name).join(', ')}${noH.length > 2 ? ` +${noH.length - 2} lainnya` : ''} belum ada resep HPP.` });
+            if (rev > 0 && !E.length) risks.push({ l: 'medium', t: 'Tidak Ada Catatan Pengeluaran', d: 'Catat semua biaya agar kalkulasi laba akurat.' });
+            if (mgn >= 35) risks.push({ l: 'low', t: 'Margin Laba Sehat', d: `Margin ${mgn.toFixed(1)}% — bisnis dalam kondisi sangat baik!` });
+            if (!risks.length) risks.push({ l: 'low', t: 'Semua Indikator Normal', d: `Tidak terdeteksi risiko signifikan pada periode ${pText}.` });
+
+            const lbl = { high: '⬛ RISIKO TINGGI', medium: '◧ PERLU PERHATIAN', low: '◻ INFO / AMAN' };
+            $('risk-grid').innerHTML = risks.map(r => `<div class="risk-card ${r.l}"><div class="risk-level">${lbl[r.l]}</div><div class="risk-title">${r.t}</div><div class="risk-desc">${r.d}</div></div>`).join('');
+            show('risk-grid');
+        }
+
+        window.onload = () => loadAllData();
+    </script>
+</body>
+
+</html>
