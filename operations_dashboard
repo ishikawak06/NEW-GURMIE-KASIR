@@ -937,7 +937,7 @@
 
     <header class="site-header">
         <div style="display: flex; align-items: center; gap: 1.5rem;">
-            <a href="index.html" class="back-btn">← INDEX</a>
+
             <div class="brand">
                 <div class="brand-dot"></div>
                 GurmieKasir <span style="font-style:italic;color:var(--muted);font-size:0.9rem;">Intelligence</span>
