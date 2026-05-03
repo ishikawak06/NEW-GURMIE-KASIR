@@ -1167,12 +1167,14 @@
             showLoading(true);
             const { data, error } = await supabaseClient.from('products').select('*').order('name');
             showLoading(false);
-            if (error) return showToast('Gagal memuat produk.', 'error');
+
+            if (error) return showToast('Gagal memuat produk: ' + error.message, 'error');
+
             state.products = data || [];
             renderKasirProducts();
             renderProductTable();
             checkDeadStock();
-            if (document.getElementById('view-bahan').classList.contains('flex')) renderResepTab();
+            if (document.getElementById('view-bahan')?.classList.contains('flex')) renderResepTab();
         }
 
         function checkDeadStock() {
@@ -1186,10 +1188,9 @@
                 return;
             }
 
-            container.innerHTML = '';
-            dead.forEach(p => {
-                container.innerHTML += `<span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs px-2 py-1 rounded border border-red-200 dark:border-red-800 shadow-sm">${p.name} (${p.stock} item)</span>`;
-            });
+            container.innerHTML = dead.map(p =>
+                `<span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs px-2 py-1 rounded border border-red-200 dark:border-red-800 shadow-sm">${p.name} (${p.stock} item)</span>`
+            ).join('');
         }
 
         async function fetchBOMData() {
@@ -1200,7 +1201,9 @@
                     supabaseClient.from('recipes').select('*')
                 ]);
 
-                if (rm.error || pm.error || rc.error) return;
+                if (rm.error || pm.error || rc.error) {
+                    throw new Error("Gagal mengambil sebagian data BOM");
+                }
 
                 state.rawMaterials = (rm.data || []).map(r => ({
                     id: r.id, name: r.name, unit: r.unit, capacity: r.capacity,
@@ -1218,7 +1221,7 @@
                     items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items
                 }));
 
-                if (document.getElementById('view-bahan').classList.contains('flex')) {
+                if (document.getElementById('view-bahan')?.classList.contains('flex')) {
                     const activeView = document.querySelector('.tab-content.active');
                     if (activeView) {
                         if (activeView.id === 'tab-dasar') renderBahanDasar();
@@ -1226,7 +1229,10 @@
                         if (activeView.id === 'tab-resep') renderResepTab();
                     }
                 }
-            } catch (err) { }
+            } catch (err) {
+                console.error("fetchBOMData error:", err);
+                showToast('Gagal memuat data Material/Resep', 'error');
+            }
         }
 
         // ==========================================
@@ -1238,7 +1244,10 @@
             const q = state.searchQuery.toLowerCase();
             const filtered = state.products.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q)));
 
-            if (filtered.length === 0) { grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-10">Produk tidak ditemukan.</div>`; return; }
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-10">Produk tidak ditemukan.</div>`;
+                return;
+            }
 
             filtered.forEach(p => {
                 const outOfStock = !p.is_bundle && p.stock <= 0;
@@ -1251,24 +1260,27 @@
                 else if (outOfStock) badge = `<span class="bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-500 text-[10px] px-2 rounded border border-red-200 dark:border-red-500/30 font-bold">HABIS</span>`;
 
                 card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <h3 class="font-semibold text-sm leading-tight text-gray-900 dark:text-white">${p.name}</h3>
-                            ${badge}
-                        </div>
-                        <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-3">${p.barcode ? '#' + p.barcode : ''} <br> Stok: <span class="${outOfStock ? 'text-red-500 font-bold' : 'text-green-600 dark:text-green-500 font-bold'}">${p.is_bundle ? '∞' : p.stock}</span></p>
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-semibold text-sm leading-tight text-gray-900 dark:text-white">${p.name}</h3>
+                        ${badge}
                     </div>
-                    <div class="flex justify-between items-center mt-auto">
-                        <span class="font-bold text-blue-600 dark:text-neon-cyan">${formatRp(p.price)}</span>
-                        ${!outOfStock ? '<div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300"><i data-lucide="plus" class="w-3 h-3"></i></div>' : ''}
-                    </div>
-                `;
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mb-3">${p.barcode ? '#' + p.barcode : ''} <br> Stok: <span class="${outOfStock ? 'text-red-500 font-bold' : 'text-green-600 dark:text-green-500 font-bold'}">${p.is_bundle ? '∞' : p.stock}</span></p>
+                </div>
+                <div class="flex justify-between items-center mt-auto">
+                    <span class="font-bold text-blue-600 dark:text-neon-cyan">${formatRp(p.price)}</span>
+                    ${!outOfStock ? '<div class="w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-300"><i data-lucide="plus" class="w-3 h-3"></i></div>' : ''}
+                </div>
+            `;
                 grid.appendChild(card);
             });
             lucide.createIcons();
         }
 
-        document.getElementById('search-product').addEventListener('input', (e) => { state.searchQuery = e.target.value; renderKasirProducts(); });
+        document.getElementById('search-product')?.addEventListener('input', (e) => {
+            state.searchQuery = e.target.value;
+            renderKasirProducts();
+        });
 
         function addToCart(product) {
             const existingItem = state.cart.find(i => i.id === product.id && !i.note && !i.customPrice);
@@ -1287,9 +1299,11 @@
                 const item = state.cart[index];
                 const product = state.products.find(p => p.id === item.id);
                 let newQty = item.qty + change;
+
                 if (newQty <= 0) state.cart.splice(index, 1);
-                else if (!product.is_bundle && newQty > product.stock) showToast('Stok tidak mencukupi!', 'warning');
+                else if (!product?.is_bundle && newQty > (product?.stock || 0)) showToast('Stok tidak mencukupi!', 'warning');
                 else item.qty = newQty;
+
                 renderCart();
             }
         }
@@ -1335,19 +1349,17 @@
             if (state.cart.length === 0) {
                 container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 opacity-70"><i data-lucide="shopping-bag" class="w-12 h-12 mb-2"></i><p class="text-sm">Keranjang kosong</p></div>`;
                 subtotalEl.innerText = 'Rp 0'; totalEl.innerText = 'Rp 0'; btnPay.disabled = true;
-                lucide.createIcons(); return;
+                lucide.createIcons();
+                return;
             }
 
-            container.innerHTML = '';
             let total = 0;
-
-            state.cart.forEach(item => {
+            container.innerHTML = state.cart.map(item => {
                 const activePrice = item.customPrice || item.price;
                 total += activePrice * item.qty;
 
-                const div = document.createElement('div');
-                div.className = 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-3 rounded-lg flex flex-col gap-2 relative group shadow-sm';
-                div.innerHTML = `
+                return `
+                <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-3 rounded-lg flex flex-col gap-2 relative group shadow-sm">
                     <div class="flex justify-between items-start">
                         <div class="flex-1 min-w-0 pr-2 cursor-pointer" onclick="openItemEdit('${item.cartId}')" title="Klik untuk edit catatan/harga">
                             <h4 class="text-sm font-bold text-gray-800 dark:text-gray-200 truncate group-hover:text-blue-600 dark:group-hover:text-neon-cyan transition-colors">${item.name}</h4>
@@ -1360,9 +1372,9 @@
                             <button onclick="updateCartQty('${item.cartId}', 1)" class="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white p-1"><i data-lucide="plus" class="w-3 h-3"></i></button>
                         </div>
                     </div>
-                `;
-                container.appendChild(div);
-            });
+                </div>
+            `;
+            }).join('');
 
             subtotalEl.innerText = formatRp(total);
             totalEl.innerText = formatRp(total);
@@ -1383,20 +1395,22 @@
 
         function updateHeldBadge() {
             const b = document.getElementById('badge-held');
+            if (!b) return;
             if (state.heldOrders.length > 0) { b.innerText = state.heldOrders.length; b.classList.remove('hidden'); }
             else b.classList.add('hidden');
         }
 
         function renderHeldOrders() {
             const list = document.getElementById('held-orders-list');
-            list.innerHTML = '';
-            if (state.heldOrders.length === 0) { list.innerHTML = '<p class="text-gray-500 text-center text-sm">Tidak ada pesanan tertahan.</p>'; return; }
+            if (state.heldOrders.length === 0) {
+                list.innerHTML = '<p class="text-gray-500 text-center text-sm">Tidak ada pesanan tertahan.</p>';
+                return;
+            }
 
-            state.heldOrders.forEach(h => {
+            list.innerHTML = state.heldOrders.map(h => {
                 const total = h.cart.reduce((s, i) => s + ((i.customPrice || i.price) * i.qty), 0);
-                const div = document.createElement('div');
-                div.className = 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-lg flex justify-between items-center shadow-sm';
-                div.innerHTML = `
+                return `
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-lg flex justify-between items-center shadow-sm">
                     <div>
                         <p class="font-bold text-sm text-blue-600 dark:text-neon-cyan">${h.name}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">${formatTime(h.time)} • ${h.cart.length} item • ${formatRp(total)}</p>
@@ -1405,9 +1419,9 @@
                         <button onclick="restoreOrder(${h.id})" class="bg-blue-100 dark:bg-neon-cyan text-blue-600 dark:text-dark p-2 rounded hover:bg-blue-200 dark:hover:bg-cyan-400"><i data-lucide="play" class="w-4 h-4"></i></button>
                         <button onclick="deleteHeldOrder(${h.id})" class="bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400 p-2 rounded hover:bg-red-200 dark:hover:bg-red-500/40"><i data-lucide="trash" class="w-4 h-4"></i></button>
                     </div>
-                `;
-                list.appendChild(div);
-            });
+                </div>
+            `;
+            }).join('');
             lucide.createIcons();
         }
 
@@ -1462,7 +1476,6 @@
             const finalTotal = getCheckoutFinalTotal();
             document.getElementById('co-total').innerText = formatRp(finalTotal);
 
-            // Update split amount if active
             const split = parseInt(document.getElementById('co-split').value) || 1;
             if (split > 1) {
                 document.getElementById('co-split-amount').innerText = formatRp(finalTotal / split);
@@ -1491,7 +1504,6 @@
             document.getElementById('co-split').value = 1;
             document.getElementById('co-split-info').classList.add('hidden');
 
-            // Reset Modal Fields
             document.getElementById('co-adj-type').value = 'none';
             document.getElementById('co-custom-adjustment').value = '';
             document.getElementById('co-custom-adjustment').classList.add('hidden');
@@ -1608,12 +1620,13 @@
 
                 showToast('Transaksi Berhasil Disimpan!', 'success');
                 clearCart();
-                fetchProducts();
-                if (document.getElementById('view-laporan').classList.contains('flex')) loadReports();
-                if (document.getElementById('view-riwayat').classList.contains('flex')) loadHistory();
+                await fetchProducts();
+                if (document.getElementById('view-laporan')?.classList.contains('flex')) loadReports();
+                if (document.getElementById('view-riwayat')?.classList.contains('flex')) loadHistory();
 
             } catch (error) {
-                showToast('Gagal memproses.', 'error');
+                console.error("submitPayment Error:", error);
+                showToast('Gagal memproses transaksi.', 'error');
             } finally {
                 showLoading(false);
             }
@@ -1624,15 +1637,15 @@
         // ==========================================
         function renderProductTable() {
             const tbody = document.getElementById('product-table-body');
-            tbody.innerHTML = '';
-            state.products.forEach(p => {
+            if (!tbody) return;
+
+            tbody.innerHTML = state.products.map(p => {
                 let status = `<span class="px-2 py-1 rounded text-[10px] font-bold bg-green-100 dark:bg-green-500/10 text-green-600 dark:text-green-500">Normal</span>`;
                 if (p.is_bundle) status = `<span class="px-2 py-1 rounded text-[10px] font-bold bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400">Bundle</span>`;
                 else if (p.stock <= 0) status = `<span class="px-2 py-1 rounded text-[10px] font-bold bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-500">Habis</span>`;
 
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50';
-                tr.innerHTML = `
+                return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <td class="px-6 py-4 font-mono text-xs text-gray-500 dark:text-gray-400">${p.barcode || '-'}</td>
                     <td class="px-6 py-4 font-bold text-gray-900 dark:text-gray-200">${p.name}</td>
                     <td class="px-6 py-4 font-medium text-blue-600 dark:text-neon-cyan">${formatRp(p.price)}</td>
@@ -1641,9 +1654,9 @@
                         <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mr-2"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
                         <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"><i data-lucide="trash" class="w-4 h-4"></i></button>
                     </td>
-                `;
-                tbody.appendChild(tr);
-            });
+                </tr>
+            `;
+            }).join('');
             lucide.createIcons();
         }
 
@@ -1694,8 +1707,12 @@
                 } else if (res.error) throw res.error;
                 else showToast('Produk tersimpan!', 'success');
 
-                closeProductForm(); fetchProducts();
-            } catch (error) { showToast('Gagal: ' + error.message, 'error'); }
+                closeProductForm();
+                await fetchProducts();
+            } catch (error) {
+                console.error("saveProduct Error:", error);
+                showToast('Gagal: ' + error.message, 'error');
+            }
             showLoading(false);
         }
 
@@ -1704,8 +1721,11 @@
             try {
                 const { error } = await supabaseClient.from('products').delete().eq('id', id);
                 if (error) throw error;
-                showToast('Terhapus.', 'success'); fetchProducts();
-            } catch (error) { showToast('Gagal (Mungkin ada histori trx).', 'error'); }
+                showToast('Terhapus.', 'success');
+                fetchProducts();
+            } catch (error) {
+                showToast('Gagal (Mungkin ada histori trx).', 'error');
+            }
         }
 
         function onScanSuccess(decodedText) {
@@ -1714,12 +1734,23 @@
             state.searchQuery = decodedText;
             renderKasirProducts();
             const match = state.products.find(p => p.barcode === decodedText);
-            if (match) { addToCart(match); showToast(`${match.name} ditambahkan`, 'success'); document.getElementById('search-product').value = ''; state.searchQuery = ''; renderKasirProducts(); }
-            else showToast('Barcode tidak ditemukan.', 'warning');
+            if (match) {
+                addToCart(match);
+                showToast(`${match.name} ditambahkan`, 'success');
+                document.getElementById('search-product').value = '';
+                state.searchQuery = '';
+                renderKasirProducts();
+            } else {
+                showToast('Barcode tidak ditemukan.', 'warning');
+            }
         }
+
         function closeScanner() {
             toggleModal('modal-scanner', false);
-            if (state.html5QrcodeScanner) { state.html5QrcodeScanner.clear(); state.html5QrcodeScanner = null; }
+            if (state.html5QrcodeScanner) {
+                state.html5QrcodeScanner.clear();
+                state.html5QrcodeScanner = null;
+            }
         }
 
         // ==========================================
@@ -1742,28 +1773,28 @@
 
         function renderBahanDasar() {
             const tbody = document.getElementById('table-bahan-dasar');
-            tbody.innerHTML = '';
+            if (!tbody) return;
+
             if (state.rawMaterials.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500 text-xs">Belum ada bahan dasar terdaftar.</td></tr>`;
                 return;
             }
-            state.rawMaterials.forEach(b => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200">${b.name}</td>
-                        <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${b.unit}</td>
-                        <td class="px-4 py-3 text-right font-medium">${b.capacity}</td>
-                        <td class="px-4 py-3 text-right text-red-500 dark:text-red-400">${formatRp(b.totalPrice)}</td>
-                        <td class="px-4 py-3 text-right font-bold text-blue-600 dark:text-neon-cyan bg-blue-50/50 dark:bg-blue-900/10">${formatRp(b.unitPrice)}</td>
-                        <td class="px-4 py-3 text-center">
-                            <div class="flex items-center justify-center gap-3">
-                                <button onclick="editBahanDasar('${b.id}')" class="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                                <button onclick="deleteBahanDasar('${b.id}')" class="text-red-500 hover:text-red-700 dark:hover:text-red-400" title="Hapus"><i data-lucide="trash" class="w-4 h-4"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
+
+            tbody.innerHTML = state.rawMaterials.map(b => `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200">${b.name}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-gray-400">${b.unit}</td>
+                <td class="px-4 py-3 text-right font-medium">${b.capacity}</td>
+                <td class="px-4 py-3 text-right text-red-500 dark:text-red-400">${formatRp(b.totalPrice)}</td>
+                <td class="px-4 py-3 text-right font-bold text-blue-600 dark:text-neon-cyan bg-blue-50/50 dark:bg-blue-900/10">${formatRp(b.unitPrice)}</td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex items-center justify-center gap-3">
+                        <button onclick="editBahanDasar('${b.id}')" class="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteBahanDasar('${b.id}')" class="text-red-500 hover:text-red-700 dark:hover:text-red-400" title="Hapus"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
             lucide.createIcons();
         }
 
@@ -1823,6 +1854,7 @@
                 toggleModal('modal-bd', false);
                 await fetchBOMData();
             } catch (e) {
+                console.error(e);
                 showToast('Gagal menyimpan data.', 'error');
             }
             showLoading(false);
@@ -1861,10 +1893,10 @@
                 opts += `</optgroup>`;
             }
             return `
-                <select onchange="updateCompMaterial(${index}, this)" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white">
-                    ${opts}
-                </select>
-            `;
+            <select onchange="updateCompMaterial(${index}, this)" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white">
+                ${opts}
+            </select>
+        `;
         }
 
         function updateCompCost(index) {
@@ -1891,23 +1923,24 @@
 
         function renderCompItems() {
             const tbody = document.getElementById('comp-items-body');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             if (state.compItems.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-2 text-center text-xs text-gray-500">Belum ada komposisi</td></tr>`;
             }
 
-            state.compItems.forEach((item, index) => {
+            tbody.innerHTML = state.compItems.map((item, index) => {
                 let itemInputHTML = '';
                 let unitControl = '';
 
                 if (item.isCustom) {
                     itemInputHTML = `
-                        <div class="flex flex-col gap-1 pr-2">
-                            <input type="text" oninput="updateCompCustomName(${index}, this.value)" value="${item.customName || ''}" placeholder="Ketik nama bahan..." class="w-full bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 p-1 rounded text-xs focus:outline-none text-gray-900 dark:text-white">
-                            <input type="number" oninput="updateCompCustomPrice(${index}, this.value)" value="${item.unitPrice || 0}" placeholder="Harga Satuan (Rp)" class="w-full bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 p-1 rounded text-xs focus:outline-none text-gray-900 dark:text-white">
-                        </div>
-                    `;
+                    <div class="flex flex-col gap-1 pr-2">
+                        <input type="text" oninput="updateCompCustomName(${index}, this.value)" value="${item.customName || ''}" placeholder="Ketik nama bahan..." class="w-full bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 p-1 rounded text-xs focus:outline-none text-gray-900 dark:text-white">
+                        <input type="number" oninput="updateCompCustomPrice(${index}, this.value)" value="${item.unitPrice || 0}" placeholder="Harga Satuan (Rp)" class="w-full bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 p-1 rounded text-xs focus:outline-none text-gray-900 dark:text-white">
+                    </div>
+                `;
                     unitControl = `<input type="text" oninput="state.compItems[${index}].inputUnit = this.value; state.compItems[${index}].baseUnit = this.value;" value="${item.inputUnit || 'Pcs'}" class="w-16 bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs text-center focus:outline-none">`;
                 } else {
                     itemInputHTML = getMaterialSelectHTML(index, item.id);
@@ -1916,19 +1949,19 @@
 
                     if (bUnit.includes('kg') || bUnit.includes('kilogram')) {
                         unitControl = `<select onchange="updateCompUnit(${index}, this.value)" class="w-16 bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs focus:outline-none text-blue-600 dark:text-neon-cyan cursor-pointer">
-                            <option value="Kg" ${item.inputUnit === 'Kg' ? 'selected' : ''}>Kg</option>
-                            <option value="Gram" ${item.inputUnit === 'Gram' ? 'selected' : ''}>Gram</option>
-                        </select>`;
+                        <option value="Kg" ${item.inputUnit === 'Kg' ? 'selected' : ''}>Kg</option>
+                        <option value="Gram" ${item.inputUnit === 'Gram' ? 'selected' : ''}>Gram</option>
+                    </select>`;
                     } else if ((bUnit.includes('liter') || bUnit.includes('l')) && !bUnit.includes('mili')) {
                         unitControl = `<select onchange="updateCompUnit(${index}, this.value)" class="w-16 bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs focus:outline-none text-blue-600 dark:text-neon-cyan cursor-pointer">
-                            <option value="Liter" ${item.inputUnit === 'Liter' ? 'selected' : ''}>Liter</option>
-                            <option value="ml" ${item.inputUnit === 'ml' ? 'selected' : ''}>ml</option>
-                        </select>`;
+                        <option value="Liter" ${item.inputUnit === 'Liter' ? 'selected' : ''}>Liter</option>
+                        <option value="ml" ${item.inputUnit === 'ml' ? 'selected' : ''}>ml</option>
+                    </select>`;
                     }
                 }
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+                return `
+                <tr>
                     <td class="p-2 pl-4 w-1/2 align-top pt-3">${itemInputHTML}</td>
                     <td class="p-2 align-top pt-3">
                         <div class="flex items-center justify-center gap-1">
@@ -1938,9 +1971,10 @@
                     </td>
                     <td class="p-2 text-right font-medium text-gray-800 dark:text-gray-200 align-top pt-4" id="cost-${index}">${formatRp(item.cost)}</td>
                     <td class="p-2 text-center align-top pt-4"><button onclick="removeCompRow(${index})" class="text-red-500 hover:text-red-700"><i data-lucide="minus-circle" class="w-4 h-4 mx-auto"></i></button></td>
-                `;
-                tbody.appendChild(tr);
-            });
+                </tr>
+            `;
+            }).join('');
+
             calcCompTotal();
             lucide.createIcons();
         }
@@ -2030,27 +2064,27 @@
 
         function renderBahanOlahan() {
             const tbody = document.getElementById('table-bahan-olahan');
-            tbody.innerHTML = '';
+            if (!tbody) return;
+
             if (state.processedMaterials.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 text-xs">Belum ada bahan mentah olahan.</td></tr>`;
                 return;
             }
-            state.processedMaterials.forEach(p => {
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200">${p.name} <br><span class="text-[10px] text-gray-500 font-normal">${p.items.length} Komposisi</span></td>
-                        <td class="px-4 py-3 text-center font-medium">${p.yield} ${p.unit}</td>
-                        <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">${formatRp(p.totalModal)}</td>
-                        <td class="px-4 py-3 text-right font-bold text-purple-600 dark:text-neon-purple bg-purple-50/50 dark:bg-purple-900/10">${formatRp(p.hppPerUnit)}</td>
-                        <td class="px-4 py-3 text-center">
-                            <div class="flex justify-center gap-3">
-                                <button onclick="editBahanOlahan('${p.id}')" class="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                                <button onclick="deleteBahanOlahan('${p.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
+
+            tbody.innerHTML = state.processedMaterials.map(p => `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200">${p.name} <br><span class="text-[10px] text-gray-500 font-normal">${p.items.length} Komposisi</span></td>
+                <td class="px-4 py-3 text-center font-medium">${p.yield} ${p.unit}</td>
+                <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400">${formatRp(p.totalModal)}</td>
+                <td class="px-4 py-3 text-right font-bold text-purple-600 dark:text-neon-purple bg-purple-50/50 dark:bg-purple-900/10">${formatRp(p.hppPerUnit)}</td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex justify-center gap-3">
+                        <button onclick="editBahanOlahan('${p.id}')" class="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteBahanOlahan('${p.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
             lucide.createIcons();
         }
 
@@ -2105,13 +2139,14 @@
 
         function renderResepTab() {
             const tbody = document.getElementById('table-resep');
-            tbody.innerHTML = '';
+            if (!tbody) return;
+
             if (state.recipes.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500 text-xs">Belum ada resep yang di-setup.</td></tr>`;
                 return;
             }
 
-            state.recipes.forEach(r => {
+            tbody.innerHTML = state.recipes.map(r => {
                 const product = state.products.find(p => p.id === r.productId);
                 const prodName = product ? product.name : 'Produk Terhapus';
                 const sellPrice = product ? product.price : 0;
@@ -2122,34 +2157,34 @@
                 if (sellPrice > 0 && r.totalHPP > 0) {
                     const bepCups = Math.ceil(r.totalHPP / sellPrice);
                     strategyHTML = `
-                    <div class="mt-2 text-[10px] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-1.5 rounded text-blue-700 dark:text-blue-300 leading-tight whitespace-normal max-w-xs">
-                        <i data-lucide="lightbulb" class="inline w-3 h-3 text-yellow-500"></i>&nbsp;
-                        <strong>Strategi:</strong> Jual <span class="font-bold text-red-500">${bepCups} cup</span> untuk BEP (Nutup HPP Total ${formatRp(r.totalHPP)}).<br>
-                        Sisa cup = <strong>Profit Bersih ${formatRp(sellPrice)} / cup</strong>.
-                    </div>`;
+                <div class="mt-2 text-[10px] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-1.5 rounded text-blue-700 dark:text-blue-300 leading-tight whitespace-normal max-w-xs">
+                    <i data-lucide="lightbulb" class="inline w-3 h-3 text-yellow-500"></i>&nbsp;
+                    <strong>Strategi:</strong> Jual <span class="font-bold text-red-500">${bepCups} cup</span> untuk BEP (Nutup HPP Total ${formatRp(r.totalHPP)}).<br>
+                    Sisa cup = <strong>Profit Bersih ${formatRp(sellPrice)} / cup</strong>.
+                </div>`;
                 }
 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 align-top pt-4">
-                            ${prodName}
-                            ${strategyHTML}
-                        </td>
-                        <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 align-top pt-4">${r.items.length} Item</td>
-                        <td class="px-4 py-3 text-right font-bold text-red-500 dark:text-red-400 align-top pt-4">${formatRp(r.totalHPP)}</td>
-                        <td class="px-4 py-3 text-right text-gray-900 dark:text-white align-top pt-4">${formatRp(sellPrice)}</td>
-                        <td class="px-4 py-3 text-right align-top pt-4 font-bold text-green-600 dark:text-neon-green bg-green-50/50 dark:bg-green-900/10">
-                            ${formatRp(margin)} <br><span class="text-[10px] font-normal text-gray-500">${marginPrc} Margin</span>
-                        </td>
-                        <td class="px-4 py-3 text-center align-top pt-4">
-                            <div class="flex justify-center gap-3">
-                                <button onclick="editResep('${r.id}')" class="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                                <button onclick="deleteResep('${r.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4 mx-auto"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            });
+                return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 align-top pt-4">
+                        ${prodName}
+                        ${strategyHTML}
+                    </td>
+                    <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 align-top pt-4">${r.items.length} Item</td>
+                    <td class="px-4 py-3 text-right font-bold text-red-500 dark:text-red-400 align-top pt-4">${formatRp(r.totalHPP)}</td>
+                    <td class="px-4 py-3 text-right text-gray-900 dark:text-white align-top pt-4">${formatRp(sellPrice)}</td>
+                    <td class="px-4 py-3 text-right align-top pt-4 font-bold text-green-600 dark:text-neon-green bg-green-50/50 dark:bg-green-900/10">
+                        ${formatRp(margin)} <br><span class="text-[10px] font-normal text-gray-500">${marginPrc} Margin</span>
+                    </td>
+                    <td class="px-4 py-3 text-center align-top pt-4">
+                        <div class="flex justify-center gap-3">
+                            <button onclick="editResep('${r.id}')" class="text-blue-500 hover:text-blue-700 dark:hover:text-blue-400"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                            <button onclick="deleteResep('${r.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4 mx-auto"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            }).join('');
             lucide.createIcons();
         }
 
@@ -2160,8 +2195,8 @@
             document.getElementById('comp-header-resep').classList.remove('hidden');
 
             const selProd = document.getElementById('comp-rs-product');
-            selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>';
-            state.products.forEach(p => { selProd.innerHTML += `<option value="${p.id}">${p.name} (Jual: ${formatRp(p.price)})</option>`; });
+            selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>' +
+                state.products.map(p => `<option value="${p.id}">${p.name} (Jual: ${formatRp(p.price)})</option>`).join('');
 
             document.getElementById('comp-id').value = '';
             state.compItems = [];
@@ -2179,11 +2214,11 @@
             document.getElementById('comp-header-resep').classList.remove('hidden');
 
             const selProd = document.getElementById('comp-rs-product');
-            selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>';
-            state.products.forEach(p => {
-                const isSelected = p.id === r.productId ? 'selected' : '';
-                selProd.innerHTML += `<option value="${p.id}" ${isSelected}>${p.name} (Jual: ${formatRp(p.price)})</option>`;
-            });
+            selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>' +
+                state.products.map(p => {
+                    const isSelected = p.id === r.productId ? 'selected' : '';
+                    return `<option value="${p.id}" ${isSelected}>${p.name} (Jual: ${formatRp(p.price)})</option>`;
+                }).join('');
 
             document.getElementById('comp-id').value = r.id;
             state.compItems = r.items ? JSON.parse(JSON.stringify(r.items)) : [];
@@ -2274,6 +2309,7 @@
                 toggleModal('modal-composition', false);
                 await fetchBOMData();
             } catch (err) {
+                console.error(err);
                 showToast('Gagal menyimpan: ' + err.message, 'error');
             }
             showLoading(false);
@@ -2316,6 +2352,7 @@
             toggleModal('modal-expense', true);
             lucide.createIcons();
         }
+
         function handleReportFilterChange() {
             const val = document.getElementById('report-filter').value;
             const customContainer = document.getElementById('custom-date-container');
@@ -2367,9 +2404,11 @@
             document.getElementById('title-profit').innerText = `Estimasi Laba Bersih (${periodText})`;
 
             try {
-                const { data: trxData } = await supabaseClient.from('transactions')
+                const { data: trxData, error: trxErr } = await supabaseClient.from('transactions')
                     .select('total_price, created_at')
                     .gte('created_at', startISO).lte('created_at', endISO);
+
+                if (trxErr) throw trxErr;
 
                 let { data: expData, error: expErr } = await supabaseClient.from('expenses')
                     .select('*')
@@ -2421,14 +2460,17 @@
                 renderExpensesTable();
 
             } catch (err) {
-                console.error(err);
+                console.error("loadReports Error:", err);
+                showToast('Gagal memuat laporan.', 'error');
             } finally {
                 showLoading(false);
             }
         }
 
         function renderChartUI(labels, data) {
-            const ctx = document.getElementById('salesChart').getContext('2d');
+            const ctx = document.getElementById('salesChart')?.getContext('2d');
+            if (!ctx) return;
+
             if (state.chartInstance) state.chartInstance.destroy();
 
             const isDark = document.documentElement.classList.contains('dark');
@@ -2461,7 +2503,7 @@
 
         function renderExpensesTable() {
             const tbody = document.getElementById('expense-table-body');
-            tbody.innerHTML = '';
+            if (!tbody) return;
 
             const sortedList = [...state.expensesList].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
 
@@ -2470,7 +2512,7 @@
                 return;
             }
 
-            sortedList.forEach(e => {
+            tbody.innerHTML = sortedList.map(e => {
                 const isHPP = e.affects_profit;
                 const isPersonal = e.is_personal;
 
@@ -2480,32 +2522,33 @@
 
                 if (isPersonal) badges += `<span class="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[9px] px-1.5 py-0.5 rounded font-bold border border-purple-200 dark:border-purple-800">UANG PRIBADI</span>`;
 
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-100 dark:border-gray-800 group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                        <td class="p-3">
-                            <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${e.name}</p>
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">${new Date(e.expense_date).toLocaleDateString('id-ID')} • ${badges}</p>
-                        </td>
-                        <td class="p-3 text-right">
-                            <p class="text-red-500 dark:text-red-400 font-bold">${formatRp(e.amount)}</p>
-                            <div class="flex justify-end gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="openExpenseModal('${e.id}')" class="text-[10px] text-blue-500 hover:underline">Edit</button>
+                return `
+                <tr class="border-b border-gray-100 dark:border-gray-800 group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                    <td class="p-3">
+                        <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${e.name}</p>
+                        <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">${new Date(e.expense_date).toLocaleDateString('id-ID')} • ${badges}</p>
+                    </td>
+                    <td class="p-3 text-right">
+                        <p class="text-red-500 dark:text-red-400 font-bold">${formatRp(e.amount)}</p>
+                        <div class="flex justify-end gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openExpenseModal('${e.id}')" class="text-[10px] text-blue-500 hover:underline">Edit</button>
                             <button onclick="deleteExpense('${e.id}')" class="text-[10px] text-red-500 hover:underline">Hapus</button>
                         </div>
                     </td>
                 </tr>
             `;
-            });
+            }).join('');
         }
 
         function renderExpenseItemRows() {
             const tbody = document.getElementById('exp-items-body');
-            tbody.innerHTML = '';
+            if (!tbody) return;
+
             let total = 0;
-            state.expenseItems.forEach((item, index) => {
+            tbody.innerHTML = state.expenseItems.map((item, index) => {
                 const subtotal = (item.qty || 0) * (item.price || 0);
                 total += subtotal;
-                tbody.innerHTML += `
+                return `
                 <tr>
                     <td class="p-2 pl-4"><input type="text" oninput="updateExpenseItemName(${index}, this.value)" value="${item.name}" placeholder="Nama Item" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs focus:outline-none focus:border-red-500 text-gray-900 dark:text-white"></td>
                     <td class="p-2"><input type="number" oninput="updateExpenseItemQty(${index}, this.value)" value="${item.qty}" min="1" step="any" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-center text-xs focus:outline-none focus:border-red-500 text-gray-900 dark:text-white"></td>
@@ -2513,7 +2556,8 @@
                     <td class="p-2 text-center"><button onclick="removeExpenseItem(${index})" class="text-red-500 hover:text-red-700"><i data-lucide="minus-circle" class="w-4 h-4 mx-auto"></i></button></td>
                 </tr>
             `;
-            });
+            }).join('');
+
             document.getElementById('exp-total-display').innerText = formatRp(total);
             lucide.createIcons();
         }
@@ -2522,20 +2566,15 @@
         function removeExpenseItem(index) { state.expenseItems.splice(index, 1); renderExpenseItemRows(); }
 
         function updateExpenseTotalOnly() {
-            let total = 0;
-            state.expenseItems.forEach(item => {
-                total += (item.qty || 0) * (item.price || 0);
-            });
+            let total = state.expenseItems.reduce((acc, item) => acc + ((item.qty || 0) * (item.price || 0)), 0);
             document.getElementById('exp-total-display').innerText = formatRp(total);
         }
 
         function updateExpenseItemName(index, val) { state.expenseItems[index].name = val; }
-
         function updateExpenseItemQty(index, val) {
             state.expenseItems[index].qty = parseFloat(val) || 0;
             updateExpenseTotalOnly();
         }
-
         function updateExpenseItemPrice(index, val) {
             state.expenseItems[index].price = parseFloat(val) || 0;
             updateExpenseTotalOnly();
@@ -2572,8 +2611,9 @@
                     showToast('Pengeluaran dicatat', 'success');
                 }
                 toggleModal('modal-expense', false);
-                if (document.getElementById('view-laporan').classList.contains('flex')) loadReports();
+                if (document.getElementById('view-laporan')?.classList.contains('flex')) loadReports();
             } catch (e) {
+                console.error(e);
                 showToast('Gagal menyimpan pengeluaran', 'error');
             } finally {
                 btn.disabled = false;
@@ -2589,11 +2629,14 @@
                 showToast('Pengeluaran dihapus', 'success');
                 loadReports();
             } catch (e) {
+                console.error(e);
                 showToast('Gagal menghapus', 'error');
             }
         }
 
         function exportToPDF() {
+            if (!window.jspdf) return showToast('Library jsPDF belum dimuat.', 'warning');
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             doc.setFontSize(20);
@@ -2638,6 +2681,7 @@
                 state.history = data || [];
                 renderHistoryTable();
             } catch (err) {
+                console.error(err);
                 showToast('Gagal memuat riwayat.', 'error');
             } finally {
                 showLoading(false);
@@ -2646,15 +2690,14 @@
 
         function renderHistoryTable() {
             const tbody = document.getElementById('history-table-body');
-            tbody.innerHTML = '';
+            if (!tbody) return;
+
             if (state.history.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-500">Belum ada transaksi.</td></tr>`;
                 return;
             }
 
-            state.history.forEach(trx => {
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors';
+            tbody.innerHTML = state.history.map(trx => {
                 const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
 
                 let adjBadge = '';
@@ -2664,7 +2707,8 @@
                     adjBadge = `<br><span class="bg-orange-100 text-orange-700 text-[10px] px-1.5 py-0.5 rounded mt-1 inline-block">Biaya Tambahan: +${formatRp(trx.adjustment_amount)}</span>`;
                 }
 
-                tr.innerHTML = `
+                return `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                     <td class="px-6 py-4 font-medium text-gray-900 dark:text-gray-200">${formatTime(trx.created_at)}</td>
                     <td class="px-6 py-4 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
                     <td class="px-6 py-4 font-bold text-blue-600 dark:text-neon-cyan">
@@ -2677,9 +2721,9 @@
                         <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mr-3" title="Edit Transaksi"><i data-lucide="edit" class="w-4 h-4"></i></button>
                         <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300" title="Hapus Transaksi"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </td>
-                `;
-                tbody.appendChild(tr);
-            });
+                </tr>
+            `;
+            }).join('');
             lucide.createIcons();
         }
 
@@ -2701,9 +2745,10 @@
                 if (error) throw error;
 
                 showToast('Transaksi dihapus & stok dipulihkan.', 'success');
-                fetchProducts();
+                await fetchProducts();
                 loadHistory();
             } catch (err) {
+                console.error(err);
                 showToast('Gagal menghapus transaksi.', 'error');
             } finally {
                 showLoading(false);
@@ -2737,8 +2782,8 @@
             document.getElementById('edit-trx-date').value = state.editingTrx.date;
 
             const select = document.getElementById('edit-trx-add-select');
-            select.innerHTML = '<option value="">-- Pilih Produk Tambahan --</option>';
-            state.products.forEach(p => { select.innerHTML += `<option value="${p.id}">${p.name} - ${formatRp(p.price)}</option>`; });
+            select.innerHTML = '<option value="">-- Pilih Produk Tambahan --</option>' +
+                state.products.map(p => `<option value="${p.id}">${p.name} - ${formatRp(p.price)}</option>`).join('');
 
             renderEditTrxItems();
             toggleModal('modal-edit-trx', true);
@@ -2746,26 +2791,28 @@
 
         function renderEditTrxItems() {
             const tbody = document.getElementById('edit-trx-items-body');
-            tbody.innerHTML = '';
-            let total = 0;
+            if (!tbody) return;
 
             if (state.editingTrx.items.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-xs text-red-500">Harus ada minimal 1 item.</td></tr>`;
+                document.getElementById('edit-trx-total').innerText = formatRp(0);
+                return;
             }
 
-            state.editingTrx.items.forEach((item, index) => {
+            let total = 0;
+            tbody.innerHTML = state.editingTrx.items.map((item, index) => {
                 const currentPrice = item.custom_price || item.price;
                 total += currentPrice * item.qty;
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
+                return `
+                <tr>
                     <td class="p-2 font-medium text-gray-900 dark:text-gray-200">${item.name}</td>
                     <td class="p-2"><input type="number" onchange="updateEditItemPrice(${index}, this.value)" value="${currentPrice}" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-1 py-1 text-xs focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white"></td>
                     <td class="p-2"><input type="number" onchange="updateEditItemQty(${index}, this.value)" value="${item.qty}" min="1" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-1 py-1 text-xs text-center focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white"></td>
                     <td class="p-2 text-center"><button onclick="removeEditItem(${index})" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"><i data-lucide="x-circle" class="w-4 h-4 mx-auto"></i></button></td>
-                `;
-                tbody.appendChild(tr);
-            });
+                </tr>
+            `;
+            }).join('');
 
             document.getElementById('edit-trx-total').innerText = formatRp(total);
             lucide.createIcons();
@@ -2783,8 +2830,9 @@
             if (!prod) return;
 
             const existing = state.editingTrx.items.find(i => i.product_id === prodId && !i.custom_price);
-            if (existing) { existing.qty += 1; }
-            else {
+            if (existing) {
+                existing.qty += 1;
+            } else {
                 state.editingTrx.items.push({
                     id: null, product_id: prod.id, name: prod.name, is_bundle: prod.is_bundle, price: prod.price, custom_price: null, qty: 1, is_new: true, old_qty: 0
                 });
@@ -2839,10 +2887,11 @@
 
                 showToast('Transaksi berhasil diperbarui!', 'success');
                 closeEditTrx();
-                fetchProducts();
+                await fetchProducts();
                 loadHistory();
 
             } catch (e) {
+                console.error(e);
                 showToast('Gagal menyimpan perubahan transaksi.', 'error');
             } finally {
                 btn.innerHTML = `Simpan Perubahan`;
@@ -2854,62 +2903,95 @@
         // ==========================================
         function toggleModal(id, show) {
             const el = document.getElementById(id);
+            if (!el) return;
             const content = el.querySelector('div');
             if (show) {
-                el.classList.remove('hidden'); setTimeout(() => { el.classList.remove('opacity-0'); if (content && content.classList.contains('scale-95')) content.classList.remove('scale-95'); }, 10);
+                el.classList.remove('hidden');
+                setTimeout(() => {
+                    el.classList.remove('opacity-0');
+                    if (content?.classList.contains('scale-95')) content.classList.remove('scale-95');
+                }, 10);
+
                 if (id === 'modal-held-orders') renderHeldOrders();
                 if (id === 'modal-scanner') {
-                    state.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-                    state.html5QrcodeScanner.render(onScanSuccess);
+                    if (window.Html5QrcodeScanner) {
+                        state.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+                        state.html5QrcodeScanner.render(onScanSuccess);
+                    } else {
+                        showToast('Library Scanner belum dimuat.', 'warning');
+                    }
                 }
             } else {
-                el.classList.add('opacity-0'); if (content && content.classList.contains('scale-100')) content.classList.add('scale-95');
+                el.classList.add('opacity-0');
+                if (content?.classList.contains('scale-100')) content.classList.add('scale-95');
                 setTimeout(() => el.classList.add('hidden'), 300);
             }
         }
 
         function switchView(viewName) {
             ['kasir', 'produk', 'bahan', 'laporan', 'riwayat'].forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden');
-                document.getElementById(`view-${v}`).classList.remove('flex');
-                const nav = document.getElementById(`nav-${v}`);
-                nav.className = "nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors";
+                const viewEl = document.getElementById(`view-${v}`);
+                const navEl = document.getElementById(`nav-${v}`);
+                if (viewEl) {
+                    viewEl.classList.add('hidden');
+                    viewEl.classList.remove('flex');
+                }
+                if (navEl) {
+                    navEl.className = "nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors";
+                }
             });
 
             const activeView = document.getElementById(`view-${viewName}`);
-            activeView.classList.remove('hidden'); activeView.classList.add('flex');
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                activeView.classList.add('flex');
+            }
 
             const activeNav = document.getElementById(`nav-${viewName}`);
-            activeNav.className = "nav-btn w-full flex items-center p-3 rounded-xl bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan shadow-sm dark:shadow-[0_0_10px_rgba(6,182,212,0.1)] transition-colors font-medium";
+            if (activeNav) {
+                activeNav.className = "nav-btn w-full flex items-center p-3 rounded-xl bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan shadow-sm dark:shadow-[0_0_10px_rgba(6,182,212,0.1)] transition-colors font-medium";
+            }
 
-            if (viewName === 'kasir') document.getElementById('search-product').focus();
+            if (viewName === 'kasir') document.getElementById('search-product')?.focus();
             else if (viewName === 'bahan') { switchBahanTab('dasar'); }
             else if (viewName === 'laporan') loadReports();
             else if (viewName === 'riwayat') loadHistory();
         }
 
-        function showLoading(show) { const el = document.getElementById('global-loader'); show ? el.classList.remove('hidden') : el.classList.add('hidden'); }
+        function showLoading(show) {
+            const el = document.getElementById('global-loader');
+            if (el) {
+                show ? el.classList.remove('hidden') : el.classList.add('hidden');
+            }
+        }
 
         let toastTimeout;
         function showToast(msg, type = 'info') {
             const toast = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
+            const msgEl = document.getElementById('toast-msg');
+            const icon = document.getElementById('toast-icon');
+
+            if (!toast || !msgEl || !icon) return;
+
+            msgEl.innerText = msg;
             toast.className = 'fixed bottom-5 right-5 transition-all duration-300 px-4 py-3 rounded-lg shadow-xl flex items-center z-[110] transform border translate-y-0 opacity-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white';
 
-            const icon = document.getElementById('toast-icon');
-            if (type === 'success') { toast.classList.add('border-l-4', 'border-l-green-500'); icon.setAttribute('data-lucide', 'check-circle'); icon.classList.add('text-green-500'); }
-            else if (type === 'error') { toast.classList.add('border-l-4', 'border-l-red-500'); icon.setAttribute('data-lucide', 'x-circle'); icon.classList.add('text-red-500'); }
-            else if (type === 'warning') { toast.classList.add('border-l-4', 'border-l-yellow-500'); icon.setAttribute('data-lucide', 'alert-triangle'); icon.classList.add('text-yellow-500'); }
-            else { toast.classList.add('border-l-4', 'border-l-blue-500'); icon.setAttribute('data-lucide', 'info'); icon.classList.add('text-blue-500'); }
+            if (type === 'success') { toast.classList.add('border-l-4', 'border-l-green-500'); icon.setAttribute('data-lucide', 'check-circle'); icon.className = 'w-5 h-5 mr-3 text-green-500'; }
+            else if (type === 'error') { toast.classList.add('border-l-4', 'border-l-red-500'); icon.setAttribute('data-lucide', 'x-circle'); icon.className = 'w-5 h-5 mr-3 text-red-500'; }
+            else if (type === 'warning') { toast.classList.add('border-l-4', 'border-l-yellow-500'); icon.setAttribute('data-lucide', 'alert-triangle'); icon.className = 'w-5 h-5 mr-3 text-yellow-500'; }
+            else { toast.classList.add('border-l-4', 'border-l-blue-500'); icon.setAttribute('data-lucide', 'info'); icon.className = 'w-5 h-5 mr-3 text-blue-500'; }
 
             lucide.createIcons();
             clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-20'); toast.classList.replace('opacity-100', 'opacity-0'); }, 3000);
+            toastTimeout = setTimeout(() => {
+                toast.classList.replace('translate-y-0', 'translate-y-20');
+                toast.classList.replace('opacity-100', 'opacity-0');
+            }, 3000);
         }
 
         window.onload = () => {
             updateThemeUI();
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
             fetchProducts();
             fetchBOMData();
             switchView('kasir');
