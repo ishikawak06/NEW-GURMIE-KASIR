@@ -953,7 +953,6 @@
                 📄 PDF
             </button>
 
-            <!-- TOMBOL BARU UNTUK GAMBAR HPP & BAHAN DASAR -->
             <button id="btn-download-hpp" onclick="downloadHPPImage()"
                 style="background:transparent;border:1.5px solid var(--border);padding:4px 10px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);border-radius:2px;transition:0.2s;"
                 onmouseover="this.style.background='var(--cream)'" onmouseout="this.style.background='transparent'">
@@ -1400,24 +1399,36 @@
             loadAllData();
         }
 
+        // PERBAIKAN: Menambahkan logic Local Date Strings Khusus untuk tabel expenses ber-tipe DATE 
         function dateRange() {
             const e = new Date(); e.setHours(23, 59, 59, 999);
             const s = new Date(); s.setHours(0, 0, 0, 0);
 
+            let sDate, eDate;
+
             if (periodType === 'today') {
-                return { start: s.toISOString(), end: e.toISOString() };
+                sDate = s; eDate = e;
             } else if (periodType === 'custom') {
-                const cS = new Date(customDates.start); cS.setHours(0, 0, 0, 0);
-                const cE = new Date(customDates.end); cE.setHours(23, 59, 59, 999);
-                return { start: cS.toISOString(), end: cE.toISOString() };
+                sDate = new Date(customDates.start); sDate.setHours(0, 0, 0, 0);
+                eDate = new Date(customDates.end); eDate.setHours(23, 59, 59, 999);
             } else {
                 let days = 7;
                 if (periodType === '30D') days = 30;
                 if (periodType === '90D') days = 90;
                 if (periodType === '1Y') days = 365;
                 s.setDate(s.getDate() - (days - 1));
-                return { start: s.toISOString(), end: e.toISOString() };
+                sDate = s; eDate = e;
             }
+
+            // Memformat string YYYY-MM-DD menggunakan Date Method lokal
+            const formatYMD = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+            return {
+                start: sDate.toISOString(),
+                end: eDate.toISOString(),
+                startDay: formatYMD(sDate), // <-- Dipakai Khusus Query untuk kolom DATE (Expense)
+                endDay: formatYMD(eDate)
+            };
         }
 
         const $ = id => document.getElementById(id);
@@ -1495,7 +1506,8 @@
                     S.I.forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
                         agg[i.product_id].qty += i.quantity;
-                        agg[i.product_id].rev += (i.custom_price || i.price) * i.quantity;
+                        // PERBAIKAN HARGA: Mengatasi error Custom Price Rp 0
+                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity;
                     });
 
                     const topProductsBody = Object.entries(agg)
@@ -1647,7 +1659,8 @@
                     (S.I || []).forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
                         agg[i.product_id].qty += i.quantity;
-                        agg[i.product_id].rev += (i.custom_price || i.price) * i.quantity;
+                        // PERBAIKAN HARGA: Mengatasi error Custom Price Rp 0
+                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity;
                     });
 
                     const top5 = Object.entries(agg)
@@ -1894,10 +1907,10 @@
             const r = dateRange();
             try {
                 // MENGGABUNGKAN transaction_items langsung ke dalam transaksi 
-                // ini memastikan item produk yang ditarik HANYA milik transaksi di tanggal yang difilter.
+                // Menggunakan r.startDay & r.endDay Khusus untuk query Date Expense
                 const [tR, eR, pR, mR, rR, dR] = await Promise.all([
                     sb.from('transactions').select('id,total_price,created_at, transaction_items(product_id,quantity,price,custom_price)').gte('created_at', r.start).lte('created_at', r.end),
-                    sb.from('expenses').select('*').gte('expense_date', r.start).lte('expense_date', r.end),
+                    sb.from('expenses').select('*').gte('expense_date', r.startDay).lte('expense_date', r.endDay),
                     sb.from('products').select('*').order('name'),
                     sb.from('raw_materials').select('*').order('name'),
                     sb.from('recipes').select('*,products(name,price)').order('total_hpp', { ascending: false }),
@@ -2146,7 +2159,12 @@
             hide('top-products-state');
             if (!I.length) { setH('top-products-state', empty('📦', 'Belum ada data item terjual')); show('top-products-state'); return }
             const agg = {};
-            I.forEach(i => { if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 }; agg[i.product_id].qty += i.quantity; agg[i.product_id].rev += (i.custom_price || i.price) * i.quantity });
+            I.forEach(i => {
+                if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
+                agg[i.product_id].qty += i.quantity;
+                // PERBAIKAN HARGA: Mengatasi error Custom Price Rp 0 di Top Products
+                agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity;
+            });
             const sorted = Object.entries(agg).sort((a, b) => b[1].qty - a[1].qty).slice(0, 7);
             const max = sorted[0][1].qty;
             let h = '';
