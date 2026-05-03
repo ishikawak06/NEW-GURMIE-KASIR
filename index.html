@@ -2518,9 +2518,29 @@
 
         function addExpenseItem() { state.expenseItems.push({ name: '', qty: 1, price: 0 }); renderExpenseItemRows(); }
         function removeExpenseItem(index) { state.expenseItems.splice(index, 1); renderExpenseItemRows(); }
+
+        // --- PERBAIKAN: Fungsi baru untuk update total tanpa render ulang tabel ---
+        function updateExpenseTotalOnly() {
+            let total = 0;
+            state.expenseItems.forEach(item => {
+                total += (item.qty || 0) * (item.price || 0);
+            });
+            document.getElementById('exp-total-display').innerText = formatRp(total);
+        }
+
         function updateExpenseItemName(index, val) { state.expenseItems[index].name = val; }
-        function updateExpenseItemQty(index, val) { state.expenseItems[index].qty = parseFloat(val) || 0; renderExpenseItemRows(); }
-        function updateExpenseItemPrice(index, val) { state.expenseItems[index].price = parseFloat(val) || 0; renderExpenseItemRows(); }
+
+        // --- PERBAIKAN: Gunakan fungsi baru biar kursor tidak lepas ---
+        function updateExpenseItemQty(index, val) {
+            state.expenseItems[index].qty = parseFloat(val) || 0;
+            updateExpenseTotalOnly();
+        }
+
+        // --- PERBAIKAN: Gunakan fungsi baru biar kursor tidak lepas ---
+        function updateExpenseItemPrice(index, val) {
+            state.expenseItems[index].price = parseFloat(val) || 0;
+            updateExpenseTotalOnly();
+        }
 
         async function saveExpense() {
             const dateStr = document.getElementById('exp-date').value;
