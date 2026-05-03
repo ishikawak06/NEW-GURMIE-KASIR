@@ -1553,6 +1553,9 @@
             const tendered = parseFloat(document.getElementById('co-tendered').value) || 0;
             const split = parseInt(document.getElementById('co-split').value) || 1;
 
+            const adjType = document.getElementById('co-adj-type').value;
+            const adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
+
             if (methodSelect === 'Tunai' && tendered < totalFinal) {
                 return showToast('Nominal pembayaran kurang!', 'error');
             }
@@ -1566,7 +1569,9 @@
                     payment_method: method,
                     cash_tendered: methodSelect === 'Tunai' ? tendered : totalFinal,
                     change_amount: methodSelect === 'Tunai' ? tendered - totalFinal : 0,
-                    split_count: split
+                    split_count: split,
+                    adjustment_type: adjType === 'none' ? null : adjType,
+                    adjustment_amount: adjType === 'none' ? 0 : adjVal
                 };
 
                 let trxRes = await supabaseClient.from('transactions').insert([trxPayload]).select().single();
@@ -1866,7 +1871,6 @@
             const item = state.compItems[index];
 
             if (item.isCustom) {
-                // Untuk item custom, qty input = base qty (1:1)
                 item.baseQty = item.inputQty;
                 item.cost = item.baseQty * item.unitPrice;
             } else {
@@ -2114,13 +2118,12 @@
                 const margin = sellPrice - r.totalHPP;
                 const marginPrc = sellPrice > 0 ? ((margin / sellPrice) * 100).toFixed(1) + '%' : '0%';
 
-                // --- STRATEGI BEP ---
                 let strategyHTML = '';
                 if (sellPrice > 0 && r.totalHPP > 0) {
                     const bepCups = Math.ceil(r.totalHPP / sellPrice);
                     strategyHTML = `
                     <div class="mt-2 text-[10px] bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-1.5 rounded text-blue-700 dark:text-blue-300 leading-tight whitespace-normal max-w-xs">
-                        <i data-lucide="lightbulb" class="inline w-3 h-3 text-yellow-500"></i> 
+                        <i data-lucide="lightbulb" class="inline w-3 h-3 text-yellow-500"></i>&nbsp;
                         <strong>Strategi:</strong> Jual <span class="font-bold text-red-500">${bepCups} cup</span> untuk BEP (Nutup HPP Total ${formatRp(r.totalHPP)}).<br>
                         Sisa cup = <strong>Profit Bersih ${formatRp(sellPrice)} / cup</strong>.
                     </div>`;
@@ -2208,7 +2211,6 @@
             const mode = document.getElementById('comp-mode').value;
             const compId = document.getElementById('comp-id').value;
 
-            // Filter data kosong & bentuk payload JSON cerdas (Support item Custom)
             const validItems = state.compItems.filter(i => (i.id !== '' || i.isCustom) && i.inputQty > 0).map(i => ({
                 id: i.isCustom ? i.id : i.id,
                 isCustom: i.isCustom || false,
@@ -2519,7 +2521,6 @@
         function addExpenseItem() { state.expenseItems.push({ name: '', qty: 1, price: 0 }); renderExpenseItemRows(); }
         function removeExpenseItem(index) { state.expenseItems.splice(index, 1); renderExpenseItemRows(); }
 
-        // --- PERBAIKAN: Fungsi baru untuk update total tanpa render ulang tabel ---
         function updateExpenseTotalOnly() {
             let total = 0;
             state.expenseItems.forEach(item => {
@@ -2530,13 +2531,11 @@
 
         function updateExpenseItemName(index, val) { state.expenseItems[index].name = val; }
 
-        // --- PERBAIKAN: Gunakan fungsi baru biar kursor tidak lepas ---
         function updateExpenseItemQty(index, val) {
             state.expenseItems[index].qty = parseFloat(val) || 0;
             updateExpenseTotalOnly();
         }
 
-        // --- PERBAIKAN: Gunakan fungsi baru biar kursor tidak lepas ---
         function updateExpenseItemPrice(index, val) {
             state.expenseItems[index].price = parseFloat(val) || 0;
             updateExpenseTotalOnly();
@@ -2631,7 +2630,7 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('transactions')
-                    .select(`*, transaction_items ( id, product_id, quantity, price, custom_price, products ( name, is_bundle ) )`)
+                    .select(`*, transaction_items ( id, product_id, quantity, price, custom_price, notes, products ( name, is_bundle ) )`)
                     .order('created_at', { ascending: false })
                     .limit(50);
 
@@ -2658,10 +2657,21 @@
                 tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors';
                 const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
 
+                let adjBadge = '';
+                if (trx.adjustment_type === 'discount') {
+                    adjBadge = `<br><span class="bg-yellow-100 text-yellow-700 text-[10px] px-1.5 py-0.5 rounded mt-1 inline-block">Diskon: -${formatRp(trx.adjustment_amount)}</span>`;
+                } else if (trx.adjustment_type === 'fee') {
+                    adjBadge = `<br><span class="bg-orange-100 text-orange-700 text-[10px] px-1.5 py-0.5 rounded mt-1 inline-block">Biaya Tambahan: +${formatRp(trx.adjustment_amount)}</span>`;
+                }
+
                 tr.innerHTML = `
                     <td class="px-6 py-4 font-medium text-gray-900 dark:text-gray-200">${formatTime(trx.created_at)}</td>
                     <td class="px-6 py-4 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
-                    <td class="px-6 py-4 font-bold text-blue-600 dark:text-neon-cyan">${formatRp(trx.total_price)} <br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} Item</span></td>
+                    <td class="px-6 py-4 font-bold text-blue-600 dark:text-neon-cyan">
+                        ${formatRp(trx.total_price)} 
+                        <br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} Item</span>
+                        ${adjBadge}
+                    </td>
                     <td class="px-6 py-4"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300 font-medium">${trx.payment_method || 'Tunai'}</span></td>
                     <td class="px-6 py-4 text-right">
                         <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mr-3" title="Edit Transaksi"><i data-lucide="edit" class="w-4 h-4"></i></button>
