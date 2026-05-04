@@ -9,7 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- PENGGANTI HTML2PDF: jsPDF & jsPDF-AutoTable (Data-Driven PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
@@ -317,7 +316,17 @@
             background: var(--paper);
             border: 1.5px solid var(--ink);
             padding: 1.5rem;
-            position: relative
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .segment-list-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-grow: 1;
+            justify-content: flex-start;
         }
 
         .panel.tall {
@@ -729,7 +738,6 @@
             background: var(--border)
         }
 
-        /* MODAL STYLES */
         .btn-primary {
             background: var(--ink);
             color: var(--paper);
@@ -937,7 +945,6 @@
 
     <header class="site-header">
         <div style="display: flex; align-items: center; gap: 1.5rem;">
-
             <div class="brand">
                 <div class="brand-dot"></div>
                 GurmieKasir <span style="font-style:italic;color:var(--muted);font-size:0.9rem;">Intelligence</span>
@@ -979,7 +986,6 @@
                 <h1 class="page-title">Business <em>Profit</em> &<br>Operations Dashboard</h1>
                 <p class="page-subtitle">// connected to Supabase · real-time data only</p>
             </div>
-            <!-- FILTER PERIODE DENGAN TAMBAHAN HARI INI DAN CUSTOM -->
             <div class="filter-bar">
                 <button class="filter-btn" onclick="setPeriod('today',this)">HARI INI</button>
                 <button class="filter-btn active" onclick="setPeriod('7D',this)">7D</button>
@@ -1030,7 +1036,6 @@
             </div>
         </div>
 
-        <!-- DECISION TRACKING SYSTEM  -->
         <div class="labeled-divider"><span>▲ Decision Tracking System</span></div>
         <div class="section-header" style="justify-content: space-between;">
             <div style="display: flex; align-items: baseline; gap: 0.75rem;">
@@ -1060,7 +1065,6 @@
         </div>
         <div class="risk-grid" id="decisions-list" style="display:none;"></div>
 
-        <!-- Modal Custom Date -->
         <div id="custom-date-modal" class="modal-overlay">
             <div class="modal-content" style="max-width: 400px;">
                 <h2 class="modal-title" style="font-size:1.5rem">Pilih Periode</h2>
@@ -1079,7 +1083,6 @@
             </div>
         </div>
 
-        <!-- Create Decision Modal -->
         <div id="create-decision-modal" class="modal-overlay">
             <div class="modal-content">
                 <h2 class="modal-title">Catat Keputusan Strategis</h2>
@@ -1130,7 +1133,6 @@
             </div>
         </div>
 
-        <!-- Evaluate Decision Modal -->
         <div id="evaluate-decision-modal" class="modal-overlay">
             <div class="modal-content">
                 <h2 class="modal-title">Evaluasi Berbasis Data</h2>
@@ -1269,14 +1271,11 @@
                 <div id="recipes-state" class="state-container">
                     <div class="spinner"></div><span class="state-text">memuat...</span>
                 </div>
-
-                <!-- DYNAMIC TABLE IMPLEMENTATION -->
                 <div id="recipes-table" style="display:none;overflow-x:auto;">
-                    <!-- TEKS PENJELASAN DIUBAH KE TOTAL PENGELUARAN KESELURUHAN -->
                     <p class="stat-sub" style="margin-bottom:0.75rem;">*<strong>Penjualan per Pcs (Balik Modal
                             Keseluruhan)</strong>
-                        = Total Pengeluaran yakni <strong id="total-expense-info">Rp 0</strong> ÷ Laba Bersih
-                        per Pcs.</p>
+                        = Total Pengeluaran yakni <strong id="total-expense-info">Rp 0</strong> ÷ Laba Bersih per Pcs.
+                    </p>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -1290,7 +1289,6 @@
                         <tbody id="recipes-tbody"></tbody>
                     </table>
                 </div>
-
             </div>
         </div>
 
@@ -1302,9 +1300,8 @@
             <div class="spinner"></div><span class="state-text">menganalisis data...</span>
         </div>
         <div class="risk-grid" id="risk-grid" style="display:none;"></div>
-        <div class="labeled-divider"><span>▲ Customer Intelligence</span></div>
 
-        <!-- Segmentasi & Peak Hours -->
+        <div class="labeled-divider"><span>▲ Customer Intelligence</span></div>
         <div class="grid-3">
             <div class="panel">
                 <div class="section-header">
@@ -1315,7 +1312,6 @@
                 </div>
                 <div id="segment-metrics"
                     style="display:none; gap:1rem; flex-direction:column; height: 100%; justify-content: center;">
-                    <!-- Metrics akan di-render di sini -->
                 </div>
             </div>
             <div class="panel">
@@ -1338,13 +1334,10 @@
                 <div id="peak-state" class="state-container">
                     <div class="spinner"></div><span class="state-text">memuat...</span>
                 </div>
-                <div id="peak-content" style="display:none; margin-top: 1rem;">
-                    <!-- Peak Hours Insight di-render di sini -->
-                </div>
+                <div id="peak-content" style="display:none; margin-top: 1rem;"></div>
             </div>
         </div>
 
-        <!-- Top Customers & Bundling Insight -->
         <div class="grid-2">
             <div class="panel tall">
                 <div class="section-header">
@@ -1560,7 +1553,6 @@
                     const agg = {};
                     S.I.forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
-
                         let qty = parseFloat(i.quantity || 1);
                         agg[i.product_id].qty += qty;
                         agg[i.product_id].rev += (i.net_revenue || 0);
@@ -1585,6 +1577,49 @@
                             styles: { fontSize: 8, font: 'helvetica' }
                         });
                         y = doc.lastAutoTable.finalY + 10;
+                    }
+
+                    if (y > 250) { doc.addPage(); y = 15; }
+
+                    // ============================================
+                    // TAMBAHAN: TOP CUSTOMERS KE PDF (DATA-DRIVEN)
+                    // ============================================
+                    if (S.T && S.T.length > 0) {
+                        const customerStats = {};
+                        S.T.forEach(t => {
+                            const custId = t.customer_id || 'umum';
+                            if (!customerStats[custId]) customerStats[custId] = { total_spent: 0, trx_count: 0 };
+                            customerStats[custId].total_spent += parseFloat(t.net_trx_total || t.total_price);
+                            customerStats[custId].trx_count += 1;
+                        });
+
+                        const topCustomersBody = Object.entries(customerStats)
+                            .sort((a, b) => b[1].total_spent - a[1].total_spent)
+                            .slice(0, 10)
+                            .map(([custId, stat], idx) => {
+                                let name, phone;
+                                if (custId === 'umum') {
+                                    name = 'Pelanggan Umum';
+                                    phone = 'Non-Member';
+                                } else {
+                                    const c = (S.C || []).find(c => c.id === custId);
+                                    name = c ? c.name : 'Unknown';
+                                    phone = c && c.phone ? c.phone.substring(0, 4) + 'XXXX' + c.phone.substring(c.phone.length - 3) : '-';
+                                }
+                                return [idx + 1, name, phone, stat.trx_count + ' trx', fmtS(stat.total_spent)];
+                            });
+
+                        if (topCustomersBody.length > 0) {
+                            doc.autoTable({
+                                startY: y,
+                                head: [['No', 'Top Pelanggan', 'Kontak', 'Total Trx', 'Total Belanja']],
+                                body: topCustomersBody,
+                                theme: 'grid',
+                                headStyles: { fillColor: [212, 168, 67] }, // Warna Emas (Gold) agar senada
+                                styles: { fontSize: 8, font: 'helvetica' }
+                            });
+                            y = doc.lastAutoTable.finalY + 10;
+                        }
                     }
 
                     if (y > 250) { doc.addPage(); y = 15; }
@@ -1946,7 +1981,6 @@
 
         async function loadAllData() {
             $('last-updated').textContent = 'memuat...';
-            // UPDATE: Tambahkan ID panel Customer Intelligence ke daftar loading & clear
             ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state', 'segment-state', 'csat-state', 'peak-state', 'top-customers-state', 'affinity-state'].forEach(id => { setH(id, spinner); show(id) });
             ['chart-wrap', 'top-products-list', 'inventory-list', 'profit-breakdown', 'expenses-list', 'materials-table', 'recipes-table', 'risk-grid', 'decisions-list', 'decision-insights-container', 'segment-metrics', 'csat-content', 'peak-content', 'top-customers-list', 'affinity-list'].forEach(hide);
             ['kpi-revenue', 'kpi-profit', 'kpi-expense', 'kpi-aov'].forEach(id => { const e = $(id); if (e) e.textContent = '—' });
@@ -2016,7 +2050,7 @@
 
                         item.total_discount = item.item_level_discount + propTrxDiscount;
                         item.net_revenue = (item.active_price * qty) - propTrxDiscount;
-                        item.transaction_id = t.id; // Menyimpan ID transaksi untuk keperluan analisa bundle
+                        item.transaction_id = t.id;
 
                         I.push(item);
                     });
@@ -2052,13 +2086,11 @@
                 renderRisk({ T, P, I, E, rev, exp, pft, mgn, R });
                 renderDecisions(D);
 
-                // UPDATE: Memanggil Customer Intelligence Renderer
-                await renderCustomerIntelligence(T, I, P);
+                await renderCustomerIntelligence(T, I, P, r);
 
                 $('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('id-ID');
             } catch (e) {
                 console.error(e);
-                // UPDATE: Panel baru ikut menampilkan state error
                 ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state', 'segment-state', 'csat-state', 'peak-state', 'top-customers-state', 'affinity-state'].forEach(id => setH(id, err('Gagal memuat: ' + e.message)));
                 $('last-updated').textContent = 'Error';
             }
@@ -2246,7 +2278,6 @@
 
             I.forEach(i => {
                 if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
-
                 let qty = parseFloat(i.quantity || 1);
                 agg[i.product_id].qty += qty;
                 agg[i.product_id].rev += (i.net_revenue || 0);
@@ -2269,7 +2300,6 @@
 
             sorted.forEach(([pid, d], idx) => {
                 const name = (P.find(p => p.id === pid) || { name: '(dihapus)' }).name;
-
                 const discountBadge = d.discount > 0.1
                     ? `<div style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--accent);margin-top:3px;">- Diskon ${fmtS(d.discount)}</div>`
                     : '';
@@ -2399,27 +2429,29 @@
             show('risk-grid');
         }
 
-        // ==========================================
-        //  FUNGSI CUSTOMER INTELLIGENCE BARU
-        // ==========================================
-
-        async function renderCustomerIntelligence(T, I, P) {
-            const { data: F } = await sb.from('customer_feedback').select('*');
+        async function renderCustomerIntelligence(T, I, P, r) {
+            const { data: F } = await sb.from('customer_feedback')
+                .select('*')
+                .gte('created_at', r.start)
+                .lte('created_at', r.end);
             const feedbackData = F || [];
 
             const { data: C } = await sb.from('customers').select('*');
             const customersData = C || [];
 
+            // TAMBAHAN UNTUK PDF DATA-DRIVEN TOP CUSTOMERS
+            S.C = customersData;
+
             renderPeakHours(T);
             renderCSAT(feedbackData);
-            renderSegmentationAndTopCustomers(T, customersData);
+            renderSegmentationAndTopCustomers(T, customersData, r);
             renderProductAffinity(T, I, P);
         }
 
         function renderPeakHours(T) {
             hide('peak-state');
             if (!T || T.length === 0) {
-                setH('peak-state', empty('⏳', 'Belum ada data transaksi.'));
+                setH('peak-state', empty('⏳', 'Belum ada data transaksi pada periode ini.'));
                 show('peak-state');
                 return;
             }
@@ -2457,7 +2489,7 @@
         function renderCSAT(F) {
             hide('csat-state');
             if (!F || F.length === 0) {
-                setH('csat-state', empty('⭐', 'Belum ada feedback.'));
+                setH('csat-state', empty('⭐', 'Belum ada feedback pada periode ini.'));
                 show('csat-state');
                 return;
             }
@@ -2497,12 +2529,12 @@
             show('csat-content');
         }
 
-        function renderSegmentationAndTopCustomers(T, C) {
+        function renderSegmentationAndTopCustomers(T, C, r) {
             hide('segment-state');
             hide('top-customers-state');
 
-            if (!T || T.length === 0 || !C || C.length === 0) {
-                setH('segment-state', empty('👥', 'Data transaksi/pelanggan tidak cukup.'));
+            if (!T || T.length === 0) {
+                setH('segment-state', empty('👥', 'Data transaksi tidak cukup.'));
                 show('segment-state');
                 setH('top-customers-state', empty('👑', 'Data tidak cukup.'));
                 show('top-customers-state');
@@ -2510,48 +2542,80 @@
             }
 
             const customerStats = {};
-            const thirtyDaysAgo = new Date();
-            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            const startDate = new Date(r.start);
+            const endDate = new Date(r.end);
+            const diffDays = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)));
+
+            const riskDays = diffDays <= 7 ? Math.max(1, Math.floor(diffDays / 2)) : (diffDays <= 30 ? 10 : 30);
+            const riskDate = new Date(r.end);
+            riskDate.setDate(riskDate.getDate() - riskDays);
+
+            const thresholdVIPTrx = diffDays <= 7 ? 2 : (diffDays <= 30 ? 3 : 5);
+            const thresholdVIPSpent = diffDays <= 7 ? 150000 : (diffDays <= 30 ? 300000 : 500000);
 
             T.forEach(t => {
-                if (t.customer_id) {
-                    if (!customerStats[t.customer_id]) {
-                        customerStats[t.customer_id] = { total_spent: 0, trx_count: 0, last_order: new Date(0) };
-                    }
-                    customerStats[t.customer_id].total_spent += parseFloat(t.net_trx_total || t.total_price);
-                    customerStats[t.customer_id].trx_count += 1;
-                    const orderDate = new Date(t.created_at);
-                    if (orderDate > customerStats[t.customer_id].last_order) {
-                        customerStats[t.customer_id].last_order = orderDate;
-                    }
+                const custId = t.customer_id || 'umum';
+                if (!customerStats[custId]) {
+                    customerStats[custId] = { total_spent: 0, trx_count: 0, last_order: new Date(0) };
                 }
+                customerStats[custId].total_spent += parseFloat(t.net_trx_total || t.total_price);
+                customerStats[custId].trx_count += 1;
+                const orderDate = new Date(t.created_at);
+                if (orderDate > customerStats[custId].last_order) customerStats[custId].last_order = orderDate;
             });
 
-            let vipCount = 0, regCount = 0, riskCount = 0;
-            const thresholdVIPSpent = 500000;
-            const thresholdVIPTrx = 5;
+            let vipCount = 0, regCount = 0, riskCount = 0, umumTrx = 0, umumSpent = 0;
 
             for (const id in customerStats) {
                 const stat = customerStats[id];
-                const isChurnRisk = stat.last_order < thirtyDaysAgo;
-
-                if (stat.total_spent >= thresholdVIPSpent && stat.trx_count >= thresholdVIPTrx) {
-                    vipCount++;
-                } else if (isChurnRisk) {
-                    riskCount++;
-                } else {
-                    regCount++;
+                if (id === 'umum') {
+                    umumTrx = stat.trx_count;
+                    umumSpent = stat.total_spent;
+                    continue;
                 }
+                if (stat.total_spent >= thresholdVIPSpent && stat.trx_count >= thresholdVIPTrx) vipCount++;
+                else if (stat.last_order < riskDate) riskCount++;
+                else regCount++;
             }
 
             const segmentHtml = `
-                <div class="metric-row"><div><div style="font-size:0.9rem;font-weight:600;color:var(--gold);">VIP / Sultan</div><div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">Sering & nominal besar</div></div><span class="metric-value" style="font-size:1.2rem;">${vipCount}</span></div>
-                <div class="metric-row"><div><div style="font-size:0.9rem;font-weight:600;color:var(--sage);">Reguler Aktif</div><div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">Membeli secara rutin</div></div><span class="metric-value" style="font-size:1.2rem;">${regCount}</span></div>
-                <div class="metric-row"><div><div style="font-size:0.9rem;font-weight:600;color:var(--accent);">At-Risk (Berisiko)</div><div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">Absen > 30 hari</div></div><span class="metric-value" style="font-size:1.2rem;">${riskCount}</span></div>
+                <div class="segment-list-wrapper">
+                    <div class="metric-row">
+                        <div>
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--gold);">VIP / Sultan</div>
+                            <div style="font-size:0.6rem;color:var(--muted);">Min. ${thresholdVIPTrx} trx & ${fmtS(thresholdVIPSpent)}</div>
+                        </div>
+                        <span class="metric-value" style="font-size:1.1rem;">${vipCount}</span>
+                    </div>
+                    <div class="metric-row">
+                        <div>
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--sage);">Reguler Aktif</div>
+                            <div style="font-size:0.6rem;color:var(--muted);">Membeli rutin di periode ini</div>
+                        </div>
+                        <span class="metric-value" style="font-size:1.1rem;">${regCount}</span>
+                    </div>
+                    <div class="metric-row">
+                        <div>
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--accent);">At-Risk (Berisiko)</div>
+                            <div style="font-size:0.6rem;color:var(--muted);">Absen > ${riskDays} hari</div>
+                        </div>
+                        <span class="metric-value" style="font-size:1.1rem;">${riskCount}</span>
+                    </div>
+                    
+                    <div class="metric-row" style="background:var(--cream); padding:0.75rem; border-radius:4px; margin-top:auto; border:1px dashed var(--muted);">
+                        <div>
+                            <div style="font-size:0.85rem;font-weight:600;color:var(--slate);">Pelanggan Umum</div>
+                            <div style="font-size:0.6rem;color:var(--muted);">Walk-in / Tanpa Member</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <span class="metric-value" style="font-size:0.9rem;">${umumTrx} trx</span>
+                            <div style="font-family:'JetBrains Mono';font-size:0.65rem;color:var(--sage); font-weight:bold;">${fmtS(umumSpent)}</div>
+                        </div>
+                    </div>
+                </div>
             `;
             setH('segment-metrics', segmentHtml);
-            document.getElementById('segment-metrics').style.display = 'flex';
-
+            show('segment-metrics');
 
             const sortedCustomers = Object.entries(customerStats)
                 .sort((a, b) => b[1].total_spent - a[1].total_spent)
@@ -2559,30 +2623,37 @@
 
             let topHtml = '';
             sortedCustomers.forEach(([custId, stat], idx) => {
-                const c = C.find(c => c.id === custId);
-                const name = c ? c.name : 'Unknown';
-                const phone = c && c.phone ? c.phone.substring(0, 4) + 'XXXX' + c.phone.substring(c.phone.length - 3) : '-';
+                let name, phone;
+                let isUmum = custId === 'umum';
+                if (isUmum) {
+                    name = 'Pelanggan Umum';
+                    phone = 'Non-Member / Walk-in';
+                } else {
+                    const c = C.find(c => c.id === custId);
+                    name = c ? c.name : 'Unknown';
+                    phone = c && c.phone ? c.phone.substring(0, 4) + 'XXXX' + c.phone.substring(c.phone.length - 3) : '-';
+                }
 
                 topHtml += `
                  <div style="padding:0.8rem 0;border-bottom:1px solid var(--border);">
-                    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;">
                         <span style="display:flex;align-items:baseline;gap:0.75rem;">
                             <span class="rank-num">${idx + 1}</span>
                             <span>
-                                <div style="font-size:0.85rem;font-weight:600;">${name}</div>
-                                <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">${phone}</div>
+                                <div style="font-size:0.85rem;font-weight:600; ${isUmum ? 'color:var(--muted); font-style:italic;' : ''}">${name}</div>
+                                <div style="font-family:'JetBrains Mono';font-size:0.6rem;color:var(--muted);">${phone}</div>
                             </span>
                         </span>
                         <div style="text-align:right;">
-                            <div style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--sage);font-weight:bold;">${fmtS(stat.total_spent)}</div>
-                            <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">${stat.trx_count} trx</div>
+                            <div style="font-family:'JetBrains Mono';font-size:0.8rem;color:var(--sage);font-weight:bold;">${fmtS(stat.total_spent)}</div>
+                            <div style="font-size:0.6rem;color:var(--muted);">${stat.trx_count} trx</div>
                         </div>
                     </div>
                 </div>`;
             });
 
             if (topHtml === '') {
-                setH('top-customers-state', empty('👑', 'Belum ada transaksi pelanggan terdaftar.'));
+                setH('top-customers-state', empty('👑', 'Belum ada transaksi.'));
                 show('top-customers-state');
             } else {
                 setH('top-customers-list', topHtml);
@@ -2620,7 +2691,7 @@
                 .slice(0, 3);
 
             if (sortedPairs.length === 0) {
-                setH('affinity-list', `<div class="state-container" style="padding:1rem;"><span class="state-text">Data belum cukup untuk analisa bundling.</span></div>`);
+                setH('affinity-list', `<div class="state-container" style="padding:1rem;"><span class="state-text">Data belum cukup untuk analisa bundling di periode ini.</span></div>`);
                 show('affinity-list');
                 return;
             }
