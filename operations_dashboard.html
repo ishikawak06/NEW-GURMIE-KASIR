@@ -1497,10 +1497,20 @@
 
                     const agg = {};
                     S.I.forEach(i => {
-                        if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
-                        agg[i.product_id].qty += i.quantity;
-                        // PERBAIKAN BUG: Gunakan '?? 1' agar rasio 0 tidak ditolak
-                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity * (i.trx_ratio ?? 1);
+                        if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
+
+                        let basePrice = parseFloat(i.price) || 0;
+                        let activePrice = i.custom_price !== null ? parseFloat(i.custom_price) : basePrice;
+                        let qty = i.quantity;
+
+                        let netRev = activePrice * qty * (i.trx_ratio ?? 1);
+                        let discount = (basePrice * qty) - netRev;
+
+                        agg[i.product_id].qty += qty;
+                        agg[i.product_id].rev += netRev;
+                        if (discount > 0) {
+                            agg[i.product_id].discount += discount;
+                        }
                     });
 
                     const topProductsBody = Object.entries(agg)
@@ -1508,13 +1518,14 @@
                         .slice(0, 10)
                         .map(([pid, d], idx) => {
                             const name = (S.P.find(p => p.id === pid) || { name: '(dihapus)' }).name;
-                            return [idx + 1, name, d.qty + ' unit', fmtS(d.rev)];
+                            // Tambah data diskon ke dalam array row (jadi 5 kolom)
+                            return [idx + 1, name, d.qty + ' unit', fmtS(d.rev), d.discount > 0 ? fmtS(d.discount) : '-'];
                         });
 
                     if (topProductsBody.length > 0) {
                         doc.autoTable({
                             startY: y,
-                            head: [['No', 'Produk Terlaris', 'Terjual', 'Estimasi Omzet']],
+                            head: [['No', 'Produk Terlaris', 'Terjual', 'Estimasi Omzet', 'Total Diskon']],
                             body: topProductsBody,
                             theme: 'grid',
                             headStyles: { fillColor: [10, 10, 15] },
@@ -1646,10 +1657,20 @@
 
                     const agg = {};
                     (S.I || []).forEach(i => {
-                        if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
-                        agg[i.product_id].qty += i.quantity;
-                        // PERBAIKAN BUG: Gunakan '?? 1' agar rasio 0 tidak ditolak
-                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity * (i.trx_ratio ?? 1);
+                        if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
+
+                        let basePrice = parseFloat(i.price) || 0;
+                        let activePrice = i.custom_price !== null ? parseFloat(i.custom_price) : basePrice;
+                        let qty = i.quantity;
+
+                        let netRev = activePrice * qty * (i.trx_ratio ?? 1);
+                        let discount = (basePrice * qty) - netRev;
+
+                        agg[i.product_id].qty += qty;
+                        agg[i.product_id].rev += netRev;
+                        if (discount > 0) {
+                            agg[i.product_id].discount += discount;
+                        }
                     });
 
                     const top5 = Object.entries(agg)
@@ -1682,6 +1703,14 @@
                             ctx.font = 'bold 18px monospace';
                             ctx.textAlign = 'right';
                             ctx.fillText(fmtS(data.rev), 750, listY);
+
+                            // Render teks diskon jika ada
+                            if (data.discount > 0) {
+                                ctx.fillStyle = '#c84b31';
+                                ctx.font = '14px monospace';
+                                ctx.fillText(`Diskon ${fmtS(data.discount)}`, 750, listY + 24);
+                            }
+
                             ctx.textAlign = 'left';
 
                             ctx.strokeStyle = border;
