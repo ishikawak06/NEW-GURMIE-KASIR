@@ -1344,7 +1344,6 @@
         const fmt = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
         const fmtS = n => { const a = Math.abs(n); const s = n < 0 ? '-' : ''; if (a >= 1e9) return s + 'Rp ' + (a / 1e9).toFixed(1) + 'M'; if (a >= 1e6) return s + 'Rp ' + (a / 1e6).toFixed(1) + 'jt'; if (a >= 1e3) return s + 'Rp ' + (a / 1e3).toFixed(0) + 'rb'; return fmt(n) };
 
-        // PRELOAD LOGO IMAGE
         const LOGO_URL = 'https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/Desain%20tanpa%20judul222.png';
         const logoImg = new Image();
         let logoBase64 = null;
@@ -1357,7 +1356,6 @@
         };
         logoImg.src = LOGO_URL;
 
-        // VARIABEL PERIODE DINAMIS
         let periodType = '7D';
         let customDates = { start: '', end: '' };
         let chartA = null, chartB = null, S = {};
@@ -1495,22 +1493,15 @@
                         y += 60;
                     }
 
+                    // ====== REFACTOR KALKULASI PDF LEBIH SIMPEL =======
                     const agg = {};
                     S.I.forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
 
-                        let basePrice = parseFloat(i.price) || 0;
-                        let activePrice = i.custom_price !== null ? parseFloat(i.custom_price) : basePrice;
-                        let qty = i.quantity;
-
-                        let netRev = activePrice * qty * (i.trx_ratio ?? 1);
-                        let discount = (basePrice * qty) - netRev;
-
+                        let qty = parseFloat(i.quantity || 1);
                         agg[i.product_id].qty += qty;
-                        agg[i.product_id].rev += netRev;
-                        if (discount > 0) {
-                            agg[i.product_id].discount += discount;
-                        }
+                        agg[i.product_id].rev += (i.net_revenue || 0);
+                        agg[i.product_id].discount += (i.total_discount || 0);
                     });
 
                     const topProductsBody = Object.entries(agg)
@@ -1518,8 +1509,7 @@
                         .slice(0, 10)
                         .map(([pid, d], idx) => {
                             const name = (S.P.find(p => p.id === pid) || { name: '(dihapus)' }).name;
-                            // Tambah data diskon ke dalam array row (jadi 5 kolom)
-                            return [idx + 1, name, d.qty + ' unit', fmtS(d.rev), d.discount > 0 ? fmtS(d.discount) : '-'];
+                            return [idx + 1, name, d.qty + ' unit', fmtS(d.rev), d.discount > 0.1 ? fmtS(d.discount) : '-'];
                         });
 
                     if (topProductsBody.length > 0) {
@@ -1655,22 +1645,14 @@
                     ctx.lineTo(750, 350);
                     ctx.stroke();
 
+                    // ====== REFACTOR KALKULASI IMAGE LEBIH SIMPEL =======
                     const agg = {};
                     (S.I || []).forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
-
-                        let basePrice = parseFloat(i.price) || 0;
-                        let activePrice = i.custom_price !== null ? parseFloat(i.custom_price) : basePrice;
-                        let qty = i.quantity;
-
-                        let netRev = activePrice * qty * (i.trx_ratio ?? 1);
-                        let discount = (basePrice * qty) - netRev;
-
+                        let qty = parseFloat(i.quantity || 1);
                         agg[i.product_id].qty += qty;
-                        agg[i.product_id].rev += netRev;
-                        if (discount > 0) {
-                            agg[i.product_id].discount += discount;
-                        }
+                        agg[i.product_id].rev += (i.net_revenue || 0);
+                        agg[i.product_id].discount += (i.total_discount || 0);
                     });
 
                     const top5 = Object.entries(agg)
@@ -1704,8 +1686,7 @@
                             ctx.textAlign = 'right';
                             ctx.fillText(fmtS(data.rev), 750, listY);
 
-                            // Render teks diskon jika ada
-                            if (data.discount > 0) {
+                            if (data.discount > 0.1) {
                                 ctx.fillStyle = '#c84b31';
                                 ctx.font = '14px monospace';
                                 ctx.fillText(`Diskon ${fmtS(data.discount)}`, 750, listY + 24);
@@ -1926,33 +1907,69 @@
                 const D = dR.data || [];
 
                 const I = [];
+                console.log("== MEMUAT DATA BARU & MENGHITUNG DISKON SECARA AGRESIF ==");
+
+                // ====== REFACTOR DETEKSI DISKON (ROOT CAUSE) ======
                 T.forEach(t => {
-                    // PERBAIKAN LOGIKA: Bandingkan Total Aktual Transaksi dengan Harga Mentah Item
-                    let actualTrxTotal = parseFloat(t.total_price || 0);
+                    let rawTrxTotal = parseFloat(t.total_price || 0);
+                    let explicitTrxDiscount = 0;
 
-                    if (t.transaction_items && Array.isArray(t.transaction_items)) {
-                        let itemsRawTotal = 0;
-
-                        // Hitung total harga item sebelum diskon level-transaksi
-                        t.transaction_items.forEach(item => {
-                            let p = item.custom_price !== null ? parseFloat(item.custom_price) : parseFloat(item.price);
-                            itemsRawTotal += (p * item.quantity);
-                        });
-
-                        // Hitung rasio
-                        let ratio = itemsRawTotal > 0 ? (actualTrxTotal / itemsRawTotal) : 1;
-
-                        t.transaction_items.forEach(item => {
-                            item.trx_ratio = ratio;
-                            I.push(item);
-                        });
+                    // Mengambil diskon langsung dari kolom adjustment jika diisi
+                    if (parseFloat(t.adjustment_amount) > 0) {
+                        explicitTrxDiscount = parseFloat(t.adjustment_amount);
                     }
+
+                    let itemsRawTotal = 0;
+                    let tItems = t.transaction_items || [];
+
+                    tItems.forEach(item => {
+                        let masterProduct = P.find(p => p.id === item.product_id);
+                        let normalPrice = (masterProduct && masterProduct.price) ? parseFloat(masterProduct.price) : parseFloat(item.price || 0);
+                        let activePrice = (item.custom_price != null && item.custom_price !== "") ? parseFloat(item.custom_price) : parseFloat(item.price || normalPrice);
+                        let qty = parseFloat(item.quantity || 1);
+
+                        item.normal_price = normalPrice;
+                        item.active_price = activePrice;
+                        // Diskon per item (misal karena diganti harganya di kasir)
+                        item.item_level_discount = (normalPrice - activePrice) * qty;
+                        if (item.item_level_discount < 0) item.item_level_discount = 0;
+
+                        itemsRawTotal += (activePrice * qty);
+                    });
+
+                    let impliedDiscount = itemsRawTotal - rawTrxTotal;
+                    let finalTrxDiscount = explicitTrxDiscount;
+
+                    // Cek jika kasir memakai `adjustment_amount` tapi total_price ternyata tidak ikut terpotong
+                    // Atau total_price sudah dipotong tapi kolom `adjustment_amount` tidak terisi
+                    if (impliedDiscount > explicitTrxDiscount + 0.1) {
+                        finalTrxDiscount = impliedDiscount;
+                        t.net_trx_total = rawTrxTotal;
+                    } else if (explicitTrxDiscount > 0 && impliedDiscount <= 0.1) {
+                        // Kasus dimana adjustment_amount ada, tapi tidak mengubah total_price di database
+                        t.net_trx_total = rawTrxTotal - explicitTrxDiscount;
+                    } else {
+                        t.net_trx_total = rawTrxTotal;
+                    }
+
+                    // Proporsikan diskon transaksi ke masing-masing item supaya kelihatan akurat
+                    tItems.forEach(item => {
+                        let qty = parseFloat(item.quantity || 1);
+                        let itemWeight = itemsRawTotal > 0 ? ((item.active_price * qty) / itemsRawTotal) : 0;
+                        let propTrxDiscount = finalTrxDiscount * itemWeight;
+
+                        // Simpan pre-kalkulasi yang Fix
+                        item.total_discount = item.item_level_discount + propTrxDiscount;
+                        item.net_revenue = (item.active_price * qty) - propTrxDiscount;
+
+                        I.push(item);
+                    });
                 });
 
                 S = { T, E, P, I, M, R, D };
 
-                // Gunakan total_price langsung karena database sudah menyimpan nilai net yang dibayar customer
-                const rev = T.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
+                // Gunakan net_trx_total agar KPI merujuk ke angka paling real setelah diskon
+                const rev = T.reduce((s, t) => s + (t.net_trx_total || 0), 0);
                 const exp = E.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
 
                 const pft = rev - exp;
@@ -1966,7 +1983,8 @@
                 $('kpi-profit').className = 'stat-value ' + (pft >= 0 ? 'positive' : 'negative');
                 $('kpi-expense').textContent = fmtS(exp); anim('kpi-expense');
                 $('kpi-aov').textContent = fmtS(aov); anim('kpi-aov');
-                $('kpi-trx-count').textContent = T.length + ' transaksi';
+
+                $('kpi-trx-count').innerHTML = T.length + ' transaksi';
                 $('kpi-exp-count').textContent = E.length + ' catatan pengeluaran';
                 $('kpi-products').textContent = P.length + ' produk terdaftar';
                 $('kpi-margin').textContent = 'margin ' + mgn.toFixed(1) + '%';
@@ -2139,7 +2157,7 @@
                 T.forEach(t => {
                     const dateObj = new Date(t.created_at);
                     const hourStr = dateObj.getHours().toString().padStart(2, '0') + ':00';
-                    if (map[hourStr] !== undefined) map[hourStr] += parseFloat(t.total_price || 0);
+                    if (map[hourStr] !== undefined) map[hourStr] += (t.net_trx_total || 0);
                 });
             } else {
                 let loops = 0;
@@ -2150,7 +2168,7 @@
                 }
                 T.forEach(t => {
                     const k = new Date(t.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
-                    if (map[k] !== undefined) map[k] += parseFloat(t.total_price || 0);
+                    if (map[k] !== undefined) map[k] += (t.net_trx_total || 0);
                 });
             }
 
@@ -2163,39 +2181,39 @@
         function renderTop(I, P) {
             hide('top-products-state');
             if (!I.length) { setH('top-products-state', empty('📦', 'Belum ada data item terjual')); show('top-products-state'); return }
+
+            // ====== REFACTOR RENDER TOP LEBIH SIMPEL ======
             const agg = {};
+            let globalTotalDiskon = 0;
+
             I.forEach(i => {
-                // Tambahkan key discount: 0
                 if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
 
-                let basePrice = parseFloat(i.price) || 0;
-                let activePrice = i.custom_price !== null ? parseFloat(i.custom_price) : basePrice;
-                let qty = i.quantity;
-
-                // Hitung revenue bersih setelah rasio diskon transaksi
-                let netRev = activePrice * qty * (i.trx_ratio ?? 1);
-
-                // Diskon = (Harga Normal * Qty) - (Nett Revenue)
-                let discount = (basePrice * qty) - netRev;
-
+                let qty = parseFloat(i.quantity || 1);
                 agg[i.product_id].qty += qty;
-                agg[i.product_id].rev += netRev;
+                agg[i.product_id].rev += (i.net_revenue || 0);
+                agg[i.product_id].discount += (i.total_discount || 0);
 
-                // Hanya catat jika ada diskon (mencegah nilai negatif jika ada markup harga)
-                if (discount > 0) {
-                    agg[i.product_id].discount += discount;
+                if (i.total_discount > 0.1) {
+                    globalTotalDiskon += i.total_discount;
                 }
             });
+
+            if (globalTotalDiskon > 0.1) {
+                document.querySelector('.section-tag').innerText = `TOTAL DISKON ${fmtS(globalTotalDiskon)}`;
+                document.querySelector('.section-tag').style.color = "var(--accent)";
+                document.querySelector('.section-tag').style.borderColor = "var(--accent)";
+            }
 
             const sorted = Object.entries(agg).sort((a, b) => b[1].qty - a[1].qty).slice(0, 7);
             const max = sorted[0][1].qty;
             let h = '';
+
             sorted.forEach(([pid, d], idx) => {
                 const name = (P.find(p => p.id === pid) || { name: '(dihapus)' }).name;
 
-                // Elemen teks diskon (hanya muncul jika diskon > 0)
-                const discountBadge = d.discount > 0
-                    ? `<div style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--accent);margin-top:3px;">Diskon ${fmtS(d.discount)}</div>`
+                const discountBadge = d.discount > 0.1
+                    ? `<div style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--accent);margin-top:3px;">- Diskon ${fmtS(d.discount)}</div>`
                     : '';
 
                 h += `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border);">
