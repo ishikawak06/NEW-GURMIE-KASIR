@@ -191,6 +191,39 @@
         </div>
     </aside>
 
+    <!-- MODAL TAMBAH PELANGGAN -->
+    <div id="modal-add-customer"
+        class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity">
+        <div
+            class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-sm p-5 shadow-2xl transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-900 dark:text-white flex items-center"><i data-lucide="user"
+                        class="w-4 h-4 mr-2 text-blue-600"></i> Tambah Pelanggan</h3>
+                <button onclick="toggleModal('modal-add-customer', false)"
+                    class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Nama Pelanggan *</label>
+                    <input type="text" id="new-cust-name" placeholder="Misal: Budi Santoso"
+                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Nomor HP / WA</label>
+                    <input type="text" id="new-cust-phone" placeholder="Misal: 08123456789"
+                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-blue-500">
+                </div>
+            </div>
+            <div class="mt-5 flex justify-end gap-2">
+                <button onclick="toggleModal('modal-add-customer', false)"
+                    class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200">Batal</button>
+                <button onclick="saveNewCustomer()"
+                    class="px-4 py-2 rounded text-sm bg-blue-600 hover:bg-blue-700 text-white font-bold shadow flex items-center">Simpan</button>
+            </div>
+        </div>
+    </div>
+
     <main class="flex-1 flex flex-col relative overflow-hidden">
 
         <section id="view-kasir" class="h-full flex flex-col md:flex-row w-full animate-fade-in">
@@ -791,6 +824,23 @@
                             </div>
                         </div>
                     </div>
+                    <!-- TABAHAN FITUR PELANGGAN -->
+                    <div class="mb-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400">Pilih Pelanggan
+                                (Opsional)</label>
+                            <button onclick="openAddCustomerModal()"
+                                class="text-xs text-blue-600 dark:text-neon-cyan hover:underline flex items-center">
+                                <i data-lucide="user-plus" class="w-3 h-3 mr-1"></i> Pelanggan Baru
+                            </button>
+                        </div>
+                        <select id="co-customer"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white">
+                            <option value="">-- Pelanggan Umum / Tanpa Nama --</option>
+                            <!-- Opsi pelanggan akan di-render dari JS -->
+                        </select>
+                    </div>
+                    <!-- AKHIR TAMBAHAN -->
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -1135,7 +1185,8 @@
             processedMaterials: [],
             recipes: [],
 
-            compItems: []
+            compItems: [],
+            customers: [] // <-- BARU: State untuk menyimpan data pelanggan
         };
 
         const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n || 0);
@@ -1161,7 +1212,7 @@
         }
 
         // ==========================================
-        // 2. DATA FETCHING
+        // 2. DATA FETCHING (TERMASUK PELANGGAN)
         // ==========================================
         async function fetchProducts() {
             showLoading(true);
@@ -1234,6 +1285,58 @@
                 showToast('Gagal memuat data Material/Resep', 'error');
             }
         }
+
+        // --- BARU: LOGIKA DATA PELANGGAN ---
+        async function fetchCustomers() {
+            const { data, error } = await supabaseClient.from('customers').select('*').order('name');
+            if (!error && data) {
+                state.customers = data;
+                renderCustomerSelect();
+            }
+        }
+
+        function renderCustomerSelect() {
+            const select = document.getElementById('co-customer');
+            if (!select) return;
+
+            const prevValue = select.value;
+            select.innerHTML = '<option value="">-- Pelanggan Umum / Tanpa Nama --</option>' +
+                state.customers.map(c => `<option value="${c.id}">${c.name} ${c.phone ? ' - ' + c.phone : ''}</option>`).join('');
+
+            if (prevValue) select.value = prevValue;
+        }
+
+        function openAddCustomerModal() {
+            document.getElementById('new-cust-name').value = '';
+            document.getElementById('new-cust-phone').value = '';
+            toggleModal('modal-add-customer', true);
+        }
+
+        async function saveNewCustomer() {
+            const name = document.getElementById('new-cust-name').value;
+            const phone = document.getElementById('new-cust-phone').value;
+
+            if (!name) return showToast('Nama pelanggan wajib diisi', 'warning');
+
+            showLoading(true);
+            try {
+                const { data, error } = await supabaseClient.from('customers').insert([{ name, phone }]).select().single();
+                if (error) throw error;
+
+                showToast('Pelanggan ditambahkan!', 'success');
+                state.customers.push(data);
+
+                renderCustomerSelect();
+                document.getElementById('co-customer').value = data.id;
+
+                toggleModal('modal-add-customer', false);
+            } catch (e) {
+                showToast('Gagal menyimpan pelanggan', 'error');
+                console.error(e);
+            }
+            showLoading(false);
+        }
+        // -----------------------------------
 
         // ==========================================
         // 3. KASIR & CART LOGIC
@@ -1511,6 +1614,9 @@
             document.getElementById('co-method-custom-name').value = '';
             document.getElementById('co-method-custom-name').classList.add('hidden');
 
+            // BARU: Reset Customer Option
+            if (document.getElementById('co-customer')) document.getElementById('co-customer').value = '';
+
             calcCheckoutTotal();
 
             toggleModal('modal-checkout', true);
@@ -1568,6 +1674,10 @@
             const adjType = document.getElementById('co-adj-type').value;
             const adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
 
+            // BARU: Ambil ID Pelanggan
+            const customerSelect = document.getElementById('co-customer');
+            const customerId = customerSelect ? customerSelect.value : null;
+
             if (methodSelect === 'Tunai' && tendered < totalFinal) {
                 return showToast('Nominal pembayaran kurang!', 'error');
             }
@@ -1576,6 +1686,7 @@
             toggleModal('modal-checkout', false);
 
             try {
+                // BARU: Tambahkan customer_id ke payload
                 let trxPayload = {
                     total_price: totalFinal,
                     payment_method: method,
@@ -1583,7 +1694,8 @@
                     change_amount: methodSelect === 'Tunai' ? tendered - totalFinal : 0,
                     split_count: split,
                     adjustment_type: adjType === 'none' ? null : adjType,
-                    adjustment_amount: adjType === 'none' ? 0 : adjVal
+                    adjustment_amount: adjType === 'none' ? 0 : adjVal,
+                    customer_id: customerId || null
                 };
 
                 let trxRes = await supabaseClient.from('transactions').insert([trxPayload]).select().single();
@@ -2712,7 +2824,7 @@
                     <td class="px-6 py-4 font-medium text-gray-900 dark:text-gray-200">${formatTime(trx.created_at)}</td>
                     <td class="px-6 py-4 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
                     <td class="px-6 py-4 font-bold text-blue-600 dark:text-neon-cyan">
-                        ${formatRp(trx.total_price)} 
+                        ${formatRp(trx.total_price)} 
                         <br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} Item</span>
                         ${adjBadge}
                     </td>
@@ -2994,6 +3106,11 @@
             if (window.lucide) lucide.createIcons();
             fetchProducts();
             fetchBOMData();
+
+            // --- BARU: Jalankan fetchCustomers saat awal load
+            fetchCustomers();
+            // ------------------------------------------------
+
             switchView('kasir');
         };
     </script>
