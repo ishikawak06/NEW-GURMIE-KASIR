@@ -2136,17 +2136,57 @@
             if (!I.length) { setH('top-products-state', empty('📦', 'Belum ada data item terjual')); show('top-products-state'); return }
             const agg = {};
             I.forEach(i => {
-                if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
-                agg[i.product_id].qty += i.quantity;
-                // PERBAIKAN BUG: Gunakan '?? 1' agar rasio 0 tidak ditolak
-                agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity * (i.trx_ratio ?? 1);
+                // Tambahkan key discount: 0
+                if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
+
+                let basePrice = parseFloat(i.price) || 0;
+                let activePrice = i.custom_price !== null ? parseFloat(i.custom_price) : basePrice;
+                let qty = i.quantity;
+
+                // Hitung revenue bersih setelah rasio diskon transaksi
+                let netRev = activePrice * qty * (i.trx_ratio ?? 1);
+
+                // Diskon = (Harga Normal * Qty) - (Nett Revenue)
+                let discount = (basePrice * qty) - netRev;
+
+                agg[i.product_id].qty += qty;
+                agg[i.product_id].rev += netRev;
+
+                // Hanya catat jika ada diskon (mencegah nilai negatif jika ada markup harga)
+                if (discount > 0) {
+                    agg[i.product_id].discount += discount;
+                }
             });
+
             const sorted = Object.entries(agg).sort((a, b) => b[1].qty - a[1].qty).slice(0, 7);
             const max = sorted[0][1].qty;
             let h = '';
             sorted.forEach(([pid, d], idx) => {
                 const name = (P.find(p => p.id === pid) || { name: '(dihapus)' }).name;
-                h += `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border);"><div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;"><span style="display:flex;align-items:baseline;gap:0.5rem;"><span class="rank-num">${idx + 1}</span><span style="font-size:0.8rem;font-weight:500;">${name}</span></span><span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--muted);">${d.qty} unit</span></div><div style="display:flex;align-items:center;gap:0.5rem;"><div class="bar-track" style="flex:1;"><div class="bar-fill" style="width:${(d.qty / max * 100).toFixed(0)}%"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--sage);min-width:60px;text-align:right;">${fmtS(d.rev)}</span></div></div>`;
+
+                // Elemen teks diskon (hanya muncul jika diskon > 0)
+                const discountBadge = d.discount > 0
+                    ? `<div style="font-family:'JetBrains Mono',monospace;font-size:0.55rem;color:var(--accent);margin-top:3px;">Diskon ${fmtS(d.discount)}</div>`
+                    : '';
+
+                h += `<div style="padding:0.6rem 0;border-bottom:1px solid var(--border);">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;">
+                        <span style="display:flex;align-items:baseline;gap:0.5rem;">
+                            <span class="rank-num">${idx + 1}</span>
+                            <span style="font-size:0.8rem;font-weight:500;">${name}</span>
+                        </span>
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--muted);">${d.qty} unit</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                        <div class="bar-track" style="flex:1;">
+                            <div class="bar-fill" style="width:${(d.qty / max * 100).toFixed(0)}%"></div>
+                        </div>
+                        <div style="text-align:right; min-width:70px;">
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--sage);">${fmtS(d.rev)}</div>
+                            ${discountBadge}
+                        </div>
+                    </div>
+                </div>`;
             });
             setH('top-products-list', h); show('top-products-list');
         }
