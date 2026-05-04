@@ -1,1 +1,1508 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Feedback & Insight Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #181b22;
+    --border: #232633;
+    --accent: #f0c040;
+    --accent2: #e05c40;
+    --accent3: #40c0a0;
+    --text: #e8eaf0;
+    --muted: #6b7080;
+    --danger: #e04060;
+    --success: #40c080;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,12,16,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-logo {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .header-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .header-title span {
+    color: var(--accent);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* NAV TABS */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  nav button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 14px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.01em;
+  }
+
+  nav button:hover { color: var(--text); }
+  nav button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* MAIN */
+  main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* SECTIONS */
+  .section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .section-title small {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0;
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    main { padding: 1rem; }
+  }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.yellow::before { background: var(--accent); }
+  .stat-card.red::before { background: var(--accent2); }
+  .stat-card.green::before { background: var(--accent3); }
+  .stat-card.blue::before { background: #6090f0; }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* FORM */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 14px;
+    transition: border-color 0.2s;
+    outline: none;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  select option { background: var(--surface); }
+  textarea { resize: vertical; min-height: 90px; }
+
+  /* RATING STARS */
+  .rating-group { display: flex; gap: 6px; }
+  .star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    color: var(--border);
+    transition: all 0.15s;
+    padding: 4px;
+  }
+  .star-btn.active, .star-btn:hover { color: var(--accent); transform: scale(1.1); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    transition: all 0.2s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a0c10;
+  }
+  .btn-primary:hover { background: #f8d060; transform: translateY(-1px); }
+
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+  .btn-danger {
+    background: rgba(224,64,96,0.12);
+    color: var(--danger);
+    border: 1px solid rgba(224,64,96,0.2);
+  }
+
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* FEEDBACK LIST */
+  .feedback-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .feedback-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: start;
+    transition: border-color 0.2s;
+  }
+
+  .feedback-item:hover { border-color: var(--accent); }
+
+  .feedback-rating {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .feedback-name {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .feedback-text {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  .feedback-meta {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 10px;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+  }
+
+  .badge.yellow { border-color: rgba(240,192,64,0.3); color: var(--accent); background: rgba(240,192,64,0.08); }
+  .badge.green { border-color: rgba(64,192,160,0.3); color: var(--accent3); background: rgba(64,192,160,0.08); }
+  .badge.red { border-color: rgba(224,92,64,0.3); color: var(--accent2); background: rgba(224,92,64,0.08); }
+
+  .feedback-date {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* CHARTS */
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+
+  .chart-container {
+    position: relative;
+    height: 260px;
+  }
+
+  /* INSIGHT BOX */
+  .insight-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .insight-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .insight-icon.yellow { background: rgba(240,192,64,0.12); }
+  .insight-icon.red { background: rgba(224,92,64,0.12); }
+  .insight-icon.green { background: rgba(64,192,160,0.12); }
+  .insight-icon.blue { background: rgba(96,144,240,0.12); }
+
+  .insight-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .insight-value {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+
+  .insight-sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ALERT */
+  .alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    font-size: 13px;
+    margin-bottom: 1rem;
+  }
+
+  .alert-danger {
+    background: rgba(224,64,96,0.08);
+    border: 1px solid rgba(224,64,96,0.25);
+    color: #f08090;
+  }
+
+  .alert-warning {
+    background: rgba(240,192,64,0.08);
+    border: 1px solid rgba(240,192,64,0.25);
+    color: var(--accent);
+  }
+
+  .alert-info {
+    background: rgba(64,192,160,0.08);
+    border: 1px solid rgba(64,192,160,0.25);
+    color: var(--accent3);
+  }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+
+  .empty-state .empty-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 1.5rem;
+    justify-content: center;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ERROR */
+  .error-msg {
+    background: rgba(224,64,96,0.08);
+    border: 1px solid rgba(224,64,96,0.2);
+    border-radius: var(--radius-sm);
+    color: #f08090;
+    font-size: 13px;
+    padding: 10px 14px;
+    margin-top: 0.5rem;
+    display: none;
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+    max-width: 320px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  .toast-item.success { border-left: 3px solid var(--success); }
+  .toast-item.error { border-left: 3px solid var(--danger); }
+  .toast-item.info { border-left: 3px solid var(--accent); }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* MANUAL INPUT TOGGLE */
+  #manual-name-wrap { display: none; }
+
+  /* SEARCH BAR */
+  .search-bar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .search-bar input {
+    flex: 1;
+  }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+  }
+
+  /* SCORE BAR */
+  .score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+  }
+
+  .score-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--accent);
+    transition: width 0.8s ease;
+  }
+
+  .score-pct {
+    font-size: 12px;
+    color: var(--muted);
+    width: 36px;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="header-logo">💬</div>
+    <div class="header-title">Feedback<span>Hub</span></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" onclick="refreshAll()">↻ Refresh</button>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('form', this)">✏️ Input Feedback</button>
+  <button onclick="switchTab('list', this)">📋 Feedback List</button>
+  <button onclick="switchTab('dashboard', this)">📊 Dashboard</button>
+  <button onclick="switchTab('insight', this)">🔍 Insight</button>
+</nav>
+
+<main>
+
+  <!-- ===================== FORM ===================== -->
+  <div class="section active" id="section-form">
+    <div class="section-header">
+      <div class="section-title">
+        Input Feedback
+        <small>Tambah feedback baru dari pelanggan</small>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="form-grid">
+
+        <!-- Customer Select -->
+        <div class="form-group">
+          <label>Customer</label>
+          <select id="customer-select" onchange="onCustomerChange(this)">
+            <option value="">Memuat data...</option>
+          </select>
+        </div>
+
+        <!-- Manual Name -->
+        <div class="form-group" id="manual-name-wrap">
+          <label>Nama Customer (Manual)</label>
+          <input type="text" id="manual-name" placeholder="Masukkan nama customer">
+        </div>
+
+        <!-- Rating -->
+        <div class="form-group">
+          <label>Rating</label>
+          <div class="rating-group" id="star-group">
+            <button class="star-btn" data-v="1" onclick="setRating(1)">★</button>
+            <button class="star-btn" data-v="2" onclick="setRating(2)">★</button>
+            <button class="star-btn" data-v="3" onclick="setRating(3)">★</button>
+            <button class="star-btn" data-v="4" onclick="setRating(4)">★</button>
+            <button class="star-btn" data-v="5" onclick="setRating(5)">★</button>
+          </div>
+          <input type="hidden" id="rating-val" value="">
+        </div>
+
+        <!-- Kategori -->
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="kategori">
+            <option value="">Pilih kategori</option>
+            <option>Pelayanan</option>
+            <option>Makanan</option>
+            <option>Harga</option>
+            <option>Tempat</option>
+          </select>
+        </div>
+
+        <!-- Waktu Kunjungan -->
+        <div class="form-group">
+          <label>Waktu Kunjungan</label>
+          <select id="waktu">
+            <option value="">Pilih waktu</option>
+            <option>Pagi</option>
+            <option>Siang</option>
+            <option>Sore</option>
+            <option>Malam</option>
+          </select>
+        </div>
+
+        <!-- Menu Favorit -->
+        <div class="form-group">
+          <label>Menu Favorit</label>
+          <input type="text" id="menu-favorit" placeholder="contoh: Nasi Goreng Spesial">
+        </div>
+
+        <!-- Feedback -->
+        <div class="form-group full">
+          <label>Feedback</label>
+          <textarea id="feedback-text" placeholder="Tuliskan feedback dari pelanggan..."></textarea>
+        </div>
+
+      </div>
+
+      <div id="form-error" class="error-msg"></div>
+
+      <div style="margin-top:1.25rem; display:flex; gap:10px;">
+        <button class="btn btn-primary" onclick="submitFeedback()">✓ Simpan Feedback</button>
+        <button class="btn btn-secondary" onclick="resetForm()">↺ Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== LIST ===================== -->
+  <div class="section" id="section-list">
+    <div class="section-header">
+      <div class="section-title">
+        Feedback List
+        <small>Semua feedback dari pelanggan</small>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadFeedbackList()">↻ Muat Ulang</button>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Cari nama, kategori, atau feedback..." oninput="filterFeedback()">
+      <select id="filter-kategori" onchange="filterFeedback()">
+        <option value="">Semua Kategori</option>
+        <option>Pelayanan</option>
+        <option>Makanan</option>
+        <option>Harga</option>
+        <option>Tempat</option>
+      </select>
+    </div>
+
+    <div id="feedback-list-container">
+      <div class="loading"><div class="spinner"></div> Memuat feedback...</div>
+    </div>
+  </div>
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <div class="section" id="section-dashboard">
+    <div class="section-header">
+      <div class="section-title">
+        Dashboard
+        <small>Visualisasi data feedback real-time</small>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadDashboard()">↻ Muat Ulang</button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid-4" style="margin-bottom:1.25rem;">
+      <div class="stat-card yellow">
+        <div class="stat-label">Total Feedback</div>
+        <div class="stat-value" id="stat-total">–</div>
+        <div class="stat-sub">entri feedback</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Rata-rata Rating</div>
+        <div class="stat-value" id="stat-avg">–</div>
+        <div class="stat-sub">dari 5 bintang</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Total Customer</div>
+        <div class="stat-value" id="stat-customers">–</div>
+        <div class="stat-sub">pelanggan terdaftar</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Hari Aktif</div>
+        <div class="stat-value" id="stat-days">–</div>
+        <div class="stat-sub">hari dengan feedback</div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2" style="margin-bottom:1.25rem;">
+      <div class="chart-wrap">
+        <div class="card-title">Feedback per Kategori</div>
+        <div id="chart-kategori-state">
+          <div class="loading"><div class="spinner"></div> Memuat...</div>
+        </div>
+        <div class="chart-container" id="chart-kategori-wrap" style="display:none;">
+          <canvas id="chartKategori"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="card-title">Tren Feedback per Hari</div>
+        <div id="chart-tren-state">
+          <div class="loading"><div class="spinner"></div> Memuat...</div>
+        </div>
+        <div class="chart-container" id="chart-tren-wrap" style="display:none;">
+          <canvas id="chartTren"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rating per Kategori -->
+    <div class="card">
+      <div class="card-title">Rata-rata Rating per Kategori</div>
+      <div id="rating-by-cat-container">
+        <div class="loading"><div class="spinner"></div> Memuat...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== INSIGHT ===================== -->
+  <div class="section" id="section-insight">
+    <div class="section-header">
+      <div class="section-title">
+        Customer Insight
+        <small>Analisis mendalam berbasis data real</small>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="loadInsight()">↻ Muat Ulang</button>
+    </div>
+
+    <div id="insight-alerts" style="margin-bottom:1rem;"></div>
+
+    <div class="grid-3" style="margin-bottom:1.25rem;">
+      <div class="insight-item">
+        <div class="insight-icon red">⚠️</div>
+        <div>
+          <div class="insight-label">Rating Terendah</div>
+          <div class="insight-value" id="insight-low-rating">–</div>
+          <div class="insight-sub" id="insight-low-rating-sub">–</div>
+        </div>
+      </div>
+      <div class="insight-item">
+        <div class="insight-icon green">🏆</div>
+        <div>
+          <div class="insight-label">Pelanggan Paling Sering Transaksi</div>
+          <div class="insight-value" id="insight-top-trx">–</div>
+          <div class="insight-sub" id="insight-top-trx-sub">–</div>
+        </div>
+      </div>
+      <div class="insight-item">
+        <div class="insight-icon yellow">🍽️</div>
+        <div>
+          <div class="insight-label">Menu Favorit Terpopuler</div>
+          <div class="insight-value" id="insight-top-menu">–</div>
+          <div class="insight-sub" id="insight-top-menu-sub">–</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="insight-rec-box">
+      <div class="card-title">Rekomendasi Otomatis</div>
+      <div id="insight-recommendations">
+        <div class="loading"><div class="spinner"></div> Menganalisis data...</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="card">
+      <div class="card-title">Distribusi Waktu Kunjungan</div>
+      <div id="waktu-stats-container">
+        <div class="loading"><div class="spinner"></div> Memuat...</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+// ========== CONFIG ==========
+const BASE_URL = 'https://jariewywijsmjxxbgpvi.supabase.co';
+const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmlld3l3aWpzbWp4eGJncHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYzMzM2MTYsImV4cCI6MjA2MTkwOTYxNn0.O2gMdZDZsyNVK-fB88wr-kBmOBlPNKv9Lq7WLZR1Dxs';
+
+const HEADERS = {
+  'apikey': API_KEY,
+  'Authorization': `Bearer ${API_KEY}`,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation'
+};
+
+// ========== STATE ==========
+let allFeedback = [];
+let customers = [];
+let selectedRating = 0;
+let chartKategori = null;
+let chartTren = null;
+
+// ========== API ==========
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(`${BASE_URL}/rest/v1${path}`, {
+    headers: HEADERS,
+    ...opts
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API Error ${res.status}: ${err}`);
+  }
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+// ========== TOAST ==========
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast-item ${type}`;
+  const icons = { success: '✓', error: '✕', info: 'ℹ' };
+  el.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ========== TABS ==========
+function switchTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(`section-${name}`).classList.add('active');
+  btn.classList.add('active');
+
+  if (name === 'list') loadFeedbackList();
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'insight') loadInsight();
+}
+
+// ========== REFRESH ALL ==========
+async function refreshAll() {
+  toast('Menyegarkan semua data...', 'info');
+  await loadCustomers();
+  const activeTab = document.querySelector('nav button.active').textContent.trim();
+  if (activeTab.includes('Feedback List')) loadFeedbackList();
+  if (activeTab.includes('Dashboard')) loadDashboard();
+  if (activeTab.includes('Insight')) loadInsight();
+}
+
+// ========== CUSTOMERS ==========
+async function loadCustomers() {
+  try {
+    customers = await apiFetch('/customers?select=*&order=name.asc');
+    const sel = document.getElementById('customer-select');
+    sel.innerHTML = `<option value="">Pilih customer</option>`;
+    customers.forEach(c => {
+      sel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+    });
+    sel.innerHTML += `<option value="manual">+ Input Manual</option>`;
+  } catch (e) {
+    toast('Gagal memuat data customer: ' + e.message, 'error');
+  }
+}
+
+function onCustomerChange(sel) {
+  const wrap = document.getElementById('manual-name-wrap');
+  wrap.style.display = sel.value === 'manual' ? 'flex' : 'none';
+}
+
+// ========== RATING ==========
+function setRating(v) {
+  selectedRating = v;
+  document.getElementById('rating-val').value = v;
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.v) <= v);
+  });
+}
+
+// ========== FORM SUBMIT ==========
+async function submitFeedback() {
+  const sel = document.getElementById('customer-select');
+  const manualName = document.getElementById('manual-name').value.trim();
+  const kategori = document.getElementById('kategori').value;
+  const waktu = document.getElementById('waktu').value;
+  const menu = document.getElementById('menu-favorit').value.trim();
+  const feedbackText = document.getElementById('feedback-text').value.trim();
+  const errEl = document.getElementById('form-error');
+
+  errEl.style.display = 'none';
+
+  // Validate
+  if (!sel.value) return showFormError('Pilih customer terlebih dahulu.');
+  if (sel.value === 'manual' && !manualName) return showFormError('Nama customer tidak boleh kosong.');
+  if (!selectedRating) return showFormError('Pilih rating terlebih dahulu.');
+  if (!kategori) return showFormError('Pilih kategori terlebih dahulu.');
+  if (!feedbackText) return showFormError('Feedback tidak boleh kosong.');
+
+  const btn = document.querySelector('#section-form .btn-primary');
+  btn.disabled = true;
+  btn.textContent = '⏳ Menyimpan...';
+
+  try {
+    let customerId = sel.value;
+
+    // Insert manual customer
+    if (sel.value === 'manual') {
+      const newCustomers = await apiFetch('/customers', {
+        method: 'POST',
+        body: JSON.stringify({ name: manualName })
+      });
+      if (!newCustomers || !newCustomers[0]) throw new Error('Gagal membuat customer baru.');
+      customerId = newCustomers[0].id;
+      customers.push(newCustomers[0]);
+      toast(`Customer "${manualName}" berhasil ditambahkan.`, 'success');
+    }
+
+    // Insert feedback
+    await apiFetch('/customer_feedback', {
+      method: 'POST',
+      body: JSON.stringify({
+        customer_id: customerId,
+        rating: selectedRating,
+        kategori,
+        feedback: feedbackText,
+        waktu_kunjungan: waktu || null,
+        menu_favorit: menu || null
+      })
+    });
+
+    toast('Feedback berhasil disimpan! ✓', 'success');
+    resetForm();
+  } catch (e) {
+    showFormError('Gagal menyimpan: ' + e.message);
+    toast('Gagal menyimpan feedback.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✓ Simpan Feedback';
+  }
+}
+
+function showFormError(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function resetForm() {
+  document.getElementById('customer-select').value = '';
+  document.getElementById('manual-name').value = '';
+  document.getElementById('manual-name-wrap').style.display = 'none';
+  document.getElementById('kategori').value = '';
+  document.getElementById('waktu').value = '';
+  document.getElementById('menu-favorit').value = '';
+  document.getElementById('feedback-text').value = '';
+  document.getElementById('form-error').style.display = 'none';
+  selectedRating = 0;
+  document.getElementById('rating-val').value = '';
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+}
+
+// ========== FEEDBACK LIST ==========
+async function loadFeedbackList() {
+  const container = document.getElementById('feedback-list-container');
+  container.innerHTML = `<div class="loading"><div class="spinner"></div> Memuat feedback...</div>`;
+  try {
+    allFeedback = await apiFetch('/customer_feedback?select=*,customers(name)&order=created_at.desc');
+    renderFeedbackList(allFeedback);
+  } catch (e) {
+    container.innerHTML = `<div class="alert alert-danger">⚠ Gagal memuat feedback: ${e.message}</div>`;
+  }
+}
+
+function renderFeedbackList(data) {
+  const container = document.getElementById('feedback-list-container');
+  if (!data.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">💬</div>
+        <p>Belum ada feedback</p>
+      </div>`;
+    return;
+  }
+
+  const kategoriClass = { Pelayanan: 'yellow', Makanan: 'green', Harga: 'red', Tempat: 'blue' };
+  const waktuEmoji = { Pagi: '🌅', Siang: '☀️', Sore: '🌇', Malam: '🌙' };
+
+  container.innerHTML = `<div class="feedback-list">
+    ${data.map(fb => {
+      const name = fb.customers?.name || `Customer #${fb.customer_id}`;
+      const date = fb.created_at ? new Date(fb.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '–';
+      const stars = '★'.repeat(fb.rating) + '☆'.repeat(5 - fb.rating);
+      const kCls = kategoriClass[fb.kategori] || '';
+      const wEmoji = waktuEmoji[fb.waktu_kunjungan] || '';
+      return `
+        <div class="feedback-item">
+          <div>
+            <div class="feedback-rating">${fb.rating}</div>
+            <div style="font-size:12px;color:var(--accent);letter-spacing:0.05em;">${stars}</div>
+          </div>
+          <div>
+            <div class="feedback-name">${escHtml(name)}</div>
+            <div class="feedback-meta">
+              ${fb.kategori ? `<span class="badge ${kCls}">${fb.kategori}</span>` : ''}
+              ${fb.waktu_kunjungan ? `<span class="badge">${wEmoji} ${fb.waktu_kunjungan}</span>` : ''}
+              ${fb.menu_favorit ? `<span class="badge">🍽 ${escHtml(fb.menu_favorit)}</span>` : ''}
+            </div>
+            <div class="feedback-text">${escHtml(fb.feedback || '–')}</div>
+          </div>
+          <div class="feedback-date">${date}</div>
+        </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function filterFeedback() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const kat = document.getElementById('filter-kategori').value;
+  const filtered = allFeedback.filter(fb => {
+    const name = (fb.customers?.name || '').toLowerCase();
+    const text = (fb.feedback || '').toLowerCase();
+    const kSearch = (fb.kategori || '').toLowerCase();
+    const matchQ = !q || name.includes(q) || text.includes(q) || kSearch.includes(q);
+    const matchK = !kat || fb.kategori === kat;
+    return matchQ && matchK;
+  });
+  renderFeedbackList(filtered);
+}
+
+// ========== DASHBOARD ==========
+async function loadDashboard() {
+  document.getElementById('stat-total').textContent = '…';
+  document.getElementById('stat-avg').textContent = '…';
+  document.getElementById('stat-customers').textContent = '…';
+  document.getElementById('stat-days').textContent = '…';
+
+  try {
+    const [fbData, custData] = await Promise.all([
+      apiFetch('/customer_feedback?select=*,customers(name)'),
+      apiFetch('/customers?select=*')
+    ]);
+
+    // Stat cards
+    document.getElementById('stat-total').textContent = fbData.length;
+    document.getElementById('stat-customers').textContent = custData.length;
+
+    if (fbData.length) {
+      const avg = fbData.reduce((s, f) => s + (f.rating || 0), 0) / fbData.length;
+      document.getElementById('stat-avg').textContent = avg.toFixed(1);
+
+      const days = new Set(fbData.map(f => f.created_at?.split('T')[0])).size;
+      document.getElementById('stat-days').textContent = days;
+
+      renderKategoriChart(fbData);
+      renderTrenChart(fbData);
+      renderRatingByKat(fbData);
+    } else {
+      document.getElementById('stat-avg').textContent = '–';
+      document.getElementById('stat-days').textContent = '0';
+      showChartEmpty('chart-kategori-state', 'chart-kategori-wrap');
+      showChartEmpty('chart-tren-state', 'chart-tren-wrap');
+      document.getElementById('rating-by-cat-container').innerHTML = emptyStateHtml('Data belum tersedia');
+    }
+  } catch (e) {
+    toast('Gagal memuat dashboard: ' + e.message, 'error');
+    document.getElementById('stat-total').textContent = 'Err';
+  }
+}
+
+function showChartEmpty(stateId, wrapId) {
+  document.getElementById(stateId).innerHTML = emptyStateHtml('Data belum tersedia');
+  document.getElementById(wrapId).style.display = 'none';
+}
+
+function renderKategoriChart(data) {
+  const cats = ['Pelayanan', 'Makanan', 'Harga', 'Tempat'];
+  const counts = cats.map(c => data.filter(f => f.kategori === c).length);
+
+  if (counts.every(c => c === 0)) {
+    return showChartEmpty('chart-kategori-state', 'chart-kategori-wrap');
+  }
+
+  document.getElementById('chart-kategori-state').innerHTML = '';
+  document.getElementById('chart-kategori-wrap').style.display = 'block';
+
+  if (chartKategori) chartKategori.destroy();
+  chartKategori = new Chart(document.getElementById('chartKategori'), {
+    type: 'bar',
+    data: {
+      labels: cats,
+      datasets: [{
+        label: 'Jumlah Feedback',
+        data: counts,
+        backgroundColor: ['rgba(240,192,64,0.7)', 'rgba(64,192,160,0.7)', 'rgba(224,92,64,0.7)', 'rgba(96,144,240,0.7)'],
+        borderColor: ['#f0c040', '#40c0a0', '#e05c40', '#6090f0'],
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: chartOptions('Jumlah Feedback')
+  });
+}
+
+function renderTrenChart(data) {
+  const byDay = {};
+  data.forEach(f => {
+    const d = f.created_at?.split('T')[0];
+    if (d) byDay[d] = (byDay[d] || 0) + 1;
+  });
+
+  const sorted = Object.keys(byDay).sort();
+  if (!sorted.length) return showChartEmpty('chart-tren-state', 'chart-tren-wrap');
+
+  document.getElementById('chart-tren-state').innerHTML = '';
+  document.getElementById('chart-tren-wrap').style.display = 'block';
+
+  if (chartTren) chartTren.destroy();
+  chartTren = new Chart(document.getElementById('chartTren'), {
+    type: 'line',
+    data: {
+      labels: sorted.map(d => new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })),
+      datasets: [{
+        label: 'Feedback per Hari',
+        data: sorted.map(d => byDay[d]),
+        borderColor: '#f0c040',
+        backgroundColor: 'rgba(240,192,64,0.08)',
+        pointBackgroundColor: '#f0c040',
+        pointRadius: 4,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: chartOptions('Jumlah Feedback')
+  });
+}
+
+function renderRatingByKat(data) {
+  const cats = ['Pelayanan', 'Makanan', 'Harga', 'Tempat'];
+  const catColors = { Pelayanan: 'var(--accent)', Makanan: 'var(--accent3)', Harga: 'var(--accent2)', Tempat: '#6090f0' };
+  const container = document.getElementById('rating-by-cat-container');
+
+  const rows = cats.map(cat => {
+    const items = data.filter(f => f.kategori === cat);
+    if (!items.length) return null;
+    const avg = items.reduce((s, f) => s + (f.rating || 0), 0) / items.length;
+    return { cat, avg, count: items.length };
+  }).filter(Boolean);
+
+  if (!rows.length) {
+    container.innerHTML = emptyStateHtml('Belum ada data per kategori');
+    return;
+  }
+
+  container.innerHTML = rows.map(r => `
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px;">
+        <span>${r.cat}</span>
+        <span style="color:var(--muted);">${r.avg.toFixed(2)} / 5.00 &middot; ${r.count} feedback</span>
+      </div>
+      <div class="score-bar-wrap">
+        <div class="score-bar">
+          <div class="score-bar-fill" style="width:${(r.avg/5)*100}%;background:${catColors[r.cat]};"></div>
+        </div>
+        <div class="score-pct">${Math.round((r.avg/5)*100)}%</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function chartOptions(ylabel) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7080', font: { size: 11 } } },
+      y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6b7080', font: { size: 11 } }, beginAtZero: true }
+    }
+  };
+}
+
+// ========== INSIGHT ==========
+async function loadInsight() {
+  document.getElementById('insight-low-rating').textContent = '…';
+  document.getElementById('insight-low-rating-sub').textContent = '';
+  document.getElementById('insight-top-trx').textContent = '…';
+  document.getElementById('insight-top-trx-sub').textContent = '';
+  document.getElementById('insight-top-menu').textContent = '…';
+  document.getElementById('insight-top-menu-sub').textContent = '';
+  document.getElementById('insight-alerts').innerHTML = '';
+  document.getElementById('insight-recommendations').innerHTML = `<div class="loading"><div class="spinner"></div> Menganalisis...</div>`;
+  document.getElementById('waktu-stats-container').innerHTML = `<div class="loading"><div class="spinner"></div> Memuat...</div>`;
+
+  try {
+    const [fbData, custData, trxData] = await Promise.all([
+      apiFetch('/customer_feedback?select=*,customers(name)'),
+      apiFetch('/customers?select=*'),
+      apiFetch('/transactions?select=*').catch(() => [])
+    ]);
+
+    if (!fbData.length) {
+      document.getElementById('insight-low-rating').textContent = '–';
+      document.getElementById('insight-top-trx').textContent = '–';
+      document.getElementById('insight-top-menu').textContent = '–';
+      document.getElementById('insight-recommendations').innerHTML = emptyStateHtml('Belum cukup data untuk insight');
+      document.getElementById('waktu-stats-container').innerHTML = emptyStateHtml('Belum ada data');
+      return;
+    }
+
+    // Customer avg rating
+    const custRatings = {};
+    fbData.forEach(f => {
+      if (!f.customer_id) return;
+      const name = f.customers?.name || `Customer #${f.customer_id}`;
+      if (!custRatings[f.customer_id]) custRatings[f.customer_id] = { name, sum: 0, count: 0 };
+      custRatings[f.customer_id].sum += f.rating || 0;
+      custRatings[f.customer_id].count++;
+    });
+
+    const custArr = Object.values(custRatings).map(c => ({ ...c, avg: c.sum / c.count }));
+    custArr.sort((a, b) => a.avg - b.avg);
+    const lowest = custArr[0];
+    document.getElementById('insight-low-rating').textContent = lowest?.name || '–';
+    document.getElementById('insight-low-rating-sub').textContent = lowest ? `Rata-rata ${lowest.avg.toFixed(2)} dari ${lowest.count} feedback` : '';
+
+    // Most transactions
+    if (trxData.length) {
+      const trxCount = {};
+      trxData.forEach(t => {
+        const id = t.customer_id;
+        if (!id) return;
+        trxCount[id] = (trxCount[id] || 0) + 1;
+      });
+      const topTrxId = Object.keys(trxCount).sort((a, b) => trxCount[b] - trxCount[a])[0];
+      const topCust = custData.find(c => String(c.id) === String(topTrxId));
+      document.getElementById('insight-top-trx').textContent = topCust?.name || `Customer #${topTrxId}`;
+      document.getElementById('insight-top-trx-sub').textContent = `${trxCount[topTrxId]} transaksi`;
+    } else {
+      document.getElementById('insight-top-trx').textContent = '–';
+      document.getElementById('insight-top-trx-sub').textContent = 'Data transaksi tidak tersedia';
+    }
+
+    // Most popular menu
+    const menuCount = {};
+    fbData.forEach(f => {
+      if (f.menu_favorit) {
+        const m = f.menu_favorit.trim().toLowerCase();
+        menuCount[m] = (menuCount[m] || 0) + 1;
+      }
+    });
+    const topMenus = Object.keys(menuCount).sort((a, b) => menuCount[b] - menuCount[a]);
+    const topMenu = topMenus[0];
+    document.getElementById('insight-top-menu').textContent = topMenu ? capitalize(topMenu) : '–';
+    document.getElementById('insight-top-menu-sub').textContent = topMenu ? `Disebut ${menuCount[topMenu]}× oleh pelanggan` : 'Belum ada data menu';
+
+    // Alerts & Recommendations
+    buildAlerts(fbData);
+    buildRecommendations(fbData);
+    buildWaktuStats(fbData);
+
+  } catch (e) {
+    toast('Gagal memuat insight: ' + e.message, 'error');
+    document.getElementById('insight-recommendations').innerHTML = `<div class="alert alert-danger">⚠ ${e.message}</div>`;
+  }
+}
+
+function buildAlerts(data) {
+  const container = document.getElementById('insight-alerts');
+  const avg = data.reduce((s, f) => s + (f.rating || 0), 0) / data.length;
+
+  const alerts = [];
+  if (avg < 3) {
+    alerts.push(`<div class="alert alert-danger">🚨 <strong>Peringatan!</strong> Rata-rata rating sangat rendah (${avg.toFixed(2)}). Perlu evaluasi menyeluruh segera.</div>`);
+  }
+  if (alerts.length === 0) {
+    container.innerHTML = '';
+  } else {
+    container.innerHTML = alerts.join('');
+  }
+}
+
+function buildRecommendations(data) {
+  const container = document.getElementById('insight-recommendations');
+
+  if (!data.length) {
+    container.innerHTML = emptyStateHtml('Belum cukup data untuk insight');
+    return;
+  }
+
+  const katCount = {};
+  data.forEach(f => {
+    if (f.kategori) katCount[f.kategori] = (katCount[f.kategori] || 0) + 1;
+  });
+
+  const sorted = Object.entries(katCount).sort((a, b) => b[1] - a[1]);
+  const domKat = sorted[0];
+
+  const avg = data.reduce((s, f) => s + (f.rating || 0), 0) / data.length;
+
+  const recs = [];
+
+  if (avg < 3) {
+    recs.push({ icon: '🚨', color: 'red', title: 'Rating Kritis', body: `Rata-rata rating berada di ${avg.toFixed(2)}. Segera adakan rapat evaluasi dan audit seluruh aspek layanan.` });
+  } else if (avg < 4) {
+    recs.push({ icon: '⚡', color: 'yellow', title: 'Rating Perlu Ditingkatkan', body: `Rata-rata rating saat ini ${avg.toFixed(2)}. Identifikasi keluhan terbanyak dan prioritaskan penanganan.` });
+  } else {
+    recs.push({ icon: '🌟', color: 'green', title: 'Pertahankan Kualitas', body: `Rating rata-rata ${avg.toFixed(2)} sudah bagus! Pertahankan standar pelayanan yang ada.` });
+  }
+
+  if (domKat) {
+    const recMap = {
+      Pelayanan: 'Kategori Pelayanan paling banyak dibahas. Pertimbangkan pelatihan staf dan evaluasi SOP pelayanan.',
+      Makanan: 'Kualitas makanan banyak menjadi sorotan. Review menu, freshness bahan, dan konsistensi rasa.',
+      Harga: 'Aspek harga menjadi perhatian utama pelanggan. Evaluasi strategi pricing dan value proposition.',
+      Tempat: 'Kondisi tempat banyak dikomentari. Perhatikan kebersihan, kenyamanan, dan tata letak ruangan.'
+    };
+    recs.push({ icon: '📌', color: 'blue', title: `Kategori Dominan: ${domKat[0]}`, body: recMap[domKat[0]] || `Fokus perhatian pada kategori ${domKat[0]}.` });
+  }
+
+  const katAvg = {};
+  data.forEach(f => {
+    if (!f.kategori) return;
+    if (!katAvg[f.kategori]) katAvg[f.kategori] = { sum: 0, count: 0 };
+    katAvg[f.kategori].sum += f.rating || 0;
+    katAvg[f.kategori].count++;
+  });
+  const worstKat = Object.entries(katAvg)
+    .map(([k, v]) => ({ k, avg: v.sum / v.count }))
+    .sort((a, b) => a.avg - b.avg)[0];
+
+  if (worstKat && worstKat.avg < 3.5) {
+    recs.push({ icon: '⚠️', color: 'red', title: `Prioritas Perbaikan: ${worstKat.k}`, body: `Rating kategori ${worstKat.k} hanya ${worstKat.avg.toFixed(2)}/5. Perlu perhatian khusus dan program peningkatan segera.` });
+  }
+
+  const colorMap = { red: 'var(--danger)', yellow: 'var(--accent)', green: 'var(--success)', blue: '#6090f0' };
+  container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">
+    ${recs.map(r => `
+      <div style="display:flex;gap:12px;align-items:flex-start;padding:14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);">
+        <div style="font-size:20px;flex-shrink:0;">${r.icon}</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;color:${colorMap[r.color]};margin-bottom:4px;">${r.title}</div>
+          <div style="font-size:13px;color:var(--muted);">${r.body}</div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+function buildWaktuStats(data) {
+  const container = document.getElementById('waktu-stats-container');
+  const waktuCount = { Pagi: 0, Siang: 0, Sore: 0, Malam: 0 };
+  data.forEach(f => { if (waktuCount[f.waktu_kunjungan] !== undefined) waktuCount[f.waktu_kunjungan]++; });
+
+  const total = Object.values(waktuCount).reduce((s, v) => s + v, 0);
+  if (!total) {
+    container.innerHTML = emptyStateHtml('Belum ada data waktu kunjungan');
+    return;
+  }
+
+  const emoji = { Pagi: '🌅', Siang: '☀️', Sore: '🌇', Malam: '🌙' };
+  const colors = { Pagi: 'var(--accent3)', Siang: 'var(--accent)', Sore: 'var(--accent2)', Malam: '#6090f0' };
+
+  container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+    ${Object.entries(waktuCount).map(([w, c]) => `
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span>${emoji[w]}</span>
+          <span style="font-size:13px;font-weight:500;">${w}</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--muted);">${c} feedback</span>
+        </div>
+        <div class="score-bar">
+          <div class="score-bar-fill" style="width:${total ? (c/total*100) : 0}%;background:${colors[w]};"></div>
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+// ========== HELPERS ==========
+function emptyStateHtml(msg) {
+  return `<div class="empty-state"><div class="empty-icon">📭</div><p>${msg}</p></div>`;
+}
+
+function escHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function capitalize(s) {
+  return s.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ========== INIT ==========
+(async function init() {
+  await loadCustomers();
+})();
+</script>
+</body>
+</html>
