@@ -1302,6 +1302,70 @@
             <div class="spinner"></div><span class="state-text">menganalisis data...</span>
         </div>
         <div class="risk-grid" id="risk-grid" style="display:none;"></div>
+        <div class="labeled-divider"><span>▲ Customer Intelligence</span></div>
+
+        <!-- Segmentasi & Peak Hours -->
+        <div class="grid-3">
+            <div class="panel">
+                <div class="section-header">
+                    <h2 class="section-title">Customer Segmentation</h2><span class="section-tag">rfm</span>
+                </div>
+                <div id="segment-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="segment-metrics"
+                    style="display:none; gap:1rem; flex-direction:column; height: 100%; justify-content: center;">
+                    <!-- Metrics akan di-render di sini -->
+                </div>
+            </div>
+            <div class="panel">
+                <div class="section-header">
+                    <h2 class="section-title">Kepuasan Pelanggan</h2><span class="section-tag">csat</span>
+                </div>
+                <div id="csat-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="csat-content" style="display:none; text-align: center; margin-top: 1rem;">
+                    <div class="stat-label">Rata-Rata Rating</div>
+                    <div class="insight-val" id="csat-avg" style="font-size: 3rem;">—</div>
+                    <div id="csat-risk-container" style="margin-top: 1rem;"></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="section-header">
+                    <h2 class="section-title">Peak Hours Insight</h2><span class="section-tag">traffic</span>
+                </div>
+                <div id="peak-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="peak-content" style="display:none; margin-top: 1rem;">
+                    <!-- Peak Hours Insight di-render di sini -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Customers & Bundling Insight -->
+        <div class="grid-2">
+            <div class="panel tall">
+                <div class="section-header">
+                    <h2 class="section-title">Top Customers</h2><span class="section-tag">loyalty</span>
+                </div>
+                <div id="top-customers-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="top-customers-list" class="overflow-panel" style="display:none;"></div>
+            </div>
+            <div class="panel tall">
+                <div class="section-header">
+                    <h2 class="section-title">Product Affinity (Saran Bundle)</h2><span
+                        class="section-tag">cross-sell</span>
+                </div>
+                <div id="affinity-state" class="state-container">
+                    <div class="spinner"></div><span class="state-text">memuat...</span>
+                </div>
+                <div id="affinity-list" style="display:none;"></div>
+            </div>
+        </div>
 
         <div class="labeled-divider"><span>▲ Documentation</span></div>
         <div class="sql-guide">
@@ -1493,7 +1557,6 @@
                         y += 60;
                     }
 
-                    // ====== REFACTOR KALKULASI PDF LEBIH SIMPEL =======
                     const agg = {};
                     S.I.forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
@@ -1645,7 +1708,6 @@
                     ctx.lineTo(750, 350);
                     ctx.stroke();
 
-                    // ====== REFACTOR KALKULASI IMAGE LEBIH SIMPEL =======
                     const agg = {};
                     (S.I || []).forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
@@ -1884,14 +1946,15 @@
 
         async function loadAllData() {
             $('last-updated').textContent = 'memuat...';
-            ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state'].forEach(id => { setH(id, spinner); show(id) });
-            ['chart-wrap', 'top-products-list', 'inventory-list', 'profit-breakdown', 'expenses-list', 'materials-table', 'recipes-table', 'risk-grid', 'decisions-list', 'decision-insights-container'].forEach(hide);
+            // UPDATE: Tambahkan ID panel Customer Intelligence ke daftar loading & clear
+            ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state', 'segment-state', 'csat-state', 'peak-state', 'top-customers-state', 'affinity-state'].forEach(id => { setH(id, spinner); show(id) });
+            ['chart-wrap', 'top-products-list', 'inventory-list', 'profit-breakdown', 'expenses-list', 'materials-table', 'recipes-table', 'risk-grid', 'decisions-list', 'decision-insights-container', 'segment-metrics', 'csat-content', 'peak-content', 'top-customers-list', 'affinity-list'].forEach(hide);
             ['kpi-revenue', 'kpi-profit', 'kpi-expense', 'kpi-aov'].forEach(id => { const e = $(id); if (e) e.textContent = '—' });
 
             const r = dateRange();
             try {
                 const [tR, eR, pR, mR, rR, dR] = await Promise.all([
-                    sb.from('transactions').select('id,total_price,adjustment_type,adjustment_amount,created_at, transaction_items(product_id,quantity,price,custom_price)').gte('created_at', r.start).lte('created_at', r.end),
+                    sb.from('transactions').select('id,total_price,adjustment_type,adjustment_amount,created_at, customer_id, transaction_items(product_id,quantity,price,custom_price)').gte('created_at', r.start).lte('created_at', r.end),
                     sb.from('expenses').select('*').gte('expense_date', r.startDay).lte('expense_date', r.endDay),
                     sb.from('products').select('*').order('name'),
                     sb.from('raw_materials').select('*').order('name'),
@@ -1909,12 +1972,10 @@
                 const I = [];
                 console.log("== MEMUAT DATA BARU & MENGHITUNG DISKON SECARA AGRESIF ==");
 
-                // ====== REFACTOR DETEKSI DISKON (ROOT CAUSE) ======
                 T.forEach(t => {
                     let rawTrxTotal = parseFloat(t.total_price || 0);
                     let explicitTrxDiscount = 0;
 
-                    // Mengambil diskon langsung dari kolom adjustment jika diisi
                     if (parseFloat(t.adjustment_amount) > 0) {
                         explicitTrxDiscount = parseFloat(t.adjustment_amount);
                     }
@@ -1930,7 +1991,6 @@
 
                         item.normal_price = normalPrice;
                         item.active_price = activePrice;
-                        // Diskon per item (misal karena diganti harganya di kasir)
                         item.item_level_discount = (normalPrice - activePrice) * qty;
                         if (item.item_level_discount < 0) item.item_level_discount = 0;
 
@@ -1940,27 +2000,23 @@
                     let impliedDiscount = itemsRawTotal - rawTrxTotal;
                     let finalTrxDiscount = explicitTrxDiscount;
 
-                    // Cek jika kasir memakai `adjustment_amount` tapi total_price ternyata tidak ikut terpotong
-                    // Atau total_price sudah dipotong tapi kolom `adjustment_amount` tidak terisi
                     if (impliedDiscount > explicitTrxDiscount + 0.1) {
                         finalTrxDiscount = impliedDiscount;
                         t.net_trx_total = rawTrxTotal;
                     } else if (explicitTrxDiscount > 0 && impliedDiscount <= 0.1) {
-                        // Kasus dimana adjustment_amount ada, tapi tidak mengubah total_price di database
                         t.net_trx_total = rawTrxTotal - explicitTrxDiscount;
                     } else {
                         t.net_trx_total = rawTrxTotal;
                     }
 
-                    // Proporsikan diskon transaksi ke masing-masing item supaya kelihatan akurat
                     tItems.forEach(item => {
                         let qty = parseFloat(item.quantity || 1);
                         let itemWeight = itemsRawTotal > 0 ? ((item.active_price * qty) / itemsRawTotal) : 0;
                         let propTrxDiscount = finalTrxDiscount * itemWeight;
 
-                        // Simpan pre-kalkulasi yang Fix
                         item.total_discount = item.item_level_discount + propTrxDiscount;
                         item.net_revenue = (item.active_price * qty) - propTrxDiscount;
+                        item.transaction_id = t.id; // Menyimpan ID transaksi untuk keperluan analisa bundle
 
                         I.push(item);
                     });
@@ -1968,7 +2024,6 @@
 
                 S = { T, E, P, I, M, R, D };
 
-                // Gunakan net_trx_total agar KPI merujuk ke angka paling real setelah diskon
                 const rev = T.reduce((s, t) => s + (t.net_trx_total || 0), 0);
                 const exp = E.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
 
@@ -1997,10 +2052,14 @@
                 renderRisk({ T, P, I, E, rev, exp, pft, mgn, R });
                 renderDecisions(D);
 
+                // UPDATE: Memanggil Customer Intelligence Renderer
+                await renderCustomerIntelligence(T, I, P);
+
                 $('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString('id-ID');
             } catch (e) {
                 console.error(e);
-                ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state'].forEach(id => setH(id, err('Gagal memuat: ' + e.message)));
+                // UPDATE: Panel baru ikut menampilkan state error
+                ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state', 'segment-state', 'csat-state', 'peak-state', 'top-customers-state', 'affinity-state'].forEach(id => setH(id, err('Gagal memuat: ' + e.message)));
                 $('last-updated').textContent = 'Error';
             }
         }
@@ -2182,7 +2241,6 @@
             hide('top-products-state');
             if (!I.length) { setH('top-products-state', empty('📦', 'Belum ada data item terjual')); show('top-products-state'); return }
 
-            // ====== REFACTOR RENDER TOP LEBIH SIMPEL ======
             const agg = {};
             let globalTotalDiskon = 0;
 
@@ -2339,6 +2397,256 @@
             const lbl = { high: '⬛ RISIKO TINGGI', medium: '◧ PERLU PERHATIAN', low: '◻ INFO / AMAN' };
             $('risk-grid').innerHTML = risks.map(r => `<div class="risk-card ${r.l}"><div class="risk-level">${lbl[r.l]}</div><div class="risk-title">${r.t}</div><div class="risk-desc">${r.d}</div></div>`).join('');
             show('risk-grid');
+        }
+
+        // ==========================================
+        //  FUNGSI CUSTOMER INTELLIGENCE BARU
+        // ==========================================
+
+        async function renderCustomerIntelligence(T, I, P) {
+            const { data: F } = await sb.from('customer_feedback').select('*');
+            const feedbackData = F || [];
+
+            const { data: C } = await sb.from('customers').select('*');
+            const customersData = C || [];
+
+            renderPeakHours(T);
+            renderCSAT(feedbackData);
+            renderSegmentationAndTopCustomers(T, customersData);
+            renderProductAffinity(T, I, P);
+        }
+
+        function renderPeakHours(T) {
+            hide('peak-state');
+            if (!T || T.length === 0) {
+                setH('peak-state', empty('⏳', 'Belum ada data transaksi.'));
+                show('peak-state');
+                return;
+            }
+
+            const hourCounts = {};
+            T.forEach(t => {
+                const hour = new Date(t.created_at).getHours();
+                hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+            });
+
+            const sortedHours = Object.entries(hourCounts).sort((a, b) => b[1] - a[1]);
+
+            if (sortedHours.length > 0) {
+                const peak1 = `${sortedHours[0][0].padStart(2, '0')}:00`;
+                const peak2 = sortedHours.length > 1 ? `${sortedHours[1][0].padStart(2, '0')}:00` : '-';
+                const deadHour = `${sortedHours[sortedHours.length - 1][0].padStart(2, '0')}:00`;
+
+                const h = `
+                    <div style="margin-bottom: 1rem;">
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--sage);font-weight:bold;">▲ JAM TERSIBUK</span>
+                        <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;">${peak1} <span style="font-size:1rem;color:var(--muted);font-family:'Instrument Sans'">&amp; ${peak2}</span></div>
+                        <div class="stat-sub">Optimalkan staf dan siapkan stok bahan pada jam ini.</div>
+                    </div>
+                    <div style="padding-top: 1rem; border-top: 1px solid var(--border);">
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--accent);font-weight:bold;">▼ JAM TERSEPI</span>
+                        <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;">${deadHour}</div>
+                        <div class="stat-sub">Pertimbangkan promo Flash Sale (e.g., Diskon 15%) pada jam ini.</div>
+                    </div>
+                `;
+                setH('peak-content', h);
+                show('peak-content');
+            }
+        }
+
+        function renderCSAT(F) {
+            hide('csat-state');
+            if (!F || F.length === 0) {
+                setH('csat-state', empty('⭐', 'Belum ada feedback.'));
+                show('csat-state');
+                return;
+            }
+
+            let totalRating = 0;
+            const categoryScores = {};
+
+            F.forEach(f => {
+                totalRating += f.rating;
+                if (!categoryScores[f.kategori]) {
+                    categoryScores[f.kategori] = { total: 0, count: 0 };
+                }
+                categoryScores[f.kategori].total += f.rating;
+                categoryScores[f.kategori].count += 1;
+            });
+
+            const avgRating = (totalRating / F.length).toFixed(1);
+            $('csat-avg').textContent = avgRating;
+            $('csat-avg').style.color = avgRating >= 4 ? 'var(--sage)' : (avgRating >= 3 ? 'var(--gold)' : 'var(--accent)');
+
+            let riskHtml = '';
+            for (const [kategori, data] of Object.entries(categoryScores)) {
+                const avgCat = data.total / data.count;
+                if (avgCat < 3) {
+                    riskHtml += `<div style="background:rgba(200, 75, 49, 0.1); border:1px solid var(--accent); padding:8px; margin-top:8px; text-align:left; border-radius:2px;">
+                        <span style="font-family:'JetBrains Mono'; font-size:0.6rem; font-weight:bold; color:var(--accent);">⚠ PERINGATAN KATEGORI</span>
+                        <div style="font-size:0.8rem; margin-top:4px;">Kepuasan pada <strong>${kategori}</strong> anjlok (${avgCat.toFixed(1)}/5). Segera evaluasi!</div>
+                    </div>`;
+                }
+            }
+
+            if (riskHtml === '') {
+                riskHtml = `<div class="stat-sub" style="margin-top:1rem; color:var(--sage)">Semua kategori pelayanan terpantau stabil (>3.0).</div>`;
+            }
+
+            setH('csat-risk-container', riskHtml);
+            show('csat-content');
+        }
+
+        function renderSegmentationAndTopCustomers(T, C) {
+            hide('segment-state');
+            hide('top-customers-state');
+
+            if (!T || T.length === 0 || !C || C.length === 0) {
+                setH('segment-state', empty('👥', 'Data transaksi/pelanggan tidak cukup.'));
+                show('segment-state');
+                setH('top-customers-state', empty('👑', 'Data tidak cukup.'));
+                show('top-customers-state');
+                return;
+            }
+
+            const customerStats = {};
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            T.forEach(t => {
+                if (t.customer_id) {
+                    if (!customerStats[t.customer_id]) {
+                        customerStats[t.customer_id] = { total_spent: 0, trx_count: 0, last_order: new Date(0) };
+                    }
+                    customerStats[t.customer_id].total_spent += parseFloat(t.net_trx_total || t.total_price);
+                    customerStats[t.customer_id].trx_count += 1;
+                    const orderDate = new Date(t.created_at);
+                    if (orderDate > customerStats[t.customer_id].last_order) {
+                        customerStats[t.customer_id].last_order = orderDate;
+                    }
+                }
+            });
+
+            let vipCount = 0, regCount = 0, riskCount = 0;
+            const thresholdVIPSpent = 500000;
+            const thresholdVIPTrx = 5;
+
+            for (const id in customerStats) {
+                const stat = customerStats[id];
+                const isChurnRisk = stat.last_order < thirtyDaysAgo;
+
+                if (stat.total_spent >= thresholdVIPSpent && stat.trx_count >= thresholdVIPTrx) {
+                    vipCount++;
+                } else if (isChurnRisk) {
+                    riskCount++;
+                } else {
+                    regCount++;
+                }
+            }
+
+            const segmentHtml = `
+                <div class="metric-row"><div><div style="font-size:0.9rem;font-weight:600;color:var(--gold);">VIP / Sultan</div><div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">Sering & nominal besar</div></div><span class="metric-value" style="font-size:1.2rem;">${vipCount}</span></div>
+                <div class="metric-row"><div><div style="font-size:0.9rem;font-weight:600;color:var(--sage);">Reguler Aktif</div><div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">Membeli secara rutin</div></div><span class="metric-value" style="font-size:1.2rem;">${regCount}</span></div>
+                <div class="metric-row"><div><div style="font-size:0.9rem;font-weight:600;color:var(--accent);">At-Risk (Berisiko)</div><div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">Absen > 30 hari</div></div><span class="metric-value" style="font-size:1.2rem;">${riskCount}</span></div>
+            `;
+            setH('segment-metrics', segmentHtml);
+            document.getElementById('segment-metrics').style.display = 'flex';
+
+
+            const sortedCustomers = Object.entries(customerStats)
+                .sort((a, b) => b[1].total_spent - a[1].total_spent)
+                .slice(0, 7);
+
+            let topHtml = '';
+            sortedCustomers.forEach(([custId, stat], idx) => {
+                const c = C.find(c => c.id === custId);
+                const name = c ? c.name : 'Unknown';
+                const phone = c && c.phone ? c.phone.substring(0, 4) + 'XXXX' + c.phone.substring(c.phone.length - 3) : '-';
+
+                topHtml += `
+                 <div style="padding:0.8rem 0;border-bottom:1px solid var(--border);">
+                    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;">
+                        <span style="display:flex;align-items:baseline;gap:0.75rem;">
+                            <span class="rank-num">${idx + 1}</span>
+                            <span>
+                                <div style="font-size:0.85rem;font-weight:600;">${name}</div>
+                                <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">${phone}</div>
+                            </span>
+                        </span>
+                        <div style="text-align:right;">
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--sage);font-weight:bold;">${fmtS(stat.total_spent)}</div>
+                            <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--muted);">${stat.trx_count} trx</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            if (topHtml === '') {
+                setH('top-customers-state', empty('👑', 'Belum ada transaksi pelanggan terdaftar.'));
+                show('top-customers-state');
+            } else {
+                setH('top-customers-list', topHtml);
+                show('top-customers-list');
+            }
+        }
+
+        function renderProductAffinity(T, I, P) {
+            hide('affinity-state');
+
+            const trxItemsMap = {};
+            I.forEach(item => {
+                if (!trxItemsMap[item.transaction_id]) {
+                    trxItemsMap[item.transaction_id] = [];
+                }
+                trxItemsMap[item.transaction_id].push(item.product_id);
+            });
+
+            const pairs = {};
+            for (const trxId in trxItemsMap) {
+                const items = trxItemsMap[trxId];
+                const uniqueItems = [...new Set(items)];
+
+                for (let i = 0; i < uniqueItems.length; i++) {
+                    for (let j = i + 1; j < uniqueItems.length; j++) {
+                        const pair = [uniqueItems[i], uniqueItems[j]].sort().join('|');
+                        pairs[pair] = (pairs[pair] || 0) + 1;
+                    }
+                }
+            }
+
+            const sortedPairs = Object.entries(pairs)
+                .sort((a, b) => b[1] - a[1])
+                .filter(p => p[1] > 1)
+                .slice(0, 3);
+
+            if (sortedPairs.length === 0) {
+                setH('affinity-list', `<div class="state-container" style="padding:1rem;"><span class="state-text">Data belum cukup untuk analisa bundling.</span></div>`);
+                show('affinity-list');
+                return;
+            }
+
+            let html = '<div style="margin-bottom:1rem;" class="stat-sub">Kombinasi produk ini sering dibeli bersamaan. Pertimbangkan membuat <strong>Paket Hemat</strong>.</div>';
+
+            sortedPairs.forEach((pairData, idx) => {
+                const pIds = pairData[0].split('|');
+                const freq = pairData[1];
+                const p1 = P.find(p => p.id === pIds[0])?.name || 'Unknown';
+                const p2 = P.find(p => p.id === pIds[1])?.name || 'Unknown';
+
+                html += `
+                <div style="background:var(--cream); padding:1rem; margin-bottom:0.75rem; border:1px dashed var(--muted);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--slate);font-weight:bold;">SUGGESTION #${idx + 1}</span>
+                        <span class="badge badge-gold">${freq}x BERSAMAAN</span>
+                    </div>
+                    <div style="font-size:0.9rem; font-weight:600; margin-top:0.5rem; line-height:1.4;">
+                        ${p1} <span style="color:var(--accent); margin:0 4px;">+</span> ${p2}
+                    </div>
+                </div>`;
+            });
+
+            setH('affinity-list', html);
+            show('affinity-list');
         }
 
         window.onload = () => loadAllData();
