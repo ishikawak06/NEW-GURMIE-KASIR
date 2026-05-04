@@ -1358,7 +1358,7 @@
         logoImg.src = LOGO_URL;
 
         // VARIABEL PERIODE DINAMIS
-        let periodType = '7D'; // 'today', '7D', '30D', '90D', '1Y', 'custom'
+        let periodType = '7D';
         let customDates = { start: '', end: '' };
         let chartA = null, chartB = null, S = {};
 
@@ -1399,7 +1399,6 @@
             loadAllData();
         }
 
-        // PERBAIKAN: Menambahkan logic Local Date Strings Khusus untuk tabel expenses ber-tipe DATE 
         function dateRange() {
             const e = new Date(); e.setHours(23, 59, 59, 999);
             const s = new Date(); s.setHours(0, 0, 0, 0);
@@ -1420,13 +1419,12 @@
                 sDate = s; eDate = e;
             }
 
-            // Memformat string YYYY-MM-DD menggunakan Date Method lokal
             const formatYMD = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 
-            return { 
-                start: sDate.toISOString(), 
+            return {
+                start: sDate.toISOString(),
                 end: eDate.toISOString(),
-                startDay: formatYMD(sDate), // <-- Dipakai Khusus Query untuk kolom DATE (Expense)
+                startDay: formatYMD(sDate),
                 endDay: formatYMD(eDate)
             };
         }
@@ -1442,9 +1440,6 @@
         const openModal = id => { $(id).style.display = 'flex'; };
         const closeModal = id => { $(id).style.display = 'none'; };
 
-        // ==========================================
-        //  FITUR DOWNLOAD PDF (DATA-DRIVEN) + LOGO
-        // ==========================================
         function downloadPDF() {
             const btn = $('btn-download-pdf');
             const originalText = btn.innerHTML;
@@ -1457,8 +1452,6 @@
                     let y = 15;
 
                     doc.setFont("helvetica", "bold");
-
-                    // Render Logo Jika Tersedia
                     if (logoBase64) {
                         doc.addImage(logoBase64, 'PNG', 14, 10, 16, 16);
                         doc.setFontSize(18);
@@ -1506,8 +1499,8 @@
                     S.I.forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
                         agg[i.product_id].qty += i.quantity;
-                        // PERBAIKAN HARGA: Mengatasi error Custom Price Rp 0
-                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity;
+                        // PERBAIKAN BUG: Gunakan '?? 1' agar rasio 0 tidak ditolak
+                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity * (i.trx_ratio ?? 1);
                     });
 
                     const topProductsBody = Object.entries(agg)
@@ -1580,9 +1573,6 @@
             }, 100);
         }
 
-        // ==========================================
-        //  FITUR DOWNLOAD GAMBAR (CANVAS API) + LOGO
-        // ==========================================
         function downloadImage() {
             const btn = $('btn-download-img');
             const originalText = btn.innerHTML;
@@ -1602,7 +1592,6 @@
                     const muted = '#8a8070';
                     const border = 'rgba(10, 10, 15, 0.12)';
 
-                    // Render Logo & Judul
                     if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
                         ctx.drawImage(logoImg, 50, 42, 38, 38);
                         ctx.fillStyle = ink;
@@ -1659,8 +1648,8 @@
                     (S.I || []).forEach(i => {
                         if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
                         agg[i.product_id].qty += i.quantity;
-                        // PERBAIKAN HARGA: Mengatasi error Custom Price Rp 0
-                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity;
+                        // PERBAIKAN BUG: Gunakan '?? 1' agar rasio 0 tidak ditolak
+                        agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity * (i.trx_ratio ?? 1);
                     });
 
                     const top5 = Object.entries(agg)
@@ -1725,9 +1714,6 @@
             }, 100);
         }
 
-        // ==========================================
-        // FITUR DOWNLOAD GAMBAR HPP & BAHAN DASAR
-        // ==========================================
         function downloadHPPImage() {
             const btn = $('btn-download-hpp');
             const originalText = btn.innerHTML;
@@ -1748,7 +1734,6 @@
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
 
-                    // Background Warna Paper
                     ctx.fillStyle = '#f5f0e8';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -1756,9 +1741,6 @@
                     const muted = '#8a8070';
                     const border = 'rgba(10, 10, 15, 0.12)';
 
-                    // ==============================
-                    // GAMBAR PANEL KIRI (BAHAN DASAR)
-                    // ==============================
                     ctx.strokeStyle = ink;
                     ctx.lineWidth = 2;
                     ctx.strokeRect(40, 40, 740, height - 80);
@@ -1792,7 +1774,6 @@
                         ctx.font = '16px sans-serif';
                         ctx.fillText(m.name, 70, yL);
 
-                        // Badge background untuk Satuan
                         ctx.fillStyle = 'rgba(61, 74, 92, 0.12)';
                         ctx.fillRect(300, yL - 18, 90, 26);
                         ctx.fillStyle = '#3d4a5c';
@@ -1809,9 +1790,6 @@
                         yL += rowH;
                     });
 
-                    // ==============================
-                    // GAMBAR PANEL KANAN (HPP RESEP)
-                    // ==============================
                     ctx.strokeStyle = ink;
                     ctx.lineWidth = 2;
                     ctx.strokeRect(820, 40, 740, height - 80);
@@ -1880,7 +1858,6 @@
                         yR += rowH;
                     });
 
-                    // Trigger Download Canvas ke Gambar
                     const link = document.createElement('a');
                     link.download = `GurmieKasir_Bahan_HPP.png`;
                     link.href = canvas.toDataURL('image/png', 1.0);
@@ -1895,9 +1872,6 @@
             }, 100);
         }
 
-        // ==========================================
-        //  CORE LOGIC & RENDERING
-        // ==========================================
         async function loadAllData() {
             $('last-updated').textContent = 'memuat...';
             ['chart-state', 'top-products-state', 'inventory-state', 'profit-breakdown-state', 'expenses-state', 'materials-state', 'recipes-state', 'risks-state', 'decisions-state'].forEach(id => { setH(id, spinner); show(id) });
@@ -1906,10 +1880,8 @@
 
             const r = dateRange();
             try {
-                // MENGGABUNGKAN transaction_items langsung ke dalam transaksi 
-                // Menggunakan r.startDay & r.endDay Khusus untuk query Date Expense
                 const [tR, eR, pR, mR, rR, dR] = await Promise.all([
-                    sb.from('transactions').select('id,total_price,created_at, transaction_items(product_id,quantity,price,custom_price)').gte('created_at', r.start).lte('created_at', r.end),
+                    sb.from('transactions').select('id,total_price,adjustment_type,adjustment_amount,created_at, transaction_items(product_id,quantity,price,custom_price)').gte('created_at', r.start).lte('created_at', r.end),
                     sb.from('expenses').select('*').gte('expense_date', r.startDay).lte('expense_date', r.endDay),
                     sb.from('products').select('*').order('name'),
                     sb.from('raw_materials').select('*').order('name'),
@@ -1924,18 +1896,34 @@
                 const R = rR.data || [];
                 const D = dR.data || [];
 
-                // Ekstrak data items murni dari transaksi yang berhasil di filter
                 const I = [];
                 T.forEach(t => {
+                    // PERBAIKAN LOGIKA: Bandingkan Total Aktual Transaksi dengan Harga Mentah Item
+                    let actualTrxTotal = parseFloat(t.total_price || 0);
+
                     if (t.transaction_items && Array.isArray(t.transaction_items)) {
-                        I.push(...t.transaction_items);
+                        let itemsRawTotal = 0;
+
+                        // Hitung total harga item sebelum diskon level-transaksi
+                        t.transaction_items.forEach(item => {
+                            let p = item.custom_price !== null ? parseFloat(item.custom_price) : parseFloat(item.price);
+                            itemsRawTotal += (p * item.quantity);
+                        });
+
+                        // Hitung rasio
+                        let ratio = itemsRawTotal > 0 ? (actualTrxTotal / itemsRawTotal) : 1;
+
+                        t.transaction_items.forEach(item => {
+                            item.trx_ratio = ratio;
+                            I.push(item);
+                        });
                     }
                 });
 
                 S = { T, E, P, I, M, R, D };
 
+                // Gunakan total_price langsung karena database sudah menyimpan nilai net yang dibayar customer
                 const rev = T.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
-                // Total Semua Pengeluaran (Modal yang keluar)
                 const exp = E.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
 
                 const pft = rev - exp;
@@ -1958,8 +1946,6 @@
                 if (bar && lbl) { bar.style.width = Math.min(Math.max(mgn, 0), 100) + '%'; bar.className = 'profit-bar' + (pft < 0 ? ' negative' : ''); lbl.textContent = mgn.toFixed(1) + '% ' + (pft >= 0 ? '↑ Laba' : '↓ Rugi'); lbl.style.color = pft >= 0 ? 'var(--sage)' : 'var(--accent)' }
 
                 renderChart(T); renderTop(I, P); renderInv(P); renderPnL(rev, exp, pft, E); renderExp(E); renderMat(M);
-
-                // MENGIRIM VARIABEL TOTAL PENGELUARAN (exp) ALIH-ALIH OPEX
                 renderRec(R, exp);
                 renderRisk({ T, P, I, E, rev, exp, pft, mgn, R });
                 renderDecisions(D);
@@ -2017,13 +2003,13 @@
                 const evalBtn = (isPast && !isEvaluated) ? `<button class="decision-eval-btn" onclick="openEvaluate(${JSON.stringify(d).replace(/"/g, '&quot;')})">EVALUASI SEKARANG</button>` : '';
 
                 h += `<div class="risk-card" style="border-color: ${isEvaluated ? 'var(--border)' : 'var(--ink)'}">
-          ${evalBtn}
-          <div class="risk-level" style="color:var(--muted)">${badge} · ${d.start_date} sd ${d.end_date}</div>
-          <div class="risk-title" style="font-size:1.1rem; margin-bottom:0.75rem">${d.title}</div>
-          <div class="risk-desc" style="margin-bottom:0.5rem"><strong>Goal:</strong> ${d.goal}</div>
-          <div class="risk-desc" style="margin-bottom:0.5rem"><strong>Target:</strong> ${fmtS(d.expected_revenue)} / ${d.expected_transactions} trx</div>
-          ${isEvaluated && d.decision_results[0] ? `<div class="risk-desc" style="background:var(--cream); padding:0.5rem; border-left:2px solid var(--sage); margin-top:0.75rem;"><strong>Learning:</strong> ${d.decision_results[0].learning}</div>` : ''}
-      </div>`;
+            ${evalBtn}
+            <div class="risk-level" style="color:var(--muted)">${badge} · ${d.start_date} sd ${d.end_date}</div>
+            <div class="risk-title" style="font-size:1.1rem; margin-bottom:0.75rem">${d.title}</div>
+            <div class="risk-desc" style="margin-bottom:0.5rem"><strong>Goal:</strong> ${d.goal}</div>
+            <div class="risk-desc" style="margin-bottom:0.5rem"><strong>Target:</strong> ${fmtS(d.expected_revenue)} / ${d.expected_transactions} trx</div>
+            ${isEvaluated && d.decision_results[0] ? `<div class="risk-desc" style="background:var(--cream); padding:0.5rem; border-left:2px solid var(--sage); margin-top:0.75rem;"><strong>Learning:</strong> ${d.decision_results[0].learning}</div>` : ''}
+        </div>`;
             });
 
             setH('decisions-list', h); show('decisions-list');
@@ -2069,11 +2055,11 @@
             openModal('evaluate-decision-modal'); hide('eval-results'); show('eval-loading');
             $('e-learning').disabled = true; $('btn-save-eval').disabled = true;
 
-            const { data: trx, error } = await sb.from('transactions').select('total_price').gte('created_at', d.start_date + 'T00:00:00Z').lte('created_at', d.end_date + 'T23:59:59Z');
+            const { data: trx, error } = await sb.from('transactions').select('total_price, adjustment_type, adjustment_amount').gte('created_at', d.start_date + 'T00:00:00Z').lte('created_at', d.end_date + 'T23:59:59Z');
             if (error) { alert('Gagal menarik data transaksi: ' + error.message); closeModal('evaluate-decision-modal'); return; }
 
             let act_rev = 0, act_trx = trx.length;
-            trx.forEach(t => act_rev += parseFloat(t.total_price));
+            trx.forEach(t => act_rev += parseFloat(t.total_price || 0));
 
             let rev_pct = d.expected_revenue > 0 ? (act_rev / d.expected_revenue) : 0;
             let trx_pct = d.expected_transactions > 0 ? (act_trx / d.expected_transactions) : 0;
@@ -2114,35 +2100,25 @@
             const r = dateRange();
             const curr = new Date(r.start);
             const end = new Date(r.end);
-
-            // LOGIKA BARU: Jika perbedaan waktu start & end adalah 1 hari (24 Jam)
-            // Ini akan memicu analisa per jam untuk Hari Ini ATAU Custom Tanggal yg Sama
             const isOneDay = (end.getTime() - curr.getTime()) <= 24 * 60 * 60 * 1000;
 
             if (isOneDay) {
-                // Generate label x-axis per jam (00:00 - 23:00)
                 for (let i = 0; i < 24; i++) {
                     const hour = i.toString().padStart(2, '0') + ':00';
                     map[hour] = 0;
                 }
-
                 T.forEach(t => {
-                    // Konversi waktu UTC ke Waktu Lokal, lalu ambil jamnya
                     const dateObj = new Date(t.created_at);
                     const hourStr = dateObj.getHours().toString().padStart(2, '0') + ':00';
-                    if (map[hourStr] !== undefined) {
-                        map[hourStr] += parseFloat(t.total_price || 0);
-                    }
+                    if (map[hourStr] !== undefined) map[hourStr] += parseFloat(t.total_price || 0);
                 });
             } else {
-                // Generate rentang x-axis otomatis dari tanggal start ke end per hari (Logika Lama)
                 let loops = 0;
                 while (curr <= end && loops < 366) {
                     map[curr.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })] = 0;
                     curr.setDate(curr.getDate() + 1);
                     loops++;
                 }
-
                 T.forEach(t => {
                     const k = new Date(t.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
                     if (map[k] !== undefined) map[k] += parseFloat(t.total_price || 0);
@@ -2159,11 +2135,11 @@
             hide('top-products-state');
             if (!I.length) { setH('top-products-state', empty('📦', 'Belum ada data item terjual')); show('top-products-state'); return }
             const agg = {};
-            I.forEach(i => { 
-                if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 }; 
-                agg[i.product_id].qty += i.quantity; 
-                // PERBAIKAN HARGA: Mengatasi error Custom Price Rp 0 di Top Products
-                agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity; 
+            I.forEach(i => {
+                if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0 };
+                agg[i.product_id].qty += i.quantity;
+                // PERBAIKAN BUG: Gunakan '?? 1' agar rasio 0 tidak ditolak
+                agg[i.product_id].rev += (i.custom_price !== null ? parseFloat(i.custom_price) : parseFloat(i.price)) * i.quantity * (i.trx_ratio ?? 1);
             });
             const sorted = Object.entries(agg).sort((a, b) => b[1].qty - a[1].qty).slice(0, 7);
             const max = sorted[0][1].qty;
@@ -2229,12 +2205,10 @@
                 const sp = r.products ? parseFloat(r.products.price) : 0;
                 const hpp = parseFloat(r.total_hpp || 0);
 
-                // Kalkulasi Laba Kotor per Pcs (Harga Jual - HPP)
                 const laba = sp - hpp;
                 const mgn = sp > 0 ? (laba / sp * 100).toFixed(1) : '0';
                 const mc = parseFloat(mgn) > 30 ? 'var(--sage)' : parseFloat(mgn) > 0 ? 'var(--gold)' : 'var(--accent)';
 
-                // Kalkulasi Target Balik Modal Pcs Menggunakan TOTAL PENGELUARAN (Keseluruhan)
                 let targetText = '—';
                 if (laba > 0 && totalExp > 0) {
                     targetText = Math.ceil(totalExp / laba) + ' pcs';
@@ -2253,7 +2227,6 @@
                 </tr>`;
             }).join('');
 
-            // Tampilkan total nilai PENGELUARAN KESELURUHAN agar user mengerti hitungannya dari mana
             $('total-expense-info').textContent = fmtS(totalExp);
             show('recipes-table');
         }
@@ -2286,4 +2259,3 @@
 </body>
 
 </html>
-```
