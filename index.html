@@ -1606,16 +1606,37 @@
             }
         }
 
+        // === FUNGSI CHART OF ACCOUNTS (COA) DIPERBARUI ===
         async function fetchCOA() {
             try {
                 const { data, error } = await supabaseClient.from('chart_of_accounts').select('*').order('code');
                 if (error) throw error;
                 state.coaList = data || [];
-                // renderCOA(); // Asumsi ada fungsi eksternal atau UI khusus COA
+                renderCOA(); // Komentar dihilangkan, memanggil fungsi render
             } catch (err) {
                 console.error("Gagal memuat COA:", err);
             }
         }
+
+        function renderCOA() {
+            const tbody = document.getElementById('coa-table-body');
+            if (!tbody) return;
+
+            if (state.coaList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">Data akun kosong.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = state.coaList.map(coa => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${coa.code}</td>
+                    <td class="px-4 py-3 font-bold text-gray-900 dark:text-white text-sm">${coa.name || coa.akun || '-'}</td>
+                    <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-sm">${coa.category || '-'}</td>
+                    <td class="px-4 py-3 text-right font-bold text-gray-900 dark:text-white text-sm">${formatRp(coa.balance)}</td>
+                </tr>
+            `).join('');
+        }
+        // =================================================
 
         function renderCustomerSelect() {
             const select = document.getElementById('co-customer');
@@ -1933,6 +1954,7 @@
             else info.classList.add('hidden');
         }
 
+        // === LOGIKA SUBMIT PAYMENT DIPERBARUI UNTUK COA ===
         async function submitPayment() {
             const totalFinal = getCheckoutFinalTotal();
             const methodSelect = document.getElementById('co-method').value;
@@ -1950,6 +1972,7 @@
             toggleModal('modal-checkout', false);
 
             try {
+                // 1. Simpan Transaksi
                 let trxPayload = {
                     total_price: totalFinal, payment_method: method,
                     cash_tendered: methodSelect === 'Tunai' ? tendered : totalFinal,
@@ -1965,6 +1988,7 @@
                 if (trxRes.error) throw trxRes.error;
                 const trx = trxRes.data;
 
+                // 2. Simpan Item Transaksi
                 const itemsPayload = state.cart.map(item => ({ transaction_id: trx.id, product_id: item.id, quantity: item.qty, price: item.price, custom_price: item.customPrice || null, notes: item.note || null }));
                 let itemRes = await supabaseClient.from('transaction_items').insert(itemsPayload);
                 if (itemRes.error && itemRes.error.message.includes('column')) {
@@ -1973,8 +1997,37 @@
                 }
                 if (itemRes.error) throw itemRes.error;
 
+                // 3. Update Stok
                 for (let item of state.cart) {
                     if (!item.is_bundle) await supabaseClient.from('products').update({ stock: item.stock - item.qty }).eq('id', item.id);
+                }
+
+                // 4. Update Saldo COA untuk Penjualan (Kas & Pendapatan Bertambah)
+                try {
+                    const { data: coaData } = await supabaseClient.from('chart_of_accounts')
+                        .select('code, balance').in('code', ['1001', '4001']);
+
+                    let kasBalance = 0;
+                    let salesBalance = 0;
+
+                    if (coaData && coaData.length > 0) {
+                        coaData.forEach(acc => {
+                            if (acc.code === '1001') kasBalance = parseFloat(acc.balance);
+                            if (acc.code === '4001') salesBalance = parseFloat(acc.balance);
+                        });
+
+                        // Kas (1001) bertambah
+                        await supabaseClient.from('chart_of_accounts')
+                            .update({ balance: kasBalance + totalFinal })
+                            .eq('code', '1001');
+
+                        // Pendapatan/Penjualan (4001) bertambah
+                        await supabaseClient.from('chart_of_accounts')
+                            .update({ balance: salesBalance + totalFinal })
+                            .eq('code', '4001');
+                    }
+                } catch (coaErr) {
+                    console.error("Gagal update COA Penjualan:", coaErr);
                 }
 
                 showToast('Transaksi Berhasil!', 'success');
@@ -1989,6 +2042,7 @@
                 showLoading(false);
             }
         }
+        // =========================================================
 
         // ==========================================
         // PRODUK MODULE
@@ -2414,7 +2468,6 @@
         // LAPORAN MODULE
         // ==========================================
 
-        // FUNGSI DIPERBARUI: Penanganan Kategori saat Modal Dibuka
         function openExpenseModal(id = null) {
             state.editingExpenseId = id;
             if (id) {
@@ -2425,7 +2478,6 @@
                     document.getElementById('exp-name').value = exp.name;
                     document.getElementById('exp-personal').checked = exp.is_personal;
 
-                    // Deteksi kategori dari DB, jika belum ada gunakan logika fallback (cogs/opex)
                     const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
                     const radio = document.querySelector(`input[name="exp-category"][value="${cat}"]`);
                     if (radio) radio.checked = true;
@@ -2439,7 +2491,6 @@
                 document.getElementById('exp-name').value = '';
                 document.getElementById('exp-personal').checked = false;
 
-                // Set default kategori ke Opex
                 const radioOpex = document.getElementById('exp-cat-opex');
                 if (radioOpex) radioOpex.checked = true;
 
@@ -2458,7 +2509,6 @@
             else { customContainer.classList.add('hidden'); customContainer.classList.remove('flex'); loadReports(); }
         }
 
-        // FUNGSI DIPERBARUI: Filter Perhitungan Akuntansi Laba/Rugi
         async function loadReports() {
             showLoading(true);
             let startD = new Date(); startD.setHours(0, 0, 0, 0);
@@ -2494,12 +2544,10 @@
                 const salesTotal = (trxData || []).reduce((s, t) => s + parseFloat(t.total_price), 0);
                 let cogs = 0, opex = 0;
 
-                // Hitung pengeluaran berdasarkan kategori baru
                 (expData || []).forEach(e => {
                     const cat = e.category || (e.affects_profit ? 'cogs' : 'opex');
                     if (cat === 'cogs') cogs += parseFloat(e.amount);
                     else if (cat === 'opex') opex += parseFloat(e.amount);
-                    // Jika 'asset', tidak dimasukkan ke perhitungan laba rugi langsung
                 });
 
                 document.getElementById('stat-sales').innerText = formatRp(salesTotal);
@@ -2584,7 +2632,6 @@
         function updateExpenseItemQty(index, val) { state.expenseItems[index].qty = parseFloat(val) || 0; updateExpenseTotalOnly(); }
         function updateExpenseItemPrice(index, val) { state.expenseItems[index].price = parseFloat(val) || 0; updateExpenseTotalOnly(); }
 
-        // FUNGSI DIPERBARUI: Simpan Pengeluaran + Penjurnalan Ganda (COA) dengan Kategori Baru
         async function saveExpense() {
             const dateStr = document.getElementById('exp-date').value;
             const nameStr = document.getElementById('exp-name').value;
@@ -2600,8 +2647,6 @@
             if (validItems.length === 0) return showToast('Minimal 1 item valid', 'warning');
 
             const total = validItems.reduce((s, i) => s + (i.qty * i.price), 0);
-
-            // Map kategori baru ke affects_profit untuk kompatibilitas data lama
             const affectsProfit = (category === 'cogs');
 
             const payload = {
@@ -2627,7 +2672,6 @@
                     expRes = await supabaseClient.from('expenses').insert([payload]);
                 }
 
-                // Fallback: Jika Supabase belum punya kolom 'category', tangkap error dan simpan tanpa category
                 if (expRes.error && expRes.error.message.includes('column')) {
                     delete payload.category;
                     if (state.editingExpenseId) {
@@ -2638,11 +2682,10 @@
                 } else if (expRes.error) throw expRes.error;
 
                 // 2. LOGIKA AKUNTANSI (UPDATE SALDO COA)
-                let debitCode = '6001'; // Default: Beban Operasional (Opex)
-                if (category === 'cogs') debitCode = '1101'; // Persediaan Barang
-                else if (category === 'asset') debitCode = '1201'; // Aset Tetap
+                let debitCode = '6001';
+                if (category === 'cogs') debitCode = '1101';
+                else if (category === 'asset') debitCode = '1201';
 
-                // 1001 = Kas Laci, 3001 = Modal/Prive
                 const creditCode = isPersonal ? '3001' : '1001';
 
                 const { data: coaData, error: coaErr } = await supabaseClient.from('chart_of_accounts').select('code, balance').in('code', [debitCode, creditCode]);
@@ -2659,16 +2702,15 @@
                     let newCreditBalance = creditBalance;
 
                     if (creditCode === '1001') {
-                        newCreditBalance -= total; // Kas Laci berkurang
+                        newCreditBalance -= total;
                     } else if (creditCode === '3001') {
-                        newCreditBalance += total; // Injeksi Uang Pribadi (Modal bertambah)
+                        newCreditBalance += total;
                     }
 
                     await supabaseClient.from('chart_of_accounts').update({ balance: newDebitBalance }).eq('code', debitCode);
                     await supabaseClient.from('chart_of_accounts').update({ balance: newCreditBalance }).eq('code', creditCode);
                 }
 
-                // 3. Refresh UI
                 showToast('Pengeluaran & Jurnal COA berhasil disimpan!', 'success');
                 toggleModal('modal-expense', false);
 
@@ -2709,12 +2751,10 @@
         // ==========================================
         function setHistoryDuration(duration) {
             state.historyDuration = duration;
-            // Update pill styles
             ['today', '7d', '30d', '60d', 'all', 'custom'].forEach(d => {
                 const btn = document.getElementById('hist-dur-' + d);
                 if (btn) btn.classList.toggle('active', d === duration);
             });
-            // Show/hide custom date row
             const customRow = document.getElementById('hist-custom-date-row');
             if (duration === 'custom') {
                 customRow.classList.remove('hidden');
@@ -2734,37 +2774,27 @@
                     .select(`*, transaction_items ( id, product_id, quantity, price, custom_price, notes, products ( name, is_bundle ) ), customers ( name, phone )`)
                     .order('created_at', { ascending: false });
 
-                // Apply duration filter
                 const duration = state.historyDuration;
                 if (duration !== 'all') {
                     let startD = new Date();
                     startD.setHours(0, 0, 0, 0);
                     let endD = new Date(); endD.setHours(23, 59, 59, 999);
 
-                    if (duration === 'today') {
-                        // startD = today
-                    } else if (duration === '7d') {
-                        startD.setDate(startD.getDate() - 6);
-                    } else if (duration === '30d') {
-                        startD.setDate(startD.getDate() - 29);
-                    } else if (duration === '60d') {
-                        startD.setDate(startD.getDate() - 59);
-                    } else if (duration === 'custom') {
+                    if (duration === '7d') startD.setDate(startD.getDate() - 6);
+                    else if (duration === '30d') startD.setDate(startD.getDate() - 29);
+                    else if (duration === '60d') startD.setDate(startD.getDate() - 59);
+                    else if (duration === 'custom') {
                         const sVal = document.getElementById('hist-start').value;
                         const eVal = document.getElementById('hist-end').value;
                         if (!sVal || !eVal) { showLoading(false); return showToast('Pilih rentang tanggal!', 'warning'); }
                         startD = new Date(sVal); startD.setHours(0, 0, 0, 0);
                         endD = new Date(eVal); endD.setHours(23, 59, 59, 999);
                     }
-
                     query = query.gte('created_at', startD.toISOString()).lte('created_at', endD.toISOString());
                 }
 
-                // Apply customer filter
                 const customerFilter = document.getElementById('hist-customer-filter')?.value;
-                if (customerFilter) {
-                    query = query.eq('customer_id', customerFilter);
-                }
+                if (customerFilter) query = query.eq('customer_id', customerFilter);
 
                 query = query.limit(200);
                 const { data, error } = await query;
@@ -2772,7 +2802,6 @@
                 state.history = data || [];
                 renderHistoryTable();
 
-                // Update summary badge
                 const badge = document.getElementById('hist-summary-badge');
                 if (badge) {
                     const total = state.history.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
@@ -2796,7 +2825,6 @@
                 return;
             }
 
-            // Desktop table rows
             if (tbody) {
                 tbody.innerHTML = state.history.map(trx => {
                     const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
@@ -2820,7 +2848,6 @@
                 }).join('');
             }
 
-            // Mobile cards
             if (mobileCards) {
                 mobileCards.innerHTML = state.history.map(trx => {
                     const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
