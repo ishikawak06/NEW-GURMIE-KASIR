@@ -369,8 +369,10 @@
     </aside>
 
     <!-- MOBILE BOTTOM NAVIGATION -->
-    <nav id="mobile-bottom-nav" class="bg-white dark:bg-panel border-t border-gray-200 dark:border-gray-800 shadow-2xl">
-        <div class="flex items-stretch h-16">
+    <nav id="mobile-bottom-nav"
+        class="bg-white dark:bg-panel border-t border-gray-200 dark:border-gray-800 shadow-2xl w-full">
+        <div class="flex items-stretch h-16 w-full">
+            <!-- Tombol-tombol menu ada di sini -->
             <button onclick="switchView('kasir')" id="mob-nav-kasir"
                 class="mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-blue-600 dark:text-neon-cyan">
                 <i data-lucide="monitor" class="w-5 h-5"></i>
@@ -804,12 +806,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4 md:mb-6">
-                <div
-                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-4 shadow-sm">
-                    <h3 class="font-bold text-sm text-gray-700 dark:text-gray-400 mb-3">Trend Penjualan</h3>
-                    <div class="relative w-full h-[200px] md:h-[250px]"><canvas id="salesChart"></canvas></div>
-                </div>
+            <div class="grid grid-cols-1 gap-4 mb-4 md:mb-6">
                 <div
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col shadow-sm max-h-[320px]">
                     <div
@@ -825,14 +822,6 @@
                         </table>
                     </div>
                 </div>
-            </div>
-
-            <div
-                class="bg-red-50 dark:bg-panel border border-red-200 dark:border-red-900/50 rounded-xl p-4 shadow-sm mb-4">
-                <h3 class="font-bold text-sm text-red-600 dark:text-red-400 mb-3 flex items-center"><i
-                        data-lucide="alert-octagon" class="w-4 h-4 mr-2"></i> Peringatan Stok Mati / Belum Terjual</h3>
-                <div class="flex flex-wrap gap-2" id="dead-stock-container"><span
-                        class="text-sm text-gray-500">Menganalisis data...</span></div>
             </div>
         </section>
 
@@ -3052,6 +3041,48 @@
             switchView('kasir');
             updateHeldBadge();
         };
+        // ==========================================
+        // TOUCH/SWIPE LISTENER UNTUK PANEL PESANAN
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const cartPanel = document.getElementById('kasir-cart-panel');
+            let startY = 0;
+            let currentY = 0;
+
+            cartPanel.addEventListener('touchstart', (e) => {
+                // Hanya aktifkan swipe jika disentuh di area drag handle atau area abu-abu di atasnya
+                if (e.target.closest('.panel-drag-handle') || e.target.closest('.bg-gray-50')) {
+                    startY = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            cartPanel.addEventListener('touchmove', (e) => {
+                if (!startY) return;
+                currentY = e.touches[0].clientY;
+            }, { passive: true });
+
+            cartPanel.addEventListener('touchend', (e) => {
+                if (!startY || !currentY) {
+                    startY = 0;
+                    currentY = 0;
+                    return;
+                }
+
+                const diffY = currentY - startY;
+
+                // Jika swipe ke atas (nilai negatif) dan panel sedang tertutup
+                if (diffY < -30 && !cartPanelExpanded) {
+                    expandCartPanel();
+                }
+                // Jika swipe ke bawah (nilai positif) dan panel sedang terbuka
+                else if (diffY > 30 && cartPanelExpanded) {
+                    toggleCartPanel(); // Menutup panel
+                }
+
+                startY = 0;
+                currentY = 0;
+            });
+        });
     </script>
 </body>
 
