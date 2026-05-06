@@ -449,23 +449,31 @@
             <div class="flex-1 flex flex-col overflow-hidden min-h-0">
                 <!-- Header Kasir -->
                 <div
-                    class="flex items-center gap-2 px-3 md:px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-panel shrink-0">
-                    <div class="relative flex-1">
-                        <i data-lucide="search"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
-                        <input type="text" id="search-product" placeholder="Cari produk atau barcode..."
-                            class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-4 py-2.5 focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm">
+                    class="flex flex-col border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-panel shrink-0">
+                    <div class="flex items-center gap-2 px-3 md:px-6 py-3">
+                        <div class="relative flex-1">
+                            <i data-lucide="search"
+                                class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"></i>
+                            <input type="text" id="search-product" placeholder="Cari produk atau barcode..."
+                                class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-4 py-2.5 focus:border-blue-500 dark:focus:border-neon-cyan focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm">
+                        </div>
+                        <button onclick="toggleModal('modal-scanner', true)"
+                            class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2.5 rounded-xl text-blue-600 dark:text-neon-cyan shrink-0">
+                            <i data-lucide="scan-line" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="toggleModal('modal-held-orders', true)"
+                            class="relative bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2.5 rounded-xl text-yellow-500 shrink-0">
+                            <i data-lucide="pause-circle" class="w-5 h-5"></i>
+                            <span id="badge-held"
+                                class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden shadow-sm">0</span>
+                        </button>
                     </div>
-                    <button onclick="toggleModal('modal-scanner', true)"
-                        class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2.5 rounded-xl text-blue-600 dark:text-neon-cyan shrink-0">
-                        <i data-lucide="scan-line" class="w-5 h-5"></i>
-                    </button>
-                    <button onclick="toggleModal('modal-held-orders', true)"
-                        class="relative bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2.5 rounded-xl text-yellow-500 shrink-0">
-                        <i data-lucide="pause-circle" class="w-5 h-5"></i>
-                        <span id="badge-held"
-                            class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden shadow-sm">0</span>
-                    </button>
+
+                    <!-- Kategori Filter Row -->
+                    <div id="category-filter-container"
+                        class="flex gap-2 px-3 md:px-6 pb-3 overflow-x-auto whitespace-nowrap scrollbar-hide">
+                        <!-- Filter Kategori akan di-generate otomatis via JavaScript -->
+                    </div>
                 </div>
                 <!-- Grid Produk -->
                 <div id="product-grid"
@@ -533,6 +541,23 @@
                 </button>
             </div>
 
+            <!-- PERUBAHAN DATALIST KATEGORI DIMULAI DI SINI -->
+            <div class="col-span-1 md:col-span-3">
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kelompok /
+                    Kategori</label>
+                <input type="text" id="prod-category" list="category-list" placeholder="Minuman, Makanan, dll"
+                    class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white text-sm">
+                <!-- Datalist untuk autocomplete otomatis -->
+                <datalist id="category-list"></datalist>
+            </div>
+            <!-- PERUBAHAN SELESAI -->
+
+            <div class="col-span-1 md:col-span-3">
+                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Urutan Kustom
+                    (Angka)</label>
+                <input type="number" id="prod-order" value="0" placeholder="1, 2, 3..."
+                    class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white text-sm">
+            </div>
             <div id="product-form-container"
                 class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 p-4 rounded-xl mb-4 shadow-sm hidden">
                 <h3 id="form-title" class="font-bold mb-4 text-blue-600 dark:text-neon-cyan text-sm">Tambah Produk</h3>
@@ -1462,7 +1487,6 @@
             <span id="toast-msg" class="text-sm font-medium">Message</span>
         </div>
     </main>
-
     <script>
         // ==========================================
         // CONFIG & INIT
@@ -1473,6 +1497,7 @@
 
         const state = {
             products: [], cart: [], searchQuery: '',
+            selectedCategory: 'all', // <-- State Kategori ditambahkan
             heldOrders: JSON.parse(localStorage.getItem('gurmie_held_orders') || '[]'),
             chartInstance: null, html5QrcodeScanner: null,
             history: [], editingTrx: { id: null, date: '', items: [] },
@@ -1549,10 +1574,26 @@
             showLoading(false);
             if (error) return showToast('Gagal memuat produk: ' + error.message, 'error');
             state.products = data || [];
+
+            renderCategoryFilters();
+            updateCategoryDatalist(); // <--- TAMBAHKAN BARIS INI
+
             renderKasirProducts();
             renderProductTable();
             checkDeadStock();
             if (document.getElementById('view-bahan')?.classList.contains('flex')) renderResepTab();
+        }
+
+        // TAMBAHKAN FUNGSI INI DI BAWAH fetchProducts()
+        function updateCategoryDatalist() {
+            const datalist = document.getElementById('category-list');
+            if (!datalist) return;
+
+            // Ambil semua kategori unik dari produk yang ada, kecualikan yang kosong
+            const categories = [...new Set(state.products.map(p => p.category).filter(Boolean))].sort();
+
+            // Generate tag <option> untuk masing-masing kategori
+            datalist.innerHTML = categories.map(cat => `<option value="${cat}">`).join('');
         }
 
         function checkDeadStock() {
@@ -1679,25 +1720,69 @@
         // ==========================================
         // KASIR & CART LOGIC
         // ==========================================
+
+        // Fungsi Render Filter Kategori
+        function renderCategoryFilters() {
+            const container = document.getElementById('category-filter-container');
+            if (!container) return;
+
+            const categories = [...new Set(state.products.map(p => p.category).filter(Boolean))].sort();
+
+            let html = `<button onclick="filterCategory('all')" class="px-4 py-1.5 rounded-full text-xs font-bold border shadow-sm transition-colors ${state.selectedCategory === 'all' ? 'bg-blue-600 border-blue-600 text-white dark:bg-neon-cyan dark:border-neon-cyan dark:text-dark' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}">Semua</button>`;
+
+            categories.forEach(cat => {
+                const isActive = state.selectedCategory === cat;
+                html += `<button onclick="filterCategory('${cat}')" class="px-4 py-1.5 rounded-full text-xs font-bold border shadow-sm transition-colors ${isActive ? 'bg-blue-600 border-blue-600 text-white dark:bg-neon-cyan dark:border-neon-cyan dark:text-dark' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}">${cat}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterCategory(cat) {
+            state.selectedCategory = cat;
+            renderCategoryFilters();
+            renderKasirProducts();
+        }
+
         function renderKasirProducts() {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
             const q = state.searchQuery.toLowerCase();
-            const filtered = state.products.filter(p => p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q)));
+
+            // Filter
+            let filtered = state.products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q));
+                const matchCategory = state.selectedCategory === 'all' || p.category === state.selectedCategory;
+                return matchSearch && matchCategory;
+            });
+
+            // Sorting by Order Index, then Name
+            filtered.sort((a, b) => {
+                const orderA = a.order_index != null ? a.order_index : 999;
+                const orderB = b.order_index != null ? b.order_index : 999;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.name.localeCompare(b.name);
+            });
+
             if (filtered.length === 0) {
                 grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-10 text-sm">Produk tidak ditemukan.</div>`;
                 return;
             }
+
             filtered.forEach(p => {
                 const outOfStock = !p.is_bundle && p.stock <= 0;
                 const card = document.createElement('div');
                 card.className = `bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex flex-col justify-between transition-all duration-200 shadow-sm ${outOfStock ? 'opacity-50 grayscale' : 'cursor-pointer neon-border hover:-translate-y-0.5 hover:shadow-md active:scale-95'}`;
                 if (!outOfStock) card.onclick = () => { addToCart(p); };
+
                 let badge = '';
                 if (p.is_bundle) badge = `<span class="bg-purple-100 dark:bg-neon-purple/20 text-purple-600 dark:text-neon-purple text-[9px] px-1.5 py-0.5 rounded border border-purple-200 font-bold">BUNDLE</span>`;
                 else if (outOfStock) badge = `<span class="bg-red-100 text-red-600 text-[9px] px-1.5 py-0.5 rounded border border-red-200 font-bold">HABIS</span>`;
+
+                const catLabel = p.category ? `<span class="text-[8px] uppercase tracking-wider text-gray-400 font-semibold mb-1 block">${p.category}</span>` : '';
+
                 card.innerHTML = `
                     <div>
+                        ${catLabel}
                         <div class="flex justify-between items-start mb-1 gap-1">
                             <h3 class="font-semibold text-xs md:text-sm leading-tight text-gray-900 dark:text-white line-clamp-2">${p.name}</h3>
                             ${badge}
@@ -2065,7 +2150,18 @@
         }
 
         function generateRandomBarcode() { document.getElementById('prod-barcode').value = Math.floor(100000000000 + Math.random() * 900000000000).toString(); }
-        function openProductForm() { document.getElementById('product-form-container').classList.remove('hidden'); document.getElementById('form-title').innerText = 'Tambah Produk'; document.getElementById('product-form').reset(); document.getElementById('prod-id').value = ''; }
+
+        function openProductForm() {
+            document.getElementById('product-form-container').classList.remove('hidden');
+            document.getElementById('form-title').innerText = 'Tambah Produk';
+            document.getElementById('product-form').reset();
+            document.getElementById('prod-id').value = '';
+
+            // Reset Kategori & Order Index
+            if (document.getElementById('prod-category')) document.getElementById('prod-category').value = '';
+            if (document.getElementById('prod-order')) document.getElementById('prod-order').value = '0';
+        }
+
         function closeProductForm() { document.getElementById('product-form-container').classList.add('hidden'); }
 
         function editProduct(id) {
@@ -2079,23 +2175,42 @@
             document.getElementById('prod-price').value = p.price;
             document.getElementById('prod-stock').value = p.stock;
             document.getElementById('prod-type').value = p.is_bundle ? 'true' : 'false';
+
+            // Load Kategori & Order Index
+            if (document.getElementById('prod-category')) document.getElementById('prod-category').value = p.category || '';
+            if (document.getElementById('prod-order')) document.getElementById('prod-order').value = p.order_index != null ? p.order_index : 0;
         }
 
         async function saveProduct(e) {
             e.preventDefault();
             const id = document.getElementById('prod-id').value;
-            const payload = { name: document.getElementById('prod-name').value, price: parseInt(document.getElementById('prod-price').value), stock: parseInt(document.getElementById('prod-stock').value), barcode: document.getElementById('prod-barcode').value || null, is_bundle: document.getElementById('prod-type').value === 'true' };
+
+            const payload = {
+                name: document.getElementById('prod-name').value,
+                price: parseInt(document.getElementById('prod-price').value),
+                stock: parseInt(document.getElementById('prod-stock').value),
+                barcode: document.getElementById('prod-barcode').value || null,
+                is_bundle: document.getElementById('prod-type').value === 'true',
+            };
+
+            if (document.getElementById('prod-category')) payload.category = document.getElementById('prod-category').value || null;
+            if (document.getElementById('prod-order')) payload.order_index = parseInt(document.getElementById('prod-order').value) || 0;
+
             showLoading(true);
             try {
                 let res;
                 if (id) res = await supabaseClient.from('products').update(payload).eq('id', id);
                 else res = await supabaseClient.from('products').insert([payload]);
+
                 if (res.error && res.error.message.includes('column')) {
                     delete payload.barcode; delete payload.is_bundle;
+                    delete payload.category; delete payload.order_index;
                     if (id) await supabaseClient.from('products').update(payload).eq('id', id);
                     else await supabaseClient.from('products').insert([payload]);
+                    showToast('Tersimpan dengan fallback. Kolom baru belum ada di DB.', 'warning');
                 } else if (res.error) throw res.error;
                 else showToast('Produk tersimpan!', 'success');
+
                 closeProductForm();
                 await fetchProducts();
             } catch (error) { showToast('Gagal: ' + error.message, 'error'); }
@@ -3046,6 +3161,7 @@
             switchView('kasir');
             updateHeldBadge();
         };
+
         // ==========================================
         // TOUCH/SWIPE LISTENER UNTUK PANEL PESANAN
         // ==========================================
@@ -3055,7 +3171,6 @@
             let currentY = 0;
 
             cartPanel.addEventListener('touchstart', (e) => {
-                // Hanya aktifkan swipe jika disentuh di area drag handle atau area abu-abu di atasnya
                 if (e.target.closest('.panel-drag-handle') || e.target.closest('.bg-gray-50')) {
                     startY = e.touches[0].clientY;
                 }
@@ -3075,13 +3190,11 @@
 
                 const diffY = currentY - startY;
 
-                // Jika swipe ke atas (nilai negatif) dan panel sedang tertutup
                 if (diffY < -30 && !cartPanelExpanded) {
                     expandCartPanel();
                 }
-                // Jika swipe ke bawah (nilai positif) dan panel sedang terbuka
                 else if (diffY > 30 && cartPanelExpanded) {
-                    toggleCartPanel(); // Menutup panel
+                    toggleCartPanel();
                 }
 
                 startY = 0;
