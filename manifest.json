@@ -8,12 +8,12 @@
   "theme_color": "#3b82f6",
   "icons": [
     {
-      "src": "icon-192x192.png", 
+      "src": "https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png", 
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512x512.png",
+      "src": "https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png",
       "sizes": "512x512",
       "type": "image/png"
     }
