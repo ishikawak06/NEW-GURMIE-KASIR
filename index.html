@@ -908,8 +908,7 @@
                         <option value="">Semua Pelanggan</option>
                     </select>
                     <span id="hist-summary-badge"
-                        class="text-xs text-gray-500 dark:text-gray-400 shrink-0 font-medium bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">0
-                        trx</span>
+                        class="text-xs text-gray-500 dark:text-gray-400 shrink-0 font-medium bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">Memuat...</span>
                 </div>
             </div>
 
@@ -925,7 +924,7 @@
                                 <tr>
                                     <th class="px-4 py-3 font-medium">Tanggal & Waktu</th>
                                     <th class="px-4 py-3 font-medium">ID</th>
-                                    <th class="px-4 py-3 font-medium">Pelanggan</th>
+                                    <th class="px-4 py-3 font-medium">Pelanggan / Keterangan</th>
                                     <th class="px-4 py-3 font-medium">Total</th>
                                     <th class="px-4 py-3 font-medium">Metode</th>
                                     <th class="px-4 py-3 font-medium text-right">Aksi</th>
@@ -1587,19 +1586,17 @@
 
         const state = {
             products: [], cart: [], searchQuery: '',
-            selectedCategory: 'all', // <-- State Kategori ditambahkan
+            selectedCategory: 'all',
             heldOrders: JSON.parse(localStorage.getItem('gurmie_held_orders') || '[]'),
             chartInstance: null, html5QrcodeScanner: null,
-            history: [], editingTrx: { id: null, date: '', items: [] },
+            history: [], historyExpenses: [], // Tambahan historyExpenses
+            editingTrx: { id: null, date: '', items: [] },
             expensesList: [], editingExpenseId: null, expenseItems: [],
             reportPeriodText: '7 Hari Terakhir',
             rawMaterials: [], processedMaterials: [], recipes: [],
-            compItems: [],
-            customers: [],
-            // History filter state
-            historyDuration: 'all',
-            historyCustomerFilter: '',
-            coaList: [] // Tambahan COA State
+            compItems: [], customers: [],
+            historyDuration: 'all', historyCustomerFilter: '',
+            coaList: []
         };
 
         const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n || 0);
@@ -1638,6 +1635,83 @@
         }
 
         // ==========================================
+        // UI & NAVIGATION TOGGLES
+        // ==========================================
+        function toggleModal(id, show) {
+            const modal = document.getElementById(id);
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            } else {
+                modal.classList.add('opacity-0');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function showLoading(show) {
+            const loader = document.getElementById('global-loader');
+            if (show) loader.classList.remove('hidden');
+            else loader.classList.add('hidden');
+        }
+
+        function showToast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            const icon = document.getElementById('toast-icon');
+            if (type === 'success') { icon.setAttribute('data-lucide', 'check-circle'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-green-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
+            else if (type === 'error') { icon.setAttribute('data-lucide', 'alert-circle'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-red-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
+            else if (type === 'warning') { icon.setAttribute('data-lucide', 'alert-triangle'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-yellow-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
+            else { icon.setAttribute('data-lucide', 'info'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-blue-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
+            lucide.createIcons();
+            setTimeout(() => { t.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
+
+        function switchView(view) {
+            ['kasir', 'produk', 'bahan', 'laporan', 'riwayat'].forEach(v => {
+                document.getElementById('view-' + v)?.classList.add('hidden');
+                document.getElementById('view-' + v)?.classList.remove('flex');
+
+                // Desktop Nav Update
+                const n = document.getElementById('nav-' + v);
+                if (n) {
+                    n.classList.remove('bg-blue-50', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-neon-cyan');
+                    n.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-800');
+                }
+
+                // Mobile Nav Update
+                const mn = document.getElementById('mob-nav-' + v);
+                if (mn) {
+                    mn.classList.remove('text-blue-600', 'dark:text-neon-cyan');
+                    mn.classList.add('text-gray-400');
+                }
+            });
+
+            const activeView = document.getElementById('view-' + view);
+            if (activeView) {
+                activeView.classList.remove('hidden');
+                activeView.classList.add('flex');
+            }
+
+            const activeNav = document.getElementById('nav-' + view);
+            if (activeNav) {
+                activeNav.classList.add('bg-blue-50', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-neon-cyan');
+                activeNav.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-800');
+            }
+
+            const activeMobNav = document.getElementById('mob-nav-' + view);
+            if (activeMobNav) {
+                activeMobNav.classList.add('text-blue-600', 'dark:text-neon-cyan');
+                activeMobNav.classList.remove('text-gray-400');
+            }
+
+            if (view === 'kasir') { renderKasirProducts(); updateHeldBadge(); }
+            if (view === 'produk') renderProductTable();
+            if (view === 'laporan') { loadReports(); fetchCOA(); }
+            if (view === 'riwayat') loadHistory();
+            if (view === 'bahan') fetchBOMData();
+        }
+
+        // ==========================================
         // MOBILE CART PANEL TOGGLE
         // ==========================================
         let cartPanelExpanded = false;
@@ -1666,7 +1740,7 @@
             state.products = data || [];
 
             renderCategoryFilters();
-            updateCategoryDatalist(); // <--- TAMBAHKAN BARIS INI
+            updateCategoryDatalist();
 
             renderKasirProducts();
             renderProductTable();
@@ -1674,15 +1748,10 @@
             if (document.getElementById('view-bahan')?.classList.contains('flex')) renderResepTab();
         }
 
-        // TAMBAHKAN FUNGSI INI DI BAWAH fetchProducts()
         function updateCategoryDatalist() {
             const datalist = document.getElementById('category-list');
             if (!datalist) return;
-
-            // Ambil semua kategori unik dari produk yang ada, kecualikan yang kosong
             const categories = [...new Set(state.products.map(p => p.category).filter(Boolean))].sort();
-
-            // Generate tag <option> untuk masing-masing kategori
             datalist.innerHTML = categories.map(cat => `<option value="${cat}">`).join('');
         }
 
@@ -1731,13 +1800,12 @@
             }
         }
 
-        // === FUNGSI CHART OF ACCOUNTS (COA) DIPERBARUI ===
         async function fetchCOA() {
             try {
                 const { data, error } = await supabaseClient.from('chart_of_accounts').select('*').order('code');
                 if (error) throw error;
                 state.coaList = data || [];
-                renderCOA(); // Komentar dihilangkan, memanggil fungsi render
+                renderCOA();
             } catch (err) {
                 console.error("Gagal memuat COA:", err);
             }
@@ -1761,7 +1829,6 @@
                 </tr>
             `).join('');
         }
-        // =================================================
 
         function renderCustomerSelect() {
             const select = document.getElementById('co-customer');
@@ -1810,16 +1877,11 @@
         // ==========================================
         // KASIR & CART LOGIC
         // ==========================================
-
-        // Fungsi Render Filter Kategori
         function renderCategoryFilters() {
             const container = document.getElementById('category-filter-container');
             if (!container) return;
-
             const categories = [...new Set(state.products.map(p => p.category).filter(Boolean))].sort();
-
             let html = `<button onclick="filterCategory('all')" class="px-4 py-1.5 rounded-full text-xs font-bold border shadow-sm transition-colors ${state.selectedCategory === 'all' ? 'bg-blue-600 border-blue-600 text-white dark:bg-neon-cyan dark:border-neon-cyan dark:text-dark' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}">Semua</button>`;
-
             categories.forEach(cat => {
                 const isActive = state.selectedCategory === cat;
                 html += `<button onclick="filterCategory('${cat}')" class="px-4 py-1.5 rounded-full text-xs font-bold border shadow-sm transition-colors ${isActive ? 'bg-blue-600 border-blue-600 text-white dark:bg-neon-cyan dark:border-neon-cyan dark:text-dark' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}">${cat}</button>`;
@@ -1838,14 +1900,12 @@
             grid.innerHTML = '';
             const q = state.searchQuery.toLowerCase();
 
-            // Filter
             let filtered = state.products.filter(p => {
                 const matchSearch = p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q));
                 const matchCategory = state.selectedCategory === 'all' || p.category === state.selectedCategory;
                 return matchSearch && matchCategory;
             });
 
-            // Sorting by Order Index, then Name
             filtered.sort((a, b) => {
                 const orderA = a.order_index != null ? a.order_index : 999;
                 const orderB = b.order_index != null ? b.order_index : 999;
@@ -2123,7 +2183,6 @@
             else info.classList.add('hidden');
         }
 
-        // === LOGIKA SUBMIT PAYMENT DIPERBARUI UNTUK COA ===
         async function submitPayment() {
             const totalFinal = getCheckoutFinalTotal();
             const methodSelect = document.getElementById('co-method').value;
@@ -2185,12 +2244,10 @@
                             if (acc.code === '4001') salesBalance = parseFloat(acc.balance);
                         });
 
-                        // Kas (1001) bertambah
                         await supabaseClient.from('chart_of_accounts')
                             .update({ balance: kasBalance + totalFinal })
                             .eq('code', '1001');
 
-                        // Pendapatan/Penjualan (4001) bertambah
                         await supabaseClient.from('chart_of_accounts')
                             .update({ balance: salesBalance + totalFinal })
                             .eq('code', '4001');
@@ -2211,7 +2268,6 @@
                 showLoading(false);
             }
         }
-        // =========================================================
 
         // ==========================================
         // PRODUK MODULE
@@ -2247,7 +2303,6 @@
             document.getElementById('product-form').reset();
             document.getElementById('prod-id').value = '';
 
-            // Reset Kategori & Order Index
             if (document.getElementById('prod-category')) document.getElementById('prod-category').value = '';
             if (document.getElementById('prod-order')) document.getElementById('prod-order').value = '0';
         }
@@ -2266,7 +2321,6 @@
             document.getElementById('prod-stock').value = p.stock;
             document.getElementById('prod-type').value = p.is_bundle ? 'true' : 'false';
 
-            // Load Kategori & Order Index
             if (document.getElementById('prod-category')) document.getElementById('prod-category').value = p.category || '';
             if (document.getElementById('prod-order')) document.getElementById('prod-order').value = p.order_index != null ? p.order_index : 0;
         }
@@ -2863,7 +2917,6 @@
             btn.innerHTML = `<div class="loader w-4 h-4 border-2"></div>`;
 
             try {
-                // 1. Simpan ke tabel Pengeluaran
                 let expRes;
                 if (state.editingExpenseId) {
                     expRes = await supabaseClient.from('expenses').update(payload).eq('id', state.editingExpenseId);
@@ -2880,7 +2933,6 @@
                     }
                 } else if (expRes.error) throw expRes.error;
 
-                // 2. LOGIKA AKUNTANSI (UPDATE SALDO COA)
                 let debitCode = '6001';
                 if (category === 'cogs') debitCode = '1101';
                 else if (category === 'asset') debitCode = '1201';
@@ -2917,6 +2969,9 @@
                     loadReports();
                     fetchCOA();
                 }
+                if (document.getElementById('view-riwayat')?.classList.contains('flex')) {
+                    loadHistory();
+                }
             } catch (e) {
                 console.error(e);
                 showToast('Gagal memproses transaksi & jurnal.', 'error');
@@ -2929,8 +2984,19 @@
 
         async function deleteExpense(id) {
             if (!confirm('Hapus pengeluaran ini?')) return;
-            try { await supabaseClient.from('expenses').delete().eq('id', id); showToast('Terhapus', 'success'); loadReports(); }
-            catch (e) { showToast('Gagal', 'error'); }
+            showLoading(true);
+            try {
+                await supabaseClient.from('expenses').delete().eq('id', id);
+                showToast('Terhapus', 'success');
+                if (document.getElementById('view-laporan')?.classList.contains('flex')) loadReports();
+                if (document.getElementById('view-riwayat')?.classList.contains('flex')) loadHistory();
+            } catch (e) { showToast('Gagal menghapus', 'error'); }
+            showLoading(false);
+        }
+
+        // Khusus hapus dari tombol di tab Riwayat (sama saja fungsinya)
+        async function deleteExpenseFromHistory(id) {
+            deleteExpense(id);
         }
 
         function exportToPDF() {
@@ -2944,6 +3010,7 @@
             doc.save(`Laporan_GurmieKasir_${new Date().getTime()}.pdf`);
             showToast('PDF berhasil diunduh.', 'success');
         }
+
         // ==========================================
         // INVOICE MODULE
         // ==========================================
@@ -2951,12 +3018,10 @@
             const trx = state.history.find(t => t.id === id);
             if (!trx) return showToast('Transaksi tidak ditemukan', 'error');
 
-            // Set Header Info
             const shortId = trx.id.split('-')[0].toUpperCase();
             document.getElementById('inv-id').innerText = `INV-${shortId}`;
             document.getElementById('inv-date').innerText = formatTime(trx.created_at);
 
-            // Set Customer Info
             if (trx.customers) {
                 document.getElementById('inv-customer-name').innerText = trx.customers.name;
                 document.getElementById('inv-customer-phone').innerText = trx.customers.phone || '-';
@@ -2965,7 +3030,6 @@
                 document.getElementById('inv-customer-phone').innerText = '';
             }
 
-            // Set Items Table
             const tbody = document.getElementById('inv-items-body');
             let subtotal = 0;
 
@@ -2987,7 +3051,6 @@
                 `;
             }).join('');
 
-            // Set Totals
             document.getElementById('inv-subtotal').innerText = formatRp(subtotal);
 
             const adjContainer = document.getElementById('inv-adjustment-container');
@@ -3012,7 +3075,6 @@
             document.getElementById('inv-total').innerText = formatRp(trx.total_price);
             document.getElementById('inv-method').innerText = trx.payment_method || 'Tunai';
 
-            // Show Modal
             toggleModal('modal-invoice', true);
         }
 
@@ -3021,7 +3083,7 @@
         }
 
         // ==========================================
-        // RIWAYAT TRANSAKSI - NEW FILTER LOGIC
+        // RIWAYAT TRANSAKSI
         // ==========================================
         function setHistoryDuration(duration) {
             state.historyDuration = duration;
@@ -3043,10 +3105,15 @@
         async function loadHistory() {
             showLoading(true);
             try {
-                let query = supabaseClient
+                let queryTrx = supabaseClient
                     .from('transactions')
                     .select(`*, transaction_items ( id, product_id, quantity, price, custom_price, notes, products ( name, is_bundle ) ), customers ( name, phone )`)
                     .order('created_at', { ascending: false });
+
+                let queryExp = supabaseClient
+                    .from('expenses')
+                    .select('*')
+                    .order('expense_date', { ascending: false });
 
                 const duration = state.historyDuration;
                 if (duration !== 'all') {
@@ -3064,22 +3131,32 @@
                         startD = new Date(sVal); startD.setHours(0, 0, 0, 0);
                         endD = new Date(eVal); endD.setHours(23, 59, 59, 999);
                     }
-                    query = query.gte('created_at', startD.toISOString()).lte('created_at', endD.toISOString());
+                    queryTrx = queryTrx.gte('created_at', startD.toISOString()).lte('created_at', endD.toISOString());
+                    queryExp = queryExp.gte('expense_date', startD.toISOString()).lte('expense_date', endD.toISOString());
                 }
 
                 const customerFilter = document.getElementById('hist-customer-filter')?.value;
-                if (customerFilter) query = query.eq('customer_id', customerFilter);
+                if (customerFilter) queryTrx = queryTrx.eq('customer_id', customerFilter);
 
-                query = query.limit(200);
-                const { data, error } = await query;
-                if (error) throw error;
-                state.history = data || [];
+                queryTrx = queryTrx.limit(200);
+                queryExp = queryExp.limit(200);
+
+                const [resTrx, resExp] = await Promise.all([queryTrx, queryExp]);
+                if (resTrx.error) throw resTrx.error;
+                if (resExp.error && !resExp.error.message.includes('relation')) throw resExp.error;
+
+                state.history = resTrx.data || [];
+                state.historyExpenses = resExp.data || [];
+
                 renderHistoryTable();
 
                 const badge = document.getElementById('hist-summary-badge');
                 if (badge) {
-                    const total = state.history.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
-                    badge.innerText = `${state.history.length} trx · ${formatRp(total)}`;
+                    const totalTrx = state.history.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
+                    // Filter customer aktif, maka hide pengeluaran di kalkulasi
+                    const totalExp = customerFilter ? 0 : state.historyExpenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
+
+                    badge.innerHTML = `<span class="text-blue-600 dark:text-neon-cyan font-bold">+ ${formatRp(totalTrx)}</span> <span class="mx-1 text-gray-300 dark:text-gray-600">|</span> <span class="text-red-500 dark:text-red-400 font-bold">- ${formatRp(totalExp)}</span>`;
                 }
             } catch (err) {
                 console.error(err);
@@ -3092,8 +3169,16 @@
         function renderHistoryTable() {
             const tbody = document.getElementById('history-table-body');
             const mobileCards = document.getElementById('history-mobile-cards');
+            const customerFilter = document.getElementById('hist-customer-filter')?.value;
 
-            if (state.history.length === 0) {
+            // Gabungkan Transaksi & Pengeluaran
+            const combined = [
+                ...state.history.map(t => ({ type: 'trx', date: new Date(t.created_at), data: t })),
+                // Jika sedang difilter berdasarkan pelanggan, jangan tampilkan expense
+                ...(customerFilter ? [] : state.historyExpenses.map(e => ({ type: 'exp', date: new Date(e.expense_date + 'T12:00:00'), data: e })))
+            ].sort((a, b) => b.date - a.date);
+
+            if (combined.length === 0) {
                 if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 text-sm">Belum ada transaksi.</td></tr>`;
                 if (mobileCards) mobileCards.innerHTML = `<div class="text-center text-gray-500 py-8 text-sm">Belum ada transaksi.</div>`;
                 return;
@@ -3101,55 +3186,103 @@
 
             // Render untuk Desktop
             if (tbody) {
-                tbody.innerHTML = state.history.map(trx => {
-                    const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
-                    const customerName = trx.customers ? trx.customers.name : '-';
-                    let adjBadge = '';
-                    if (trx.adjustment_type === 'discount') adjBadge = `<br><span class="bg-yellow-100 text-yellow-700 text-[9px] px-1.5 py-0.5 rounded">Diskon: -${formatRp(trx.adjustment_amount)}</span>`;
-                    else if (trx.adjustment_type === 'fee') adjBadge = `<br><span class="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded">Fee: +${formatRp(trx.adjustment_amount)}</span>`;
-                    return `
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${formatTime(trx.created_at)}</td>
-                            <td class="px-4 py-3 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
-                            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">${customerName}</td>
-                            <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
-                            <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
-                            <td class="px-4 py-3 text-right">
-                                <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
-                                <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </td>
-                        </tr>
-                    `;
+                tbody.innerHTML = combined.map(item => {
+                    if (item.type === 'trx') {
+                        const trx = item.data;
+                        const itemsCount = trx.transaction_items.reduce((sum, i) => sum + i.quantity, 0);
+                        const customerName = trx.customers ? trx.customers.name : '-';
+                        let adjBadge = '';
+                        if (trx.adjustment_type === 'discount') adjBadge = `<br><span class="bg-yellow-100 text-yellow-700 text-[9px] px-1.5 py-0.5 rounded">Diskon: -${formatRp(trx.adjustment_amount)}</span>`;
+                        else if (trx.adjustment_type === 'fee') adjBadge = `<br><span class="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded">Fee: +${formatRp(trx.adjustment_amount)}</span>`;
+                        return `
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${formatTime(trx.created_at)}</td>
+                                <td class="px-4 py-3 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
+                                <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">${customerName}</td>
+                                <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
+                                <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                                    <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    } else if (item.type === 'exp') {
+                        const exp = item.data;
+                        let catBadge = '';
+                        const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
+                        if (cat === 'opex') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded ml-1">Opex</span>';
+                        else if (cat === 'cogs') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded ml-1">Bahan Baku</span>';
+                        else if (cat === 'asset') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded ml-1">Aset</span>';
+
+                        return `
+                            <tr class="bg-red-50/30 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</td>
+                                <td class="px-4 py-3 text-xs font-mono text-gray-500">EXP-${exp.id.substring(0, 6)}</td>
+                                <td class="px-4 py-3 text-xs text-red-600 dark:text-red-400 font-medium">${exp.name} ${catBadge}</td>
+                                <td class="px-4 py-3 font-bold text-red-600 dark:text-red-400 text-sm">- ${formatRp(exp.amount)}</td>
+                                <td class="px-4 py-3"><span class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded text-[10px] font-bold uppercase">Pengeluaran</span></td>
+                                <td class="px-4 py-3 text-right">
+                                    <button onclick="openExpenseModal('${exp.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteExpenseFromHistory('${exp.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 }).join('');
             }
 
             // Render untuk Mobile Cards
             if (mobileCards) {
-                mobileCards.innerHTML = state.history.map(trx => {
-                    const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
-                    const customerName = trx.customers ? trx.customers.name : null;
-                    return `
-                        <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}</span>
-                                        <span class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-[10px] text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span>
+                mobileCards.innerHTML = combined.map(item => {
+                    if (item.type === 'trx') {
+                        const trx = item.data;
+                        const itemsCount = trx.transaction_items.reduce((sum, i) => sum + i.quantity, 0);
+                        const customerName = trx.customers ? trx.customers.name : null;
+                        return `
+                            <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}</span>
+                                            <span class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-[10px] text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500">${formatTime(trx.created_at)}</p>
+                                        <p class="text-[10px] text-gray-400 mt-0.5">${itemsCount} item${customerName ? ' · 👤 ' + customerName : ''}</p>
                                     </div>
-                                    <p class="text-xs text-gray-500">${formatTime(trx.created_at)}</p>
-                                    <p class="text-[10px] text-gray-400 mt-0.5">${itemsCount} item${customerName ? ' · 👤 ' + customerName : ''}</p>
-                                </div>
-                                <div class="flex gap-2 shrink-0 ml-2">
-                                    <button onclick="generateInvoice('${trx.id}')" class="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-1.5 rounded-lg"><i data-lucide="printer" class="w-4 h-4"></i></button>
-                                    <button onclick="openEditTrx('${trx.id}')" class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-1.5 rounded-lg"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                    <button onclick="deleteTrx('${trx.id}')" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-1.5 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <div class="flex gap-2">
+                                        <button onclick="generateInvoice('${trx.id}')" class="p-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                                        <button onclick="openEditTrx('${trx.id}')" class="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-neon-cyan rounded"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                        <button onclick="deleteTrx('${trx.id}')" class="p-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
+                        `;
+                    } else if (item.type === 'exp') {
+                        const exp = item.data;
+                        return `
+                            <div class="bg-red-50/50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-3 shadow-sm">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="font-bold text-red-600 dark:text-red-400 text-sm">- ${formatRp(exp.amount)}</span>
+                                            <span class="bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded text-[10px] text-red-600 dark:text-red-400 font-bold uppercase">Pengeluaran</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</p>
+                                        <p class="text-[10px] text-red-500 mt-0.5 font-medium">${exp.name}</p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button onclick="openExpenseModal('${exp.id}')" class="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-neon-cyan rounded"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                        <button onclick="deleteExpenseFromHistory('${exp.id}')" class="p-1.5 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
                 }).join('');
             }
+
             lucide.createIcons();
         }
 
