@@ -901,8 +901,17 @@
                         class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0">Terapkan</button>
                 </div>
 
+                <!-- Bagian yang diganti: Tambahan Filter Tipe Transaksi -->
                 <div class="px-4 pb-3 flex items-center gap-2">
-                    <i data-lucide="user" class="w-4 h-4 text-gray-400 shrink-0"></i>
+                    <i data-lucide="filter" class="w-4 h-4 text-gray-400 shrink-0"></i>
+                    <select id="hist-type-filter" onchange="state.historyTypeFilter = this.value; renderHistoryTable();"
+                        class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-blue-500">
+                        <option value="all">Semua Tipe</option>
+                        <option value="trx">Pemasukan (Penjualan)</option>
+                        <option value="exp">Pengeluaran</option>
+                    </select>
+
+                    <i data-lucide="user" class="w-4 h-4 text-gray-400 shrink-0 ml-1"></i>
                     <select id="hist-customer-filter" onchange="loadHistory()"
                         class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-blue-500">
                         <option value="">Semua Pelanggan</option>
@@ -3171,16 +3180,27 @@
             const mobileCards = document.getElementById('history-mobile-cards');
             const customerFilter = document.getElementById('hist-customer-filter')?.value;
 
+            // Ambil nilai filter tipe (default 'all' jika belum ada)
+            const typeFilter = state.historyTypeFilter || 'all';
+
             // Gabungkan Transaksi & Pengeluaran
-            const combined = [
+            let combined = [
                 ...state.history.map(t => ({ type: 'trx', date: new Date(t.created_at), data: t })),
                 // Jika sedang difilter berdasarkan pelanggan, jangan tampilkan expense
                 ...(customerFilter ? [] : state.historyExpenses.map(e => ({ type: 'exp', date: new Date(e.expense_date + 'T12:00:00'), data: e })))
-            ].sort((a, b) => b.date - a.date);
+            ];
+
+            // --- LOGIKA FILTER TIPE DITERAPKAN DI SINI ---
+            if (typeFilter !== 'all') {
+                combined = combined.filter(item => item.type === typeFilter);
+            }
+
+            // Urutkan dari yang terbaru
+            combined.sort((a, b) => b.date - a.date);
 
             if (combined.length === 0) {
-                if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 text-sm">Belum ada transaksi.</td></tr>`;
-                if (mobileCards) mobileCards.innerHTML = `<div class="text-center text-gray-500 py-8 text-sm">Belum ada transaksi.</div>`;
+                if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-gray-500 text-sm">Belum ada data.</td></tr>`;
+                if (mobileCards) mobileCards.innerHTML = `<div class="text-center text-gray-500 py-8 text-sm">Belum ada data.</div>`;
                 return;
             }
 
@@ -3195,19 +3215,19 @@
                         if (trx.adjustment_type === 'discount') adjBadge = `<br><span class="bg-yellow-100 text-yellow-700 text-[9px] px-1.5 py-0.5 rounded">Diskon: -${formatRp(trx.adjustment_amount)}</span>`;
                         else if (trx.adjustment_type === 'fee') adjBadge = `<br><span class="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded">Fee: +${formatRp(trx.adjustment_amount)}</span>`;
                         return `
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${formatTime(trx.created_at)}</td>
-                                <td class="px-4 py-3 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
-                                <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">${customerName}</td>
-                                <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
-                                <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
-                                <td class="px-4 py-3 text-right">
-                                    <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
-                                    <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                    <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </td>
-                            </tr>
-                        `;
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${formatTime(trx.created_at)}</td>
+                        <td class="px-4 py-3 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
+                        <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">${customerName}</td>
+                        <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
+                        <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
+                        <td class="px-4 py-3 text-right">
+                            <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                            <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                            <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
                     } else if (item.type === 'exp') {
                         const exp = item.data;
                         let catBadge = '';
@@ -3217,75 +3237,23 @@
                         else if (cat === 'asset') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded ml-1">Aset</span>';
 
                         return `
-                            <tr class="bg-red-50/30 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</td>
-                                <td class="px-4 py-3 text-xs font-mono text-gray-500">EXP-${exp.id.substring(0, 6)}</td>
-                                <td class="px-4 py-3 text-xs text-red-600 dark:text-red-400 font-medium">${exp.name} ${catBadge}</td>
-                                <td class="px-4 py-3 font-bold text-red-600 dark:text-red-400 text-sm">- ${formatRp(exp.amount)}</td>
-                                <td class="px-4 py-3"><span class="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-2 py-1 rounded text-[10px] font-bold uppercase">Pengeluaran</span></td>
-                                <td class="px-4 py-3 text-right">
-                                    <button onclick="openExpenseModal('${exp.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                    <button onclick="deleteExpenseFromHistory('${exp.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </td>
-                            </tr>
-                        `;
+                    <tr class="bg-red-50/30 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</td>
+                        <td class="px-4 py-3 text-xs font-mono text-gray-500">EXP-${exp.id.substring(0, 6)}</td>
+                        <td class="px-4 py-3 text-xs text-red-600 dark:text-red-400 font-bold">${exp.name} ${catBadge}</td>
+                        <td class="px-4 py-3 font-bold text-red-500 text-sm">- ${formatRp(exp.amount)}</td>
+                        <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">Pengeluaran</span></td>
+                        <td class="px-4 py-3 text-right">
+                            <button onclick="openExpenseModal('${exp.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                            <button onclick="deleteExpenseFromHistory('${exp.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </td>
+                    </tr>
+                `;
                     }
                 }).join('');
+                lucide.createIcons();
             }
-
-            // Render untuk Mobile Cards
-            if (mobileCards) {
-                mobileCards.innerHTML = combined.map(item => {
-                    if (item.type === 'trx') {
-                        const trx = item.data;
-                        const itemsCount = trx.transaction_items.reduce((sum, i) => sum + i.quantity, 0);
-                        const customerName = trx.customers ? trx.customers.name : null;
-                        return `
-                            <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}</span>
-                                            <span class="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-[10px] text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500">${formatTime(trx.created_at)}</p>
-                                        <p class="text-[10px] text-gray-400 mt-0.5">${itemsCount} item${customerName ? ' · 👤 ' + customerName : ''}</p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="generateInvoice('${trx.id}')" class="p-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded"><i data-lucide="printer" class="w-4 h-4"></i></button>
-                                        <button onclick="openEditTrx('${trx.id}')" class="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-neon-cyan rounded"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                        <button onclick="deleteTrx('${trx.id}')" class="p-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    } else if (item.type === 'exp') {
-                        const exp = item.data;
-                        return `
-                            <div class="bg-red-50/50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 rounded-xl p-3 shadow-sm">
-                                <div class="flex justify-between items-start">
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="font-bold text-red-600 dark:text-red-400 text-sm">- ${formatRp(exp.amount)}</span>
-                                            <span class="bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded text-[10px] text-red-600 dark:text-red-400 font-bold uppercase">Pengeluaran</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</p>
-                                        <p class="text-[10px] text-red-500 mt-0.5 font-medium">${exp.name}</p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="openExpenseModal('${exp.id}')" class="p-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-neon-cyan rounded"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                                        <button onclick="deleteExpenseFromHistory('${exp.id}')" class="p-1.5 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                }).join('');
-            }
-
-            lucide.createIcons();
         }
-
         async function deleteTrx(id) {
             if (!confirm('Hapus transaksi ini? Stok akan dikembalikan.')) return;
             showLoading(true);
