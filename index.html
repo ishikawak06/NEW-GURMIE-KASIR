@@ -1307,20 +1307,14 @@
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 space-y-4">
                     <input type="hidden" id="exp-id">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label
+                    <div class="grid grid-cols-1 gap-3">
+                                                <div>
+                                                        <label
                                 class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tanggal</label>
-                            <input type="date" id="exp-date"
+                                                        <input type="date" id="exp-date"                                
                                 class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-red-500 focus:outline-none text-gray-900 dark:text-white text-sm">
-                        </div>
-                        <div>
-                            <label
-                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Keterangan</label>
-                            <input type="text" id="exp-name" placeholder="Misal: Belanja Sayur / Bayar Listrik"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-red-500 focus:outline-none text-gray-900 dark:text-white text-sm">
-                        </div>
-                    </div>
+                                                    </div>
+                                            </div>
                     <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
                         <div
                             class="bg-gray-50 dark:bg-gray-900 p-2 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
@@ -2737,7 +2731,6 @@
                 if (exp) {
                     document.getElementById('exp-id').value = exp.id;
                     document.getElementById('exp-date').value = exp.expense_date ? exp.expense_date.split('T')[0] : '';
-                    document.getElementById('exp-name').value = exp.name;
                     document.getElementById('exp-personal').checked = exp.is_personal;
 
                     const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
@@ -2750,7 +2743,6 @@
                 document.getElementById('exp-id').value = '';
                 const today = new Date();
                 document.getElementById('exp-date').value = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-                document.getElementById('exp-name').value = '';
                 document.getElementById('exp-personal').checked = false;
 
                 const radioOpex = document.getElementById('exp-cat-opex');
@@ -2896,7 +2888,6 @@
 
         async function saveExpense() {
             const dateStr = document.getElementById('exp-date').value;
-            const nameStr = document.getElementById('exp-name').value;
             const isPersonal = document.getElementById('exp-personal').checked;
 
             const categoryRadio = document.querySelector('input[name="exp-category"]:checked');
@@ -2904,9 +2895,13 @@
 
             const btn = document.getElementById('btn-save-expense');
 
-            if (!dateStr || !nameStr) return showToast('Tanggal dan keterangan harus diisi', 'warning');
+            if (!dateStr) return showToast('Tanggal harus diisi', 'warning');
+
             const validItems = state.expenseItems.filter(i => i.name && i.qty > 0 && i.price >= 0);
             if (validItems.length === 0) return showToast('Minimal 1 item valid', 'warning');
+
+            // --- OTOMATIS: Gabungkan nama item sebagai nama pengeluaran/keterangan ---
+            const nameStr = validItems.map(i => i.name).join(', ');
 
             const total = validItems.reduce((s, i) => s + (i.qty * i.price), 0);
             const affectsProfit = (category === 'cogs');
