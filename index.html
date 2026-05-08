@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>GurmieKasir | Ultimate Dashboard</title>
 
-    <!-- PWA Meta Tag -->
     <link rel="manifest" href="manifest.json">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,11 +16,6 @@
         href="https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PWA Manifest & Warna Tema -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#3b82f6">
-    <link rel="apple-touch-icon"
-        href="https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png">
     <script>
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
@@ -294,13 +288,64 @@
         body {
             padding-bottom: env(safe-area-inset-bottom);
         }
+
+        /* ========================================
+           INVOICE PRINT & WATERMARK STYLES
+        ======================================== */
+        .watermark-lunas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 6rem;
+            font-weight: 900;
+            color: rgba(16, 185, 129, 0.08);
+            /* Hijau transparan */
+            pointer-events: none;
+            z-index: 0;
+            letter-spacing: 0.5rem;
+            white-space: nowrap;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printable-invoice,
+            #printable-invoice * {
+                visibility: visible;
+            }
+
+            #printable-invoice {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                background-color: white !important;
+                color: black !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            /* Memaksa background color muncul saat print */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
     </style>
 </head>
 
 <body
     class="bg-gray-50 dark:bg-dark text-gray-800 dark:text-gray-200 font-sans h-screen flex overflow-hidden selection:bg-blue-500 dark:selection:bg-neon-cyan selection:text-white transition-colors duration-300">
 
-    <!-- GLOBAL LOADER -->
     <div id="global-loader"
         class="fixed inset-0 bg-white/90 dark:bg-dark/90 backdrop-blur-md z-[100] flex items-center justify-center hidden">
         <div class="flex flex-col items-center gap-4">
@@ -310,7 +355,6 @@
         </div>
     </div>
 
-    <!-- DESKTOP SIDEBAR -->
     <aside id="sidebar"
         class="w-20 md:w-64 bg-white dark:bg-panel border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 z-40 shrink-0">
         <div
@@ -373,11 +417,9 @@
         </div>
     </aside>
 
-    <!-- MOBILE BOTTOM NAVIGATION -->
     <nav id="mobile-bottom-nav"
         class="bg-white dark:bg-panel border-t border-gray-200 dark:border-gray-800 shadow-2xl w-full">
         <div class="flex items-stretch h-16 w-full">
-            <!-- Tombol-tombol menu ada di sini -->
             <button onclick="switchView('kasir')" id="mob-nav-kasir"
                 class="mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-blue-600 dark:text-neon-cyan">
                 <i data-lucide="monitor" class="w-5 h-5"></i>
@@ -406,7 +448,6 @@
         </div>
     </nav>
 
-    <!-- MODAL TAMBAH PELANGGAN -->
     <div id="modal-add-customer"
         class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
         <div
@@ -441,13 +482,8 @@
 
     <main class="flex-1 flex flex-col relative overflow-hidden min-w-0">
 
-        <!-- ============================
-             VIEW: KASIR
-        ============================ -->
         <section id="view-kasir" class="h-full flex flex-col md:flex-row w-full animate-fade-in">
-            <!-- Product Grid -->
             <div class="flex-1 flex flex-col overflow-hidden min-h-0">
-                <!-- Header Kasir -->
                 <div
                     class="flex flex-col border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-panel shrink-0">
                     <div class="flex items-center gap-2 px-3 md:px-6 py-3">
@@ -469,27 +505,21 @@
                         </button>
                     </div>
 
-                    <!-- Kategori Filter Row -->
                     <div id="category-filter-container"
                         class="flex gap-2 px-3 md:px-6 pb-3 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                        <!-- Filter Kategori akan di-generate otomatis via JavaScript -->
                     </div>
                 </div>
-                <!-- Grid Produk -->
                 <div id="product-grid"
                     class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-3 md:p-4 content-start">
                 </div>
             </div>
 
-            <!-- Cart Panel (Desktop: sidebar, Mobile: bottom sheet) -->
             <div id="kasir-cart-panel"
                 class="w-full md:w-80 lg:w-96 bg-white dark:bg-panel border-t md:border-t-0 border-l-0 md:border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0">
-                <!-- Drag Handle (mobile only) -->
                 <div class="panel-drag-handle" id="cart-drag-handle" onclick="toggleCartPanel()">
                     <span></span>
                 </div>
 
-                <!-- Cart Header -->
                 <div
                     class="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 shrink-0">
                     <h3 class="font-bold flex items-center text-gray-900 dark:text-white text-sm">
@@ -506,10 +536,8 @@
                     </div>
                 </div>
 
-                <!-- Cart Items -->
                 <div id="cart-items" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
 
-                <!-- Cart Footer -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
                         <span>Subtotal</span>
@@ -527,9 +555,6 @@
             </div>
         </section>
 
-        <!-- ============================
-             VIEW: PRODUK
-        ============================ -->
         <section id="view-produk" class="h-full p-4 md:p-6 flex-col hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4 md:mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Manajemen Produk</h2>
@@ -541,17 +566,13 @@
                 </button>
             </div>
 
-            <!-- PERUBAHAN DATALIST KATEGORI DIMULAI DI SINI -->
             <div class="col-span-1 md:col-span-3">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kelompok /
                     Kategori</label>
                 <input type="text" id="prod-category" list="category-list" placeholder="Minuman, Makanan, dll"
                     class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white text-sm">
-                <!-- Datalist untuk autocomplete otomatis -->
                 <datalist id="category-list"></datalist>
             </div>
-            <!-- PERUBAHAN SELESAI -->
-
             <div class="col-span-1 md:col-span-3">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Urutan Kustom
                     (Angka)</label>
@@ -633,9 +654,6 @@
             </div>
         </section>
 
-        <!-- ============================
-             VIEW: BAHAN (unchanged structure, mobile scrollable)
-        ============================ -->
         <section id="view-bahan" class="h-full p-4 md:p-6 flex-col hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4 md:mb-6">
                 <div>
@@ -736,9 +754,6 @@
             </div>
         </section>
 
-        <!-- ============================
-             VIEW: LAPORAN
-        ============================ -->
         <section id="view-laporan" class="h-full p-4 md:p-6 flex-col hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4 md:mb-6 flex-wrap gap-3">
                 <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Laporan & Analitik</h2>
@@ -800,9 +815,6 @@
                     </h3>
                 </div>
             </div>
-            <!-- ============================
-                 CHART OF ACCOUNTS TABLE
-            ============================ -->
             <div
                 class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col shadow-sm mb-4 md:mb-6">
                 <div
@@ -855,14 +867,9 @@
             </div>
         </section>
 
-        <!-- ============================
-             VIEW: RIWAYAT TRANSAKSI (NEW FILTERS!)
-        ============================ -->
         <section id="view-riwayat" class="h-full flex-col hidden overflow-y-auto">
-            <!-- Header + Filter -->
             <div
                 class="sticky top-0 bg-white dark:bg-panel border-b border-gray-200 dark:border-gray-800 z-10 shadow-sm">
-                <!-- Title Row -->
                 <div class="flex justify-between items-center px-4 py-3">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">Riwayat Transaksi</h2>
                     <button onclick="loadHistory()"
@@ -872,7 +879,6 @@
                     </button>
                 </div>
 
-                <!-- Duration Filter Pills -->
                 <div class="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
                     <button onclick="setHistoryDuration('today')" id="hist-dur-today" class="duration-pill">Hari
                         Ini</button>
@@ -885,7 +891,6 @@
                         class="duration-pill">Custom</button>
                 </div>
 
-                <!-- Custom Date Row (hidden by default) -->
                 <div id="hist-custom-date-row" class="hidden px-4 pb-3 flex items-center gap-2 flex-wrap">
                     <input type="date" id="hist-start"
                         class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-900 dark:text-white focus:outline-none flex-1 min-w-0">
@@ -896,26 +901,21 @@
                         class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0">Terapkan</button>
                 </div>
 
-                <!-- Customer Filter -->
                 <div class="px-4 pb-3 flex items-center gap-2">
                     <i data-lucide="user" class="w-4 h-4 text-gray-400 shrink-0"></i>
                     <select id="hist-customer-filter" onchange="loadHistory()"
                         class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-blue-500">
                         <option value="">Semua Pelanggan</option>
                     </select>
-                    <!-- Summary badge -->
                     <span id="hist-summary-badge"
                         class="text-xs text-gray-500 dark:text-gray-400 shrink-0 font-medium bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">0
                         trx</span>
                 </div>
             </div>
 
-            <!-- Table / Cards -->
             <div class="flex-1 p-3 md:p-4">
-                <!-- Mobile Cards -->
                 <div id="history-mobile-cards" class="history-mobile-cards space-y-2"></div>
 
-                <!-- Desktop Table -->
                 <div
                     class="history-desktop-table bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
                     <div class="overflow-x-auto">
@@ -939,11 +939,6 @@
             </div>
         </section>
 
-        <!-- ============================
-             MODALS (all modals use bottom-sheet style on mobile)
-        ============================ -->
-
-        <!-- Modal BD -->
         <div id="modal-bd"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div
@@ -1006,7 +1001,6 @@
             </div>
         </div>
 
-        <!-- Modal Composition (Bahan Olahan & Resep) -->
         <div id="modal-composition"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div
@@ -1107,7 +1101,6 @@
             </div>
         </div>
 
-        <!-- Modal Checkout -->
         <div id="modal-checkout"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl max-h-[95vh] overflow-y-auto"
@@ -1228,7 +1221,6 @@
             </div>
         </div>
 
-        <!-- Modal Cart Edit -->
         <div id="modal-cart-edit"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div
@@ -1262,7 +1254,6 @@
             </div>
         </div>
 
-        <!-- Modal Held Orders -->
         <div id="modal-held-orders"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div
@@ -1279,7 +1270,6 @@
             </div>
         </div>
 
-        <!-- Modal Scanner -->
         <div id="modal-scanner"
             class="fixed inset-0 bg-gray-900/90 dark:bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity">
             <div
@@ -1295,7 +1285,6 @@
             </div>
         </div>
 
-        <!-- Modal Expense -->
         <div id="modal-expense"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
@@ -1353,7 +1342,6 @@
                         </div>
                     </div>
 
-                    <!-- KOTAK KATEGORI TRANSAKSI BARU -->
                     <div
                         class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/30 rounded-lg p-4 space-y-4">
                         <div>
@@ -1402,8 +1390,6 @@
                             </div>
                         </label>
                     </div>
-                    <!-- AKHIR KOTAK KATEGORI -->
-
                 </div>
                 <div
                     class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2 sticky bottom-0">
@@ -1417,7 +1403,6 @@
             </div>
         </div>
 
-        <!-- Modal Edit Transaction -->
         <div id="modal-edit-trx"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
@@ -1480,7 +1465,112 @@
             </div>
         </div>
 
-        <!-- Toast -->
+        <div id="modal-invoice"
+            class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity p-4">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-xl w-full max-w-3xl flex flex-col max-h-[95vh] shadow-2xl relative overflow-hidden">
+
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center no-print shrink-0">
+                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center text-sm">
+                        <i data-lucide="file-text" class="w-4 h-4 mr-2 text-blue-600"></i> Pratinjau Invoice
+                    </h3>
+                    <div class="flex gap-2">
+                        <button onclick="printInvoice()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow flex items-center">
+                            <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Cetak / PDF
+                        </button>
+                        <button onclick="toggleModal('modal-invoice', false)"
+                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-gray-200 dark:bg-gray-800 p-1.5 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="printable-invoice"
+                    class="flex-1 overflow-y-auto p-6 md:p-10 bg-white text-gray-900 relative relative">
+                    <div class="watermark-lunas">LUNAS</div>
+
+                    <div class="flex justify-between items-start border-b-2 border-blue-600 pb-6 mb-6">
+                        <div class="flex items-center gap-3">
+                            <img src="https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png"
+                                alt="Logo" class="w-12 h-12 object-contain">
+                            <div>
+                                <h1 class="text-2xl font-black text-blue-600 tracking-wider">GurmieKasir</h1>
+                                <p class="text-xs text-gray-500">Sistem Manajemen POS Modern</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <h2 class="text-3xl font-black text-gray-200 tracking-widest uppercase">Invoice</h2>
+                            <p class="text-sm font-bold mt-1" id="inv-id">INV-0000</p>
+                            <p class="text-xs text-gray-500 mt-0.5" id="inv-date">Tanggal</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Diterbitkan Oleh
+                            </h4>
+                            <p class="font-bold text-sm text-gray-900">Penjual: GurmieKasir</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Untuk</h4>
+                            <p class="font-bold text-sm text-gray-900">Pembeli: <span id="inv-customer-name">Pelanggan
+                                    Umum</span></p>
+                            <p class="text-xs text-gray-600 mt-1" id="inv-customer-phone"></p>
+                        </div>
+                    </div>
+
+                    <table class="w-full text-left mb-6">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200">
+                                    Info Produk</th>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-center w-24">
+                                    Jumlah</th>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-right w-32">
+                                    Harga Satuan</th>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-right w-32">
+                                    Total Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-items-body" class="divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+
+                    <div class="flex justify-end">
+                        <div class="w-1/2 min-w-[250px]">
+                            <div class="flex justify-between py-2 text-sm text-gray-600">
+                                <span>Subtotal</span>
+                                <span id="inv-subtotal" class="font-medium text-gray-900">Rp 0</span>
+                            </div>
+                            <div id="inv-adjustment-container"
+                                class="flex justify-between py-2 text-sm text-gray-600 border-t border-gray-100 hidden">
+                                <span id="inv-adjustment-label">Penyesuaian</span>
+                                <span id="inv-adjustment-amount" class="font-medium">Rp 0</span>
+                            </div>
+                            <div
+                                class="flex justify-between py-3 text-lg font-black text-blue-600 border-t-2 border-gray-200 mt-2">
+                                <span>Total Tagihan</span>
+                                <span id="inv-total">Rp 0</span>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
+                                <p class="flex justify-between"><span>Metode Pembayaran:</span> <span id="inv-method"
+                                        class="font-bold text-gray-900">Tunai</span></p>
+                                <p class="flex justify-between mt-1"><span>Status:</span> <span
+                                        class="font-bold text-green-600">LUNAS</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="toast"
             class="fixed bottom-20 md:bottom-5 right-4 transform translate-y-20 opacity-0 transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white px-4 py-3 rounded-xl shadow-xl flex items-center z-[110]">
             <i id="toast-icon" data-lucide="info" class="w-5 h-5 mr-3"></i>
@@ -2854,6 +2944,81 @@
             doc.save(`Laporan_GurmieKasir_${new Date().getTime()}.pdf`);
             showToast('PDF berhasil diunduh.', 'success');
         }
+        // ==========================================
+        // INVOICE MODULE
+        // ==========================================
+        function generateInvoice(id) {
+            const trx = state.history.find(t => t.id === id);
+            if (!trx) return showToast('Transaksi tidak ditemukan', 'error');
+
+            // Set Header Info
+            const shortId = trx.id.split('-')[0].toUpperCase();
+            document.getElementById('inv-id').innerText = `INV-${shortId}`;
+            document.getElementById('inv-date').innerText = formatTime(trx.created_at);
+
+            // Set Customer Info
+            if (trx.customers) {
+                document.getElementById('inv-customer-name').innerText = trx.customers.name;
+                document.getElementById('inv-customer-phone').innerText = trx.customers.phone || '-';
+            } else {
+                document.getElementById('inv-customer-name').innerText = 'Pelanggan Umum';
+                document.getElementById('inv-customer-phone').innerText = '';
+            }
+
+            // Set Items Table
+            const tbody = document.getElementById('inv-items-body');
+            let subtotal = 0;
+
+            tbody.innerHTML = trx.transaction_items.map(item => {
+                const activePrice = item.custom_price || item.price;
+                const totalItem = activePrice * item.quantity;
+                subtotal += totalItem;
+
+                const productName = item.products ? item.products.name : 'Produk Terhapus';
+                const notes = item.notes ? `<br><span class="text-[10px] text-gray-500 italic">Catatan: ${item.notes}</span>` : '';
+
+                return `
+                    <tr>
+                        <td class="py-3 px-4 text-sm font-medium text-gray-900">${productName}${notes}</td>
+                        <td class="py-3 px-4 text-sm text-center text-gray-600">${item.quantity}</td>
+                        <td class="py-3 px-4 text-sm text-right text-gray-600">${formatRp(activePrice)}</td>
+                        <td class="py-3 px-4 text-sm text-right font-bold text-gray-900">${formatRp(totalItem)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Set Totals
+            document.getElementById('inv-subtotal').innerText = formatRp(subtotal);
+
+            const adjContainer = document.getElementById('inv-adjustment-container');
+            if (trx.adjustment_type) {
+                adjContainer.classList.remove('hidden');
+                const adjLabel = document.getElementById('inv-adjustment-label');
+                const adjAmount = document.getElementById('inv-adjustment-amount');
+
+                if (trx.adjustment_type === 'discount') {
+                    adjLabel.innerText = 'Diskon / Potongan';
+                    adjAmount.innerText = `-${formatRp(trx.adjustment_amount)}`;
+                    adjAmount.className = 'font-medium text-red-500';
+                } else if (trx.adjustment_type === 'fee') {
+                    adjLabel.innerText = 'Biaya Tambahan (Fee)';
+                    adjAmount.innerText = `+${formatRp(trx.adjustment_amount)}`;
+                    adjAmount.className = 'font-medium text-orange-500';
+                }
+            } else {
+                adjContainer.classList.add('hidden');
+            }
+
+            document.getElementById('inv-total').innerText = formatRp(trx.total_price);
+            document.getElementById('inv-method').innerText = trx.payment_method || 'Tunai';
+
+            // Show Modal
+            toggleModal('modal-invoice', true);
+        }
+
+        function printInvoice() {
+            window.print();
+        }
 
         // ==========================================
         // RIWAYAT TRANSAKSI - NEW FILTER LOGIC
@@ -2934,6 +3099,7 @@
                 return;
             }
 
+            // Render untuk Desktop
             if (tbody) {
                 tbody.innerHTML = state.history.map(trx => {
                     const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
@@ -2949,6 +3115,7 @@
                             <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
                             <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
                             <td class="px-4 py-3 text-right">
+                                <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
                                 <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
                                 <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                             </td>
@@ -2957,6 +3124,7 @@
                 }).join('');
             }
 
+            // Render untuk Mobile Cards
             if (mobileCards) {
                 mobileCards.innerHTML = state.history.map(trx => {
                     const itemsCount = trx.transaction_items.reduce((sum, item) => sum + item.quantity, 0);
@@ -2973,6 +3141,7 @@
                                     <p class="text-[10px] text-gray-400 mt-0.5">${itemsCount} item${customerName ? ' · 👤 ' + customerName : ''}</p>
                                 </div>
                                 <div class="flex gap-2 shrink-0 ml-2">
+                                    <button onclick="generateInvoice('${trx.id}')" class="bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 p-1.5 rounded-lg"><i data-lucide="printer" class="w-4 h-4"></i></button>
                                     <button onclick="openEditTrx('${trx.id}')" class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 p-1.5 rounded-lg"><i data-lucide="edit" class="w-4 h-4"></i></button>
                                     <button onclick="deleteTrx('${trx.id}')" class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-1.5 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
