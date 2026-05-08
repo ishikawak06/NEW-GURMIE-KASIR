@@ -126,9 +126,6 @@
             }
         }
 
-        /* ========================================
-           MOBILE BOTTOM NAV
-        ======================================== */
         #mobile-bottom-nav {
             display: none;
             position: fixed;
@@ -139,7 +136,6 @@
             padding-bottom: var(--safe-bottom);
         }
 
-        /* Desktop: sidebar visible, mobile nav hidden */
         @media (max-width: 767px) {
             #sidebar {
                 display: none !important;
@@ -149,17 +145,14 @@
                 display: flex;
             }
 
-            /* Main content full width on mobile */
             main {
                 padding-bottom: calc(64px + var(--safe-bottom));
             }
 
-            /* Kasir view on mobile: stacked */
             #view-kasir {
                 flex-direction: column !important;
             }
 
-            /* Cart panel on mobile: fixed bottom sheet */
             #kasir-cart-panel {
                 position: fixed !important;
                 bottom: calc(64px + var(--safe-bottom));
@@ -210,9 +203,6 @@
             background: #4b5563;
         }
 
-        /* ========================================
-           HISTORY FILTER BAR
-        ======================================== */
         .duration-pill {
             display: inline-flex;
             align-items: center;
@@ -246,7 +236,6 @@
             color: #0B0F19;
         }
 
-        /* Mobile card view for history table */
         @media (max-width: 640px) {
             .history-desktop-table {
                 display: none;
@@ -267,7 +256,6 @@
             }
         }
 
-        /* Cart badge pulse */
         @keyframes pulse-badge {
 
             0%,
@@ -284,14 +272,10 @@
             animation: pulse-badge 0.4s ease;
         }
 
-        /* Smooth page padding */
         body {
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* ========================================
-           INVOICE PRINT & WATERMARK STYLES
-        ======================================== */
         .watermark-lunas {
             position: absolute;
             top: 50%;
@@ -300,7 +284,6 @@
             font-size: 6rem;
             font-weight: 900;
             color: rgba(16, 185, 129, 0.08);
-            /* Hijau transparan */
             pointer-events: none;
             z-index: 0;
             letter-spacing: 0.5rem;
@@ -334,11 +317,41 @@
                 display: none !important;
             }
 
-            /* Memaksa background color muncul saat print */
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
+        }
+
+        /* ── PDF Download Button ── */
+        .btn-pdf-history {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-pdf-history:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.45);
+        }
+
+        .btn-pdf-history:active {
+            transform: translateY(0);
+        }
+
+        .dark .btn-pdf-history {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
         }
     </style>
 </head>
@@ -346,6 +359,7 @@
 <body
     class="bg-gray-50 dark:bg-dark text-gray-800 dark:text-gray-200 font-sans h-screen flex overflow-hidden selection:bg-blue-500 dark:selection:bg-neon-cyan selection:text-white transition-colors duration-300">
 
+    <!-- Global Loader -->
     <div id="global-loader"
         class="fixed inset-0 bg-white/90 dark:bg-dark/90 backdrop-blur-md z-[100] flex items-center justify-center hidden">
         <div class="flex flex-col items-center gap-4">
@@ -355,6 +369,7 @@
         </div>
     </div>
 
+    <!-- Sidebar -->
     <aside id="sidebar"
         class="w-20 md:w-64 bg-white dark:bg-panel border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all duration-300 z-40 shrink-0">
         <div
@@ -368,44 +383,44 @@
         <nav class="flex-1 py-6 flex flex-col gap-2 px-3 overflow-y-auto">
             <button onclick="switchView('kasir')" id="nav-kasir"
                 class="nav-btn w-full flex items-center p-3 rounded-xl bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan shadow-sm transition-colors">
-                <i data-lucide="monitor" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Kasir</span>
+                <i data-lucide="monitor" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Kasir</span>
             </button>
             <button onclick="switchView('produk')" id="nav-produk"
                 class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
-                <i data-lucide="package" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Produk & Stok</span>
+                <i data-lucide="package" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Produk & Stok</span>
             </button>
             <button onclick="switchView('bahan')" id="nav-bahan"
                 class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
-                <i data-lucide="chef-hat" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Bahan & Resep</span>
+                <i data-lucide="chef-hat" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Bahan & Resep</span>
             </button>
             <button onclick="switchView('laporan')" id="nav-laporan"
                 class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
-                <i data-lucide="bar-chart-2" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Laporan & Laba</span>
+                <i data-lucide="bar-chart-2" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Laporan & Laba</span>
             </button>
             <button onclick="switchView('riwayat')" id="nav-riwayat"
                 class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
-                <i data-lucide="history" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Riwayat Transaksi</span>
+                <i data-lucide="history" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Riwayat Transaksi</span>
             </button>
             <hr class="border-gray-200 dark:border-gray-800 my-2">
             <a href="analysis.html"
                 class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
-                <i data-lucide="pie-chart" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Buku Besar & Analisis</span>
+                <i data-lucide="pie-chart" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Buku Besar & Analisis</span>
             </a>
             <a href="operations_dashboard.html"
                 class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
-                <i data-lucide="layout-dashboard" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Operations Dashboard</span>
+                <i data-lucide="layout-dashboard" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Operations Dashboard</span>
             </a>
             <a href="customers.html"
                 class="nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors">
-                <i data-lucide="users" class="w-5 h-5 md:mr-3 shrink-0"></i>
-                <span class="hidden md:block font-medium">Data Pelanggan</span>
+                <i data-lucide="users" class="w-5 h-5 md:mr-3 shrink-0"></i><span
+                    class="hidden md:block font-medium">Data Pelanggan</span>
             </a>
         </nav>
         <div class="p-4 border-t border-gray-200 dark:border-gray-800">
@@ -417,37 +432,35 @@
         </div>
     </aside>
 
+    <!-- Mobile Bottom Nav -->
     <nav id="mobile-bottom-nav"
         class="bg-white dark:bg-panel border-t border-gray-200 dark:border-gray-800 shadow-2xl w-full">
         <div class="flex items-stretch h-16 w-full">
             <button onclick="switchView('kasir')" id="mob-nav-kasir"
                 class="mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-blue-600 dark:text-neon-cyan">
-                <i data-lucide="monitor" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold">Kasir</span>
+                <i data-lucide="monitor" class="w-5 h-5"></i><span class="text-[10px] font-semibold">Kasir</span>
             </button>
             <button onclick="switchView('produk')" id="mob-nav-produk"
                 class="mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400">
-                <i data-lucide="package" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold">Produk</span>
+                <i data-lucide="package" class="w-5 h-5"></i><span class="text-[10px] font-semibold">Produk</span>
             </button>
             <button onclick="switchView('laporan')" id="mob-nav-laporan"
                 class="mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400">
-                <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold">Laporan</span>
+                <i data-lucide="bar-chart-2" class="w-5 h-5"></i><span class="text-[10px] font-semibold">Laporan</span>
             </button>
             <button onclick="switchView('riwayat')" id="mob-nav-riwayat"
                 class="mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400">
-                <i data-lucide="history" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold">Riwayat</span>
+                <i data-lucide="history" class="w-5 h-5"></i><span class="text-[10px] font-semibold">Riwayat</span>
             </button>
             <button onclick="toggleTheme()"
                 class="mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400">
-                <i data-lucide="moon" id="mob-theme-icon" class="w-5 h-5"></i>
-                <span class="text-[10px] font-semibold" id="mob-theme-text">Gelap</span>
+                <i data-lucide="moon" id="mob-theme-icon" class="w-5 h-5"></i><span class="text-[10px] font-semibold"
+                    id="mob-theme-text">Gelap</span>
             </button>
         </div>
     </nav>
 
+    <!-- Modal Add Customer -->
     <div id="modal-add-customer"
         class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
         <div
@@ -482,6 +495,7 @@
 
     <main class="flex-1 flex flex-col relative overflow-hidden min-w-0">
 
+        <!-- ==================== KASIR VIEW ==================== -->
         <section id="view-kasir" class="h-full flex flex-col md:flex-row w-full animate-fade-in">
             <div class="flex-1 flex flex-col overflow-hidden min-h-0">
                 <div
@@ -504,10 +518,8 @@
                                 class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden shadow-sm">0</span>
                         </button>
                     </div>
-
                     <div id="category-filter-container"
-                        class="flex gap-2 px-3 md:px-6 pb-3 overflow-x-auto whitespace-nowrap scrollbar-hide">
-                    </div>
+                        class="flex gap-2 px-3 md:px-6 pb-3 overflow-x-auto whitespace-nowrap scrollbar-hide"></div>
                 </div>
                 <div id="product-grid"
                     class="flex-1 overflow-y-auto grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 p-3 md:p-4 content-start">
@@ -516,10 +528,7 @@
 
             <div id="kasir-cart-panel"
                 class="w-full md:w-80 lg:w-96 bg-white dark:bg-panel border-t md:border-t-0 border-l-0 md:border-l border-gray-200 dark:border-gray-800 flex flex-col shrink-0">
-                <div class="panel-drag-handle" id="cart-drag-handle" onclick="toggleCartPanel()">
-                    <span></span>
-                </div>
-
+                <div class="panel-drag-handle" id="cart-drag-handle" onclick="toggleCartPanel()"><span></span></div>
                 <div
                     class="px-4 py-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 shrink-0">
                     <h3 class="font-bold flex items-center text-gray-900 dark:text-white text-sm">
@@ -535,17 +544,14 @@
                             class="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors">Reset</button>
                     </div>
                 </div>
-
                 <div id="cart-items" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
-
                 <div class="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shrink-0">
                     <div class="flex justify-between text-sm text-gray-500 dark:text-gray-400 mb-1">
-                        <span>Subtotal</span>
-                        <span id="cart-subtotal" class="font-medium text-gray-900 dark:text-white">Rp 0</span>
+                        <span>Subtotal</span><span id="cart-subtotal"
+                            class="font-medium text-gray-900 dark:text-white">Rp 0</span>
                     </div>
                     <div class="flex justify-between font-bold text-lg mb-3 text-gray-900 dark:text-white">
-                        <span>Total</span>
-                        <span id="cart-total" class="text-blue-600 dark:text-neon-cyan">Rp 0</span>
+                        <span>Total</span><span id="cart-total" class="text-blue-600 dark:text-neon-cyan">Rp 0</span>
                     </div>
                     <button onclick="openCheckoutModal()" id="btn-checkout"
                         class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan dark:hover:bg-cyan-400 text-white dark:text-dark font-bold py-3 rounded-xl shadow-md transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm">
@@ -555,17 +561,16 @@
             </div>
         </section>
 
+        <!-- ==================== PRODUK VIEW ==================== -->
         <section id="view-produk" class="h-full p-4 md:p-6 flex-col hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4 md:mb-6">
                 <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Manajemen Produk</h2>
                 <button onclick="openProductForm()"
                     class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan dark:hover:bg-cyan-400 text-white dark:text-dark font-bold px-3 md:px-4 py-2 rounded-lg text-sm flex items-center transition-colors shadow-sm">
-                    <i data-lucide="plus" class="w-4 h-4 mr-1 md:mr-2"></i>
-                    <span class="hidden md:inline">Tambah Baru</span>
-                    <span class="md:hidden">Tambah</span>
+                    <i data-lucide="plus" class="w-4 h-4 mr-1 md:mr-2"></i><span class="hidden md:inline">Tambah
+                        Baru</span><span class="md:hidden">Tambah</span>
                 </button>
             </div>
-
             <div class="col-span-1 md:col-span-3">
                 <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kelompok /
                     Kategori</label>
@@ -627,13 +632,11 @@
                         <button type="button" onclick="closeProductForm()"
                             class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800">Batal</button>
                         <button type="submit"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded text-sm flex items-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i> Simpan
-                        </button>
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded text-sm flex items-center gap-2"><i
+                                data-lucide="save" class="w-4 h-4"></i> Simpan</button>
                     </div>
                 </form>
             </div>
-
             <div
                 class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
@@ -654,6 +657,7 @@
             </div>
         </section>
 
+        <!-- ==================== BAHAN VIEW ==================== -->
         <section id="view-bahan" class="h-full p-4 md:p-6 flex-col hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4 md:mb-6">
                 <div>
@@ -672,14 +676,12 @@
                     class="px-3 md:px-4 py-2.5 font-medium text-xs md:text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 whitespace-nowrap">Resep
                     Produk</button>
             </div>
-
             <div id="tab-dasar" class="tab-content active flex-1">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-bold text-gray-800 dark:text-gray-200 text-sm">Daftar Bahan Dasar</h3>
                     <button onclick="openModalBahanDasar()"
-                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
-                        <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Tambah
-                    </button>
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm"><i
+                            data-lucide="plus" class="w-3 h-3 mr-1"></i> Tambah</button>
                 </div>
                 <div
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-x-auto shadow-sm">
@@ -699,14 +701,12 @@
                     </table>
                 </div>
             </div>
-
             <div id="tab-olahan" class="tab-content flex-1">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-bold text-gray-800 dark:text-gray-200 text-sm">Bahan Olahan (Semi-Finished)</h3>
                     <button onclick="openModalBahanOlahan()"
-                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
-                        <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Buat
-                    </button>
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm"><i
+                            data-lucide="plus" class="w-3 h-3 mr-1"></i> Buat</button>
                 </div>
                 <div
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-x-auto shadow-sm">
@@ -725,14 +725,12 @@
                     </table>
                 </div>
             </div>
-
             <div id="tab-resep" class="tab-content flex-1">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-bold text-gray-800 dark:text-gray-200 text-sm">Resep & HPP Produk</h3>
                     <button onclick="openModalResep()"
-                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
-                        <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Setup
-                    </button>
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm"><i
+                            data-lucide="plus" class="w-3 h-3 mr-1"></i> Setup</button>
                 </div>
                 <div
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-x-auto shadow-sm">
@@ -754,6 +752,7 @@
             </div>
         </section>
 
+        <!-- ==================== LAPORAN VIEW ==================== -->
         <section id="view-laporan" class="h-full p-4 md:p-6 flex-col hidden overflow-y-auto">
             <div class="flex justify-between items-center mb-4 md:mb-6 flex-wrap gap-3">
                 <h2 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">Laporan & Analitik</h2>
@@ -783,7 +782,6 @@
                     </button>
                 </div>
             </div>
-
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 md:mb-6">
                 <div
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 p-4 rounded-xl border-t-4 border-t-blue-500 dark:border-t-neon-cyan shadow-sm relative overflow-hidden">
@@ -819,14 +817,12 @@
                 class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col shadow-sm mb-4 md:mb-6">
                 <div
                     class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50 rounded-t-xl">
-                    <h3 class="font-bold text-sm text-gray-700 dark:text-gray-300 flex items-center">
-                        <i data-lucide="book-open" class="w-4 h-4 mr-2 text-blue-600"></i> CHART OF ACCOUNTS (SALDO
-                        AKTIF)
-                    </h3>
+                    <h3 class="font-bold text-sm text-gray-700 dark:text-gray-300 flex items-center"><i
+                            data-lucide="book-open" class="w-4 h-4 mr-2 text-blue-600"></i> CHART OF ACCOUNTS (SALDO
+                        AKTIF)</h3>
                     <button onclick="fetchCOA()"
-                        class="text-xs font-medium bg-blue-100 dark:bg-gray-800 hover:bg-blue-200 px-3 py-1.5 rounded text-blue-600 dark:text-neon-cyan transition-colors">
-                        <i data-lucide="refresh-cw" class="w-3 h-3"></i>
-                    </button>
+                        class="text-xs font-medium bg-blue-100 dark:bg-gray-800 hover:bg-blue-200 px-3 py-1.5 rounded text-blue-600 dark:text-neon-cyan transition-colors"><i
+                            data-lucide="refresh-cw" class="w-3 h-3"></i></button>
                 </div>
                 <div class="overflow-x-auto p-4">
                     <table class="w-full text-left text-sm whitespace-nowrap">
@@ -847,7 +843,6 @@
                     </table>
                 </div>
             </div>
-
             <div class="grid grid-cols-1 gap-4 mb-4 md:mb-6">
                 <div
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col shadow-sm max-h-[320px]">
@@ -867,18 +862,30 @@
             </div>
         </section>
 
+        <!-- ==================== RIWAYAT VIEW ==================== -->
         <section id="view-riwayat" class="h-full flex-col hidden overflow-y-auto">
             <div
                 class="sticky top-0 bg-white dark:bg-panel border-b border-gray-200 dark:border-gray-800 z-10 shadow-sm">
+
+                <!-- Header Row -->
                 <div class="flex justify-between items-center px-4 py-3">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">Riwayat Transaksi</h2>
-                    <button onclick="loadHistory()"
-                        class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-lg text-gray-600 dark:text-gray-300 transition-colors"
-                        title="Refresh">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <!-- ★ TOMBOL DOWNLOAD PDF RIWAYAT ★ -->
+                        <button onclick="downloadHistoryPDF()" id="btn-download-history-pdf" class="btn-pdf-history"
+                            title="Download PDF sesuai filter aktif">
+                            <i data-lucide="file-down" class="w-4 h-4"></i>
+                            <span class="hidden sm:inline">Download PDF</span>
+                        </button>
+                        <button onclick="loadHistory()"
+                            class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-lg text-gray-600 dark:text-gray-300 transition-colors"
+                            title="Refresh">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 </div>
 
+                <!-- Duration Pills -->
                 <div class="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
                     <button onclick="setHistoryDuration('today')" id="hist-dur-today" class="duration-pill">Hari
                         Ini</button>
@@ -891,6 +898,7 @@
                         class="duration-pill">Custom</button>
                 </div>
 
+                <!-- Custom Date Row -->
                 <div id="hist-custom-date-row" class="hidden px-4 pb-3 flex items-center gap-2 flex-wrap">
                     <input type="date" id="hist-start"
                         class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-900 dark:text-white focus:outline-none flex-1 min-w-0">
@@ -901,7 +909,7 @@
                         class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0">Terapkan</button>
                 </div>
 
-                <!-- Bagian yang diganti: Tambahan Filter Tipe Transaksi -->
+                <!-- Filter Bar -->
                 <div class="px-4 pb-3 flex items-center gap-2">
                     <i data-lucide="filter" class="w-4 h-4 text-gray-400 shrink-0"></i>
                     <select id="hist-type-filter" onchange="state.historyTypeFilter = this.value; renderHistoryTable();"
@@ -910,7 +918,6 @@
                         <option value="trx">Pemasukan (Penjualan)</option>
                         <option value="exp">Pengeluaran</option>
                     </select>
-
                     <i data-lucide="user" class="w-4 h-4 text-gray-400 shrink-0 ml-1"></i>
                     <select id="hist-customer-filter" onchange="loadHistory()"
                         class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-blue-500">
@@ -923,7 +930,6 @@
 
             <div class="flex-1 p-3 md:p-4">
                 <div id="history-mobile-cards" class="history-mobile-cards space-y-2"></div>
-
                 <div
                     class="history-desktop-table bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
                     <div class="overflow-x-auto">
@@ -947,6 +953,8 @@
             </div>
         </section>
 
+        <!-- ==================== ALL MODALS (same as original) ==================== -->
+
         <div id="modal-bd"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div
@@ -961,14 +969,12 @@
                 </div>
                 <div class="p-4 space-y-3">
                     <input type="hidden" id="bd-id">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Baku</label>
-                        <input type="text" id="bd-name"
+                    <div><label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Baku</label><input
+                            type="text" id="bd-name"
                             class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Satuan Dasar</label>
+                        <div><label class="block text-xs font-medium text-gray-500 mb-1">Satuan Dasar</label>
                             <select id="bd-unit"
                                 class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none text-sm text-gray-900 dark:text-white">
                                 <option value="Gram (g)">Gram (g)</option>
@@ -981,15 +987,13 @@
                                 <option value="Pcs">Pcs</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Total Kapasitas</label>
-                            <input type="number" id="bd-cap" min="0" step="any" oninput="calcBD()"
+                        <div><label class="block text-xs font-medium text-gray-500 mb-1">Total Kapasitas</label><input
+                                type="number" id="bd-cap" min="0" step="any" oninput="calcBD()"
                                 class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Harga Total Pembelian (Rp)</label>
-                        <input type="number" id="bd-price" min="0" step="any" oninput="calcBD()"
+                    <div><label class="block text-xs font-medium text-gray-500 mb-1">Harga Total Pembelian
+                            (Rp)</label><input type="number" id="bd-price" min="0" step="any" oninput="calcBD()"
                             class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
                     </div>
                     <div
@@ -1022,17 +1026,14 @@
                             class="w-5 h-5"></i></button>
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                    <input type="hidden" id="comp-mode">
-                    <input type="hidden" id="comp-id">
+                    <input type="hidden" id="comp-mode"><input type="hidden" id="comp-id">
                     <div id="comp-header-olahan"
                         class="grid grid-cols-1 md:grid-cols-3 gap-3 pb-4 border-b border-gray-200 dark:border-gray-800 hidden">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Olahan</label>
-                            <input type="text" id="comp-ol-name"
+                        <div><label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Olahan</label><input
+                                type="text" id="comp-ol-name"
                                 class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Satuan Hasil</label>
+                        <div><label class="block text-xs font-medium text-gray-500 mb-1">Satuan Hasil</label>
                             <select id="comp-ol-unit"
                                 class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
                                 <option value="Porsi">Porsi</option>
@@ -1043,9 +1044,9 @@
                                 <option value="Pcs">Pcs</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Yield (Kuantitas Hasil)</label>
-                            <input type="number" id="comp-ol-yield" min="1" step="any" oninput="calcCompTotal()"
+                        <div><label class="block text-xs font-medium text-gray-500 mb-1">Yield (Kuantitas
+                                Hasil)</label><input type="number" id="comp-ol-yield" min="1" step="any"
+                                oninput="calcCompTotal()"
                                 class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
                         </div>
                     </div>
@@ -1074,29 +1075,25 @@
                             <div
                                 class="bg-gray-50 dark:bg-gray-900 p-3 flex justify-center gap-4 border-t border-gray-200 dark:border-gray-800">
                                 <button onclick="addCompRow(false)"
-                                    class="text-xs font-bold text-blue-600 dark:text-neon-cyan flex items-center bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded">
-                                    <i data-lucide="database" class="w-3 h-3 mr-1"></i> + Dari Database
-                                </button>
+                                    class="text-xs font-bold text-blue-600 dark:text-neon-cyan flex items-center bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded"><i
+                                        data-lucide="database" class="w-3 h-3 mr-1"></i> + Dari Database</button>
                                 <button onclick="addCompRow(true)"
-                                    class="text-xs font-bold text-orange-600 dark:text-orange-400 flex items-center bg-orange-100 dark:bg-orange-900/30 px-3 py-1.5 rounded">
-                                    <i data-lucide="edit-3" class="w-3 h-3 mr-1"></i> + Custom Manual
-                                </button>
+                                    class="text-xs font-bold text-orange-600 dark:text-orange-400 flex items-center bg-orange-100 dark:bg-orange-900/30 px-3 py-1.5 rounded"><i
+                                        data-lucide="edit-3" class="w-3 h-3 mr-1"></i> + Custom Manual</button>
                             </div>
                         </div>
                     </div>
                     <div
                         class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 space-y-2">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-gray-600 dark:text-gray-400">Total Modal:</span>
-                            <span id="comp-total-modal" class="text-lg font-bold text-gray-900 dark:text-white">Rp
-                                0</span>
-                        </div>
+                        <div class="flex justify-between items-center"><span
+                                class="text-sm font-bold text-gray-600 dark:text-gray-400">Total Modal:</span><span
+                                id="comp-total-modal" class="text-lg font-bold text-gray-900 dark:text-white">Rp
+                                0</span></div>
                         <div
                             class="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
-                            <span class="text-sm font-bold text-gray-600 dark:text-gray-400">HPP / Satuan:</span>
-                            <span id="comp-hpp-satuan" class="text-xl font-bold text-green-600 dark:text-neon-green">Rp
-                                0</span>
-                        </div>
+                            <span class="text-sm font-bold text-gray-600 dark:text-gray-400">HPP / Satuan:</span><span
+                                id="comp-hpp-satuan" class="text-xl font-bold text-green-600 dark:text-neon-green">Rp
+                                0</span></div>
                     </div>
                 </div>
                 <div
@@ -1124,8 +1121,7 @@
                     <div
                         class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
                         <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan (Subtotal:
-                            <span id="co-subtotal-display">Rp 0</span>)
-                        </p>
+                            <span id="co-subtotal-display">Rp 0</span>)</p>
                         <h1 id="co-total" class="text-3xl font-bold text-blue-600 dark:text-neon-cyan">Rp 0</h1>
                         <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
                             <label
@@ -1145,7 +1141,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="border-t border-gray-200 dark:border-gray-800 pt-3">
                         <div class="flex justify-between items-center mb-2">
                             <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Pelanggan
@@ -1159,7 +1154,6 @@
                             <option value="">-- Pelanggan Umum / Tanpa Nama --</option>
                         </select>
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Metode
@@ -1190,12 +1184,9 @@
                             </div>
                         </div>
                     </div>
-
                     <div id="co-split-info"
                         class="text-center text-sm text-purple-600 dark:text-neon-purple hidden font-bold bg-purple-50 dark:bg-transparent p-2 rounded">
-                        Masing-masing bayar: <span id="co-split-amount">Rp 0</span>
-                    </div>
-
+                        Masing-masing bayar: <span id="co-split-amount">Rp 0</span></div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nominal Diterima
                             (Rp)</label>
@@ -1212,7 +1203,6 @@
                                 class="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded flex-1">+100k</button>
                         </div>
                     </div>
-
                     <div
                         class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
                         <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Kembalian:</span>
@@ -1307,14 +1297,11 @@
                 </div>
                 <div class="flex-1 overflow-y-auto p-4 space-y-4">
                     <input type="hidden" id="exp-id">
-                    <div class="grid grid-cols-1 gap-3">
-                                                <div>
-                                                        <label
-                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tanggal</label>
-                                                        <input type="date" id="exp-date"                                
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-red-500 focus:outline-none text-gray-900 dark:text-white text-sm">
-                                                    </div>
-                                            </div>
+                    <div><label
+                            class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tanggal</label><input
+                            type="date" id="exp-date"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-red-500 focus:outline-none text-gray-900 dark:text-white text-sm">
+                    </div>
                     <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
                         <div
                             class="bg-gray-50 dark:bg-gray-900 p-2 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
@@ -1343,52 +1330,40 @@
                                 0</span>
                         </div>
                     </div>
-
                     <div
                         class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/30 rounded-lg p-4 space-y-4">
                         <div>
                             <label class="block text-sm font-bold text-gray-900 dark:text-yellow-500 mb-3">Kategori
                                 Transaksi:</label>
                             <div class="space-y-2">
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="radio" name="exp-category" value="opex" id="exp-cat-opex"
-                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
-                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                        Beban Operasional
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Listrik,
-                                            sewa, air, dll)</span>
-                                    </span>
-                                </label>
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="radio" name="exp-category" value="cogs" id="exp-cat-cogs"
-                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                        Bahan Baku / HPP
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Stok
-                                            jualan)</span>
-                                    </span>
-                                </label>
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="radio" name="exp-category" value="asset" id="exp-cat-asset"
-                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                        Pembelian Aset
-                                        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Meja, kursi,
-                                            inventaris)</span>
-                                    </span>
-                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer"><input type="radio"
+                                        name="exp-category" value="opex" id="exp-cat-opex"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" checked><span
+                                        class="text-sm font-medium text-gray-800 dark:text-gray-200">Beban Operasional
+                                        <span class="text-xs text-gray-500 font-normal">(Listrik, sewa, air,
+                                            dll)</span></span></label>
+                                <label class="flex items-center gap-3 cursor-pointer"><input type="radio"
+                                        name="exp-category" value="cogs" id="exp-cat-cogs"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"><span
+                                        class="text-sm font-medium text-gray-800 dark:text-gray-200">Bahan Baku / HPP
+                                        <span class="text-xs text-gray-500 font-normal">(Stok
+                                            jualan)</span></span></label>
+                                <label class="flex items-center gap-3 cursor-pointer"><input type="radio"
+                                        name="exp-category" value="asset" id="exp-cat-asset"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"><span
+                                        class="text-sm font-medium text-gray-800 dark:text-gray-200">Pembelian Aset
+                                        <span class="text-xs text-gray-500 font-normal">(Meja, kursi,
+                                            inventaris)</span></span></label>
                             </div>
                         </div>
-
                         <hr class="border-yellow-200 dark:border-yellow-700/30">
-
                         <label class="flex items-start gap-3 cursor-pointer">
                             <input type="checkbox" id="exp-personal"
                                 class="w-4 h-4 text-blue-600 rounded border-gray-300 mt-0.5 focus:ring-blue-500">
                             <div>
                                 <p class="text-sm font-bold text-gray-900 dark:text-white">Bayar Uang Pribadi</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Sumber dana ini tidak memotong
-                                    kas laci (bisa digabungkan dengan kategori di atas).</p>
+                                    kas laci.</p>
                             </div>
                         </label>
                     </div>
@@ -1398,9 +1373,8 @@
                     <button onclick="toggleModal('modal-expense', false)"
                         class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">Batal</button>
                     <button onclick="saveExpense()" id="btn-save-expense"
-                        class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded text-sm shadow-sm flex items-center gap-2">
-                        <i data-lucide="save" class="w-4 h-4"></i> Simpan
-                    </button>
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded text-sm shadow-sm flex items-center gap-2"><i
+                            data-lucide="save" class="w-4 h-4"></i> Simpan</button>
                 </div>
             </div>
         </div>
@@ -1471,28 +1445,21 @@
             class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity p-4">
             <div
                 class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-xl w-full max-w-3xl flex flex-col max-h-[95vh] shadow-2xl relative overflow-hidden">
-
                 <div
                     class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center no-print shrink-0">
-                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center text-sm">
-                        <i data-lucide="file-text" class="w-4 h-4 mr-2 text-blue-600"></i> Pratinjau Invoice
-                    </h3>
+                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center text-sm"><i
+                            data-lucide="file-text" class="w-4 h-4 mr-2 text-blue-600"></i> Pratinjau Invoice</h3>
                     <div class="flex gap-2">
                         <button onclick="printInvoice()"
-                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow flex items-center">
-                            <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Cetak / PDF
-                        </button>
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow flex items-center"><i
+                                data-lucide="printer" class="w-4 h-4 mr-2"></i> Cetak / PDF</button>
                         <button onclick="toggleModal('modal-invoice', false)"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-gray-200 dark:bg-gray-800 p-1.5 rounded-lg">
-                            <i data-lucide="x" class="w-5 h-5"></i>
-                        </button>
+                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-gray-200 dark:bg-gray-800 p-1.5 rounded-lg"><i
+                                data-lucide="x" class="w-5 h-5"></i></button>
                     </div>
                 </div>
-
-                <div id="printable-invoice"
-                    class="flex-1 overflow-y-auto p-6 md:p-10 bg-white text-gray-900 relative relative">
+                <div id="printable-invoice" class="flex-1 overflow-y-auto p-6 md:p-10 bg-white text-gray-900 relative">
                     <div class="watermark-lunas">LUNAS</div>
-
                     <div class="flex justify-between items-start border-b-2 border-blue-600 pb-6 mb-6">
                         <div class="flex items-center gap-3">
                             <img src="https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png"
@@ -1508,7 +1475,6 @@
                             <p class="text-xs text-gray-500 mt-0.5" id="inv-date">Tanggal</p>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-8 mb-8">
                         <div>
                             <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Diterbitkan Oleh
@@ -1522,7 +1488,6 @@
                             <p class="text-xs text-gray-600 mt-1" id="inv-customer-phone"></p>
                         </div>
                     </div>
-
                     <table class="w-full text-left mb-6">
                         <thead class="bg-gray-50">
                             <tr>
@@ -1540,27 +1505,19 @@
                                     Total Harga</th>
                             </tr>
                         </thead>
-                        <tbody id="inv-items-body" class="divide-y divide-gray-100">
-                        </tbody>
+                        <tbody id="inv-items-body" class="divide-y divide-gray-100"></tbody>
                     </table>
-
                     <div class="flex justify-end">
                         <div class="w-1/2 min-w-[250px]">
-                            <div class="flex justify-between py-2 text-sm text-gray-600">
-                                <span>Subtotal</span>
-                                <span id="inv-subtotal" class="font-medium text-gray-900">Rp 0</span>
-                            </div>
+                            <div class="flex justify-between py-2 text-sm text-gray-600"><span>Subtotal</span><span
+                                    id="inv-subtotal" class="font-medium text-gray-900">Rp 0</span></div>
                             <div id="inv-adjustment-container"
                                 class="flex justify-between py-2 text-sm text-gray-600 border-t border-gray-100 hidden">
-                                <span id="inv-adjustment-label">Penyesuaian</span>
-                                <span id="inv-adjustment-amount" class="font-medium">Rp 0</span>
-                            </div>
+                                <span id="inv-adjustment-label">Penyesuaian</span><span id="inv-adjustment-amount"
+                                    class="font-medium">Rp 0</span></div>
                             <div
                                 class="flex justify-between py-3 text-lg font-black text-blue-600 border-t-2 border-gray-200 mt-2">
-                                <span>Total Tagihan</span>
-                                <span id="inv-total">Rp 0</span>
-                            </div>
-
+                                <span>Total Tagihan</span><span id="inv-total">Rp 0</span></div>
                             <div class="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
                                 <p class="flex justify-between"><span>Metode Pembayaran:</span> <span id="inv-method"
                                         class="font-bold text-gray-900">Tunai</span></p>
@@ -1573,32 +1530,37 @@
             </div>
         </div>
 
+        <!-- Toast -->
         <div id="toast"
             class="fixed bottom-20 md:bottom-5 right-4 transform translate-y-20 opacity-0 transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white px-4 py-3 rounded-xl shadow-xl flex items-center z-[110]">
             <i id="toast-icon" data-lucide="info" class="w-5 h-5 mr-3"></i>
             <span id="toast-msg" class="text-sm font-medium">Message</span>
         </div>
     </main>
+
     <script>
         // ==========================================
-        // CONFIG & INIT
+        // CONFIG & SUPABASE INIT
         // ==========================================
         const SUPABASE_URL = 'https://jariewywijsmjxxbgpvi.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmlld3l3aWpzbWp4eGJncHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzEzMjUsImV4cCI6MjA5MzEwNzMyNX0.yaO9StT8hScwdHgmwkh9STXCXCO7VvnMvBG6eHThljM';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const LOGO_URL = 'https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png';
 
         const state = {
             products: [], cart: [], searchQuery: '',
             selectedCategory: 'all',
             heldOrders: JSON.parse(localStorage.getItem('gurmie_held_orders') || '[]'),
             chartInstance: null, html5QrcodeScanner: null,
-            history: [], historyExpenses: [], // Tambahan historyExpenses
+            history: [], historyExpenses: [],
             editingTrx: { id: null, date: '', items: [] },
             expensesList: [], editingExpenseId: null, expenseItems: [],
             reportPeriodText: '7 Hari Terakhir',
             rawMaterials: [], processedMaterials: [], recipes: [],
             compItems: [], customers: [],
             historyDuration: 'all', historyCustomerFilter: '',
+            historyTypeFilter: 'all',
             coaList: []
         };
 
@@ -1606,12 +1568,10 @@
         const formatTime = (d) => new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date(d).toLocaleDateString('id-ID');
 
         // ==========================================
-        // PWA SERVICE WORKER
+        // PWA
         // ==========================================
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').then(reg => {
-                console.log('SW registered:', reg.scope);
-            }).catch(err => console.log('SW error:', err));
+            navigator.serviceWorker.register('./sw.js').then(reg => console.log('SW registered:', reg.scope)).catch(err => console.log('SW error:', err));
         }
 
         // ==========================================
@@ -1632,90 +1592,88 @@
             });
             ['theme-icon', 'mob-theme-icon'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) { el.setAttribute('data-lucide', isDark ? 'sun' : 'moon'); }
+                if (el) el.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
             });
             lucide.createIcons();
         }
 
         // ==========================================
-        // UI & NAVIGATION TOGGLES
+        // MODAL & TOAST
         // ==========================================
         function toggleModal(id, show) {
-            const modal = document.getElementById(id);
+            const el = document.getElementById(id);
+            if (!el) return;
             if (show) {
-                modal.classList.remove('hidden');
-                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+                el.classList.remove('hidden');
+                setTimeout(() => el.classList.remove('opacity-0'), 10);
+                if (id === 'modal-held-orders') renderHeldOrders();
+                if (id === 'modal-scanner') {
+                    if (window.Html5QrcodeScanner) {
+                        state.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+                        state.html5QrcodeScanner.render(onScanSuccess);
+                    } else showToast('Library Scanner belum dimuat.', 'warning');
+                }
             } else {
-                modal.classList.add('opacity-0');
-                setTimeout(() => modal.classList.add('hidden'), 300);
+                el.classList.add('opacity-0');
+                setTimeout(() => el.classList.add('hidden'), 300);
             }
         }
 
         function showLoading(show) {
-            const loader = document.getElementById('global-loader');
-            if (show) loader.classList.remove('hidden');
-            else loader.classList.add('hidden');
+            const el = document.getElementById('global-loader');
+            if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
         }
 
+        let toastTimeout;
         function showToast(msg, type = 'info') {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toast-msg');
             const icon = document.getElementById('toast-icon');
-            if (type === 'success') { icon.setAttribute('data-lucide', 'check-circle'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-green-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
-            else if (type === 'error') { icon.setAttribute('data-lucide', 'alert-circle'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-red-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
-            else if (type === 'warning') { icon.setAttribute('data-lucide', 'alert-triangle'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-yellow-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
-            else { icon.setAttribute('data-lucide', 'info'); t.className = "fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 bg-white dark:bg-gray-800 border-l-4 border-blue-500 text-gray-800 dark:text-white px-4 py-3 rounded shadow-xl flex items-center z-[110] translate-y-0 opacity-100"; }
+            if (!toast || !msgEl || !icon) return;
+            msgEl.innerText = msg;
+            toast.className = 'fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 px-4 py-3 rounded-xl shadow-xl flex items-center z-[110] transform border translate-y-0 opacity-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white';
+            const types = {
+                success: ['check-circle', 'text-green-500', 'border-l-4', 'border-l-green-500'],
+                error: ['x-circle', 'text-red-500', 'border-l-4', 'border-l-red-500'],
+                warning: ['alert-triangle', 'text-yellow-500', 'border-l-4', 'border-l-yellow-500'],
+                info: ['info', 'text-blue-500', 'border-l-4', 'border-l-blue-500']
+            };
+            const [iconName, iconClass, ...toastClasses] = types[type] || types.info;
+            toastClasses.forEach(c => toast.classList.add(c));
+            icon.setAttribute('data-lucide', iconName);
+            icon.className = `w-5 h-5 mr-3 ${iconClass}`;
             lucide.createIcons();
-            setTimeout(() => { t.classList.add('translate-y-20', 'opacity-0'); }, 3000);
-        }
-
-        function switchView(view) {
-            ['kasir', 'produk', 'bahan', 'laporan', 'riwayat'].forEach(v => {
-                document.getElementById('view-' + v)?.classList.add('hidden');
-                document.getElementById('view-' + v)?.classList.remove('flex');
-
-                // Desktop Nav Update
-                const n = document.getElementById('nav-' + v);
-                if (n) {
-                    n.classList.remove('bg-blue-50', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-neon-cyan');
-                    n.classList.add('text-gray-500', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-800');
-                }
-
-                // Mobile Nav Update
-                const mn = document.getElementById('mob-nav-' + v);
-                if (mn) {
-                    mn.classList.remove('text-blue-600', 'dark:text-neon-cyan');
-                    mn.classList.add('text-gray-400');
-                }
-            });
-
-            const activeView = document.getElementById('view-' + view);
-            if (activeView) {
-                activeView.classList.remove('hidden');
-                activeView.classList.add('flex');
-            }
-
-            const activeNav = document.getElementById('nav-' + view);
-            if (activeNav) {
-                activeNav.classList.add('bg-blue-50', 'dark:bg-gray-800', 'text-blue-600', 'dark:text-neon-cyan');
-                activeNav.classList.remove('text-gray-500', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-800');
-            }
-
-            const activeMobNav = document.getElementById('mob-nav-' + view);
-            if (activeMobNav) {
-                activeMobNav.classList.add('text-blue-600', 'dark:text-neon-cyan');
-                activeMobNav.classList.remove('text-gray-400');
-            }
-
-            if (view === 'kasir') { renderKasirProducts(); updateHeldBadge(); }
-            if (view === 'produk') renderProductTable();
-            if (view === 'laporan') { loadReports(); fetchCOA(); }
-            if (view === 'riwayat') loadHistory();
-            if (view === 'bahan') fetchBOMData();
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-20'); toast.classList.replace('opacity-100', 'opacity-0'); }, 3000);
         }
 
         // ==========================================
-        // MOBILE CART PANEL TOGGLE
+        // NAVIGATION
+        // ==========================================
+        function switchView(viewName) {
+            ['kasir', 'produk', 'bahan', 'laporan', 'riwayat'].forEach(v => {
+                const viewEl = document.getElementById(`view-${v}`);
+                const navEl = document.getElementById(`nav-${v}`);
+                const mobNavEl = document.getElementById(`mob-nav-${v}`);
+                if (viewEl) { viewEl.classList.add('hidden'); viewEl.classList.remove('flex'); }
+                if (navEl) navEl.className = "nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors";
+                if (mobNavEl) mobNavEl.className = "mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400";
+            });
+            const activeView = document.getElementById(`view-${viewName}`);
+            if (activeView) { activeView.classList.remove('hidden'); activeView.classList.add('flex'); }
+            const activeNav = document.getElementById(`nav-${viewName}`);
+            if (activeNav) activeNav.className = "nav-btn w-full flex items-center p-3 rounded-xl bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan shadow-sm transition-colors font-medium";
+            const activeMobNav = document.getElementById(`mob-nav-${viewName}`);
+            if (activeMobNav) activeMobNav.className = "mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-blue-600 dark:text-neon-cyan";
+
+            if (viewName === 'kasir') document.getElementById('search-product')?.focus();
+            else if (viewName === 'bahan') switchBahanTab('dasar');
+            else if (viewName === 'laporan') { loadReports(); fetchCOA(); }
+            else if (viewName === 'riwayat') loadHistory();
+        }
+
+        // ==========================================
+        // MOBILE CART PANEL
         // ==========================================
         let cartPanelExpanded = false;
         function toggleCartPanel() {
@@ -1723,13 +1681,9 @@
             cartPanelExpanded = !cartPanelExpanded;
             panel.classList.toggle('expanded', cartPanelExpanded);
         }
-
         function expandCartPanel() {
             const panel = document.getElementById('kasir-cart-panel');
-            if (!cartPanelExpanded) {
-                cartPanelExpanded = true;
-                panel.classList.add('expanded');
-            }
+            if (!cartPanelExpanded) { cartPanelExpanded = true; panel.classList.add('expanded'); }
         }
 
         // ==========================================
@@ -1741,13 +1695,10 @@
             showLoading(false);
             if (error) return showToast('Gagal memuat produk: ' + error.message, 'error');
             state.products = data || [];
-
             renderCategoryFilters();
             updateCategoryDatalist();
-
             renderKasirProducts();
             renderProductTable();
-            checkDeadStock();
             if (document.getElementById('view-bahan')?.classList.contains('flex')) renderResepTab();
         }
 
@@ -1756,19 +1707,6 @@
             if (!datalist) return;
             const categories = [...new Set(state.products.map(p => p.category).filter(Boolean))].sort();
             datalist.innerHTML = categories.map(cat => `<option value="${cat}">`).join('');
-        }
-
-        function checkDeadStock() {
-            const container = document.getElementById('dead-stock-container');
-            if (!container) return;
-            const dead = state.products.filter(p => !p.is_bundle && p.stock > 0).sort((a, b) => b.stock - a.stock).slice(0, 5);
-            if (dead.length === 0) {
-                container.innerHTML = '<span class="text-sm text-gray-500 dark:text-gray-400">Semua stok aman.</span>';
-                return;
-            }
-            container.innerHTML = dead.map(p =>
-                `<span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs px-2 py-1 rounded border border-red-200 dark:border-red-800">${p.name} (${p.stock} item)</span>`
-            ).join('');
         }
 
         async function fetchBOMData() {
@@ -1788,19 +1726,12 @@
                     if (activeView.id === 'tab-olahan') renderBahanOlahan();
                     if (activeView.id === 'tab-resep') renderResepTab();
                 }
-            } catch (err) {
-                console.error("fetchBOMData error:", err);
-                showToast('Gagal memuat data Material/Resep', 'error');
-            }
+            } catch (err) { showToast('Gagal memuat data Material/Resep', 'error'); }
         }
 
         async function fetchCustomers() {
             const { data, error } = await supabaseClient.from('customers').select('*').order('name');
-            if (!error && data) {
-                state.customers = data;
-                renderCustomerSelect();
-                renderHistoryCustomerFilter();
-            }
+            if (!error && data) { state.customers = data; renderCustomerSelect(); renderHistoryCustomerFilter(); }
         }
 
         async function fetchCOA() {
@@ -1809,20 +1740,13 @@
                 if (error) throw error;
                 state.coaList = data || [];
                 renderCOA();
-            } catch (err) {
-                console.error("Gagal memuat COA:", err);
-            }
+            } catch (err) { console.error("Gagal memuat COA:", err); }
         }
 
         function renderCOA() {
             const tbody = document.getElementById('coa-table-body');
             if (!tbody) return;
-
-            if (state.coaList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">Data akun kosong.</td></tr>`;
-                return;
-            }
-
+            if (state.coaList.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="text-center p-4 text-gray-500">Data akun kosong.</td></tr>`; return; }
             tbody.innerHTML = state.coaList.map(coa => `
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${coa.code}</td>
@@ -1837,8 +1761,7 @@
             const select = document.getElementById('co-customer');
             if (!select) return;
             const prevValue = select.value;
-            select.innerHTML = '<option value="">-- Pelanggan Umum / Tanpa Nama --</option>' +
-                state.customers.map(c => `<option value="${c.id}">${c.name}${c.phone ? ' - ' + c.phone : ''}</option>`).join('');
+            select.innerHTML = '<option value="">-- Pelanggan Umum / Tanpa Nama --</option>' + state.customers.map(c => `<option value="${c.id}">${c.name}${c.phone ? ' - ' + c.phone : ''}</option>`).join('');
             if (prevValue) select.value = prevValue;
         }
 
@@ -1846,8 +1769,7 @@
             const select = document.getElementById('hist-customer-filter');
             if (!select) return;
             const prevValue = select.value;
-            select.innerHTML = '<option value="">Semua Pelanggan</option>' +
-                state.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            select.innerHTML = '<option value="">Semua Pelanggan</option>' + state.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             if (prevValue) select.value = prevValue;
         }
 
@@ -1871,14 +1793,12 @@
                 renderHistoryCustomerFilter();
                 document.getElementById('co-customer').value = data.id;
                 toggleModal('modal-add-customer', false);
-            } catch (e) {
-                showToast('Gagal menyimpan pelanggan', 'error');
-            }
+            } catch (e) { showToast('Gagal menyimpan pelanggan', 'error'); }
             showLoading(false);
         }
 
         // ==========================================
-        // KASIR & CART LOGIC
+        // KASIR & CART
         // ==========================================
         function renderCategoryFilters() {
             const container = document.getElementById('category-filter-container');
@@ -1892,47 +1812,33 @@
             container.innerHTML = html;
         }
 
-        function filterCategory(cat) {
-            state.selectedCategory = cat;
-            renderCategoryFilters();
-            renderKasirProducts();
-        }
+        function filterCategory(cat) { state.selectedCategory = cat; renderCategoryFilters(); renderKasirProducts(); }
 
         function renderKasirProducts() {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
             const q = state.searchQuery.toLowerCase();
-
             let filtered = state.products.filter(p => {
                 const matchSearch = p.name.toLowerCase().includes(q) || (p.barcode && p.barcode.includes(q));
                 const matchCategory = state.selectedCategory === 'all' || p.category === state.selectedCategory;
                 return matchSearch && matchCategory;
             });
-
             filtered.sort((a, b) => {
                 const orderA = a.order_index != null ? a.order_index : 999;
                 const orderB = b.order_index != null ? b.order_index : 999;
                 if (orderA !== orderB) return orderA - orderB;
                 return a.name.localeCompare(b.name);
             });
-
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-10 text-sm">Produk tidak ditemukan.</div>`;
-                return;
-            }
-
+            if (filtered.length === 0) { grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-10 text-sm">Produk tidak ditemukan.</div>`; return; }
             filtered.forEach(p => {
                 const outOfStock = !p.is_bundle && p.stock <= 0;
                 const card = document.createElement('div');
                 card.className = `bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-3 flex flex-col justify-between transition-all duration-200 shadow-sm ${outOfStock ? 'opacity-50 grayscale' : 'cursor-pointer neon-border hover:-translate-y-0.5 hover:shadow-md active:scale-95'}`;
                 if (!outOfStock) card.onclick = () => { addToCart(p); };
-
                 let badge = '';
                 if (p.is_bundle) badge = `<span class="bg-purple-100 dark:bg-neon-purple/20 text-purple-600 dark:text-neon-purple text-[9px] px-1.5 py-0.5 rounded border border-purple-200 font-bold">BUNDLE</span>`;
                 else if (outOfStock) badge = `<span class="bg-red-100 text-red-600 text-[9px] px-1.5 py-0.5 rounded border border-red-200 font-bold">HABIS</span>`;
-
                 const catLabel = p.category ? `<span class="text-[8px] uppercase tracking-wider text-gray-400 font-semibold mb-1 block">${p.category}</span>` : '';
-
                 card.innerHTML = `
                     <div>
                         ${catLabel}
@@ -1952,10 +1858,7 @@
             lucide.createIcons();
         }
 
-        document.getElementById('search-product')?.addEventListener('input', (e) => {
-            state.searchQuery = e.target.value;
-            renderKasirProducts();
-        });
+        document.getElementById('search-product')?.addEventListener('input', (e) => { state.searchQuery = e.target.value; renderKasirProducts(); });
 
         function addToCart(product) {
             const existingItem = state.cart.find(i => i.id === product.id && !i.note && !i.customPrice);
@@ -1997,10 +1900,7 @@
             const price = document.getElementById('ce-price').value;
             const note = document.getElementById('ce-note').value;
             const item = state.cart.find(i => i.cartId === cartId);
-            if (item) {
-                item.customPrice = price ? parseFloat(price) : null;
-                item.note = note;
-            }
+            if (item) { item.customPrice = price ? parseFloat(price) : null; item.note = note; }
             toggleModal('modal-cart-edit', false);
             renderCart();
         }
@@ -2015,19 +1915,16 @@
             const btnPay = document.getElementById('btn-checkout');
             const countBadge = document.getElementById('cart-count-badge');
             updateHeldBadge();
-
             const totalItems = state.cart.reduce((s, i) => s + i.qty, 0);
             if (countBadge) {
                 if (totalItems > 0) { countBadge.innerText = totalItems; countBadge.classList.remove('hidden'); countBadge.classList.add('badge-pulse'); setTimeout(() => countBadge.classList.remove('badge-pulse'), 400); }
                 else countBadge.classList.add('hidden');
             }
-
             if (state.cart.length === 0) {
                 container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-gray-400 dark:text-gray-500 opacity-70 py-8"><i data-lucide="shopping-bag" class="w-10 h-10 mb-2"></i><p class="text-xs">Keranjang kosong</p></div>`;
                 subtotalEl.innerText = 'Rp 0'; totalEl.innerText = 'Rp 0'; if (btnPay) btnPay.disabled = true;
                 lucide.createIcons(); return;
             }
-
             let total = 0;
             container.innerHTML = state.cart.map(item => {
                 const activePrice = item.customPrice || item.price;
@@ -2049,7 +1946,6 @@
                     </div>
                 `;
             }).join('');
-
             subtotalEl.innerText = formatRp(total);
             totalEl.innerText = formatRp(total);
             if (btnPay) btnPay.disabled = false;
@@ -2097,22 +1993,10 @@
         function restoreOrder(id) {
             if (state.cart.length > 0 && !confirm("Keranjang saat ini tidak kosong. Timpa?")) return;
             const idx = state.heldOrders.findIndex(h => h.id === id);
-            if (idx > -1) {
-                state.cart = [...state.heldOrders[idx].cart];
-                state.heldOrders.splice(idx, 1);
-                localStorage.setItem('gurmie_held_orders', JSON.stringify(state.heldOrders));
-                toggleModal('modal-held-orders', false);
-                renderCart();
-                expandCartPanel();
-            }
+            if (idx > -1) { state.cart = [...state.heldOrders[idx].cart]; state.heldOrders.splice(idx, 1); localStorage.setItem('gurmie_held_orders', JSON.stringify(state.heldOrders)); toggleModal('modal-held-orders', false); renderCart(); expandCartPanel(); }
         }
 
-        function deleteHeldOrder(id) {
-            state.heldOrders = state.heldOrders.filter(h => h.id !== id);
-            localStorage.setItem('gurmie_held_orders', JSON.stringify(state.heldOrders));
-            renderHeldOrders();
-            updateHeldBadge();
-        }
+        function deleteHeldOrder(id) { state.heldOrders = state.heldOrders.filter(h => h.id !== id); localStorage.setItem('gurmie_held_orders', JSON.stringify(state.heldOrders)); renderHeldOrders(); updateHeldBadge(); }
 
         // Checkout
         function getCheckoutFinalTotal() {
@@ -2196,84 +2080,40 @@
             const adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
             const customerSelect = document.getElementById('co-customer');
             const customerId = customerSelect ? customerSelect.value : null;
-
             if (methodSelect === 'Tunai' && tendered < totalFinal) return showToast('Nominal pembayaran kurang!', 'error');
-
             showLoading(true);
             toggleModal('modal-checkout', false);
-
             try {
-                // 1. Simpan Transaksi
-                let trxPayload = {
-                    total_price: totalFinal, payment_method: method,
-                    cash_tendered: methodSelect === 'Tunai' ? tendered : totalFinal,
-                    change_amount: methodSelect === 'Tunai' ? tendered - totalFinal : 0,
-                    split_count: split,
-                    adjustment_type: adjType === 'none' ? null : adjType,
-                    adjustment_amount: adjType === 'none' ? 0 : adjVal,
-                    customer_id: customerId || null
-                };
-
+                let trxPayload = { total_price: totalFinal, payment_method: method, cash_tendered: methodSelect === 'Tunai' ? tendered : totalFinal, change_amount: methodSelect === 'Tunai' ? tendered - totalFinal : 0, split_count: split, adjustment_type: adjType === 'none' ? null : adjType, adjustment_amount: adjType === 'none' ? 0 : adjVal, customer_id: customerId || null };
                 let trxRes = await supabaseClient.from('transactions').insert([trxPayload]).select().single();
                 if (trxRes.error && trxRes.error.message.includes('column')) trxRes = await supabaseClient.from('transactions').insert([{ total_price: totalFinal }]).select().single();
                 if (trxRes.error) throw trxRes.error;
                 const trx = trxRes.data;
-
-                // 2. Simpan Item Transaksi
                 const itemsPayload = state.cart.map(item => ({ transaction_id: trx.id, product_id: item.id, quantity: item.qty, price: item.price, custom_price: item.customPrice || null, notes: item.note || null }));
                 let itemRes = await supabaseClient.from('transaction_items').insert(itemsPayload);
-                if (itemRes.error && itemRes.error.message.includes('column')) {
-                    const cleanItems = state.cart.map(item => ({ transaction_id: trx.id, product_id: item.id, quantity: item.qty, price: item.customPrice || item.price }));
-                    itemRes = await supabaseClient.from('transaction_items').insert(cleanItems);
-                }
+                if (itemRes.error && itemRes.error.message.includes('column')) { const cleanItems = state.cart.map(item => ({ transaction_id: trx.id, product_id: item.id, quantity: item.qty, price: item.customPrice || item.price })); itemRes = await supabaseClient.from('transaction_items').insert(cleanItems); }
                 if (itemRes.error) throw itemRes.error;
-
-                // 3. Update Stok
-                for (let item of state.cart) {
-                    if (!item.is_bundle) await supabaseClient.from('products').update({ stock: item.stock - item.qty }).eq('id', item.id);
-                }
-
-                // 4. Update Saldo COA untuk Penjualan (Kas & Pendapatan Bertambah)
+                for (let item of state.cart) { if (!item.is_bundle) await supabaseClient.from('products').update({ stock: item.stock - item.qty }).eq('id', item.id); }
                 try {
-                    const { data: coaData } = await supabaseClient.from('chart_of_accounts')
-                        .select('code, balance').in('code', ['1001', '4001']);
-
-                    let kasBalance = 0;
-                    let salesBalance = 0;
-
+                    const { data: coaData } = await supabaseClient.from('chart_of_accounts').select('code, balance').in('code', ['1001', '4001']);
                     if (coaData && coaData.length > 0) {
-                        coaData.forEach(acc => {
-                            if (acc.code === '1001') kasBalance = parseFloat(acc.balance);
-                            if (acc.code === '4001') salesBalance = parseFloat(acc.balance);
-                        });
-
-                        await supabaseClient.from('chart_of_accounts')
-                            .update({ balance: kasBalance + totalFinal })
-                            .eq('code', '1001');
-
-                        await supabaseClient.from('chart_of_accounts')
-                            .update({ balance: salesBalance + totalFinal })
-                            .eq('code', '4001');
+                        let kasBalance = 0, salesBalance = 0;
+                        coaData.forEach(acc => { if (acc.code === '1001') kasBalance = parseFloat(acc.balance); if (acc.code === '4001') salesBalance = parseFloat(acc.balance); });
+                        await supabaseClient.from('chart_of_accounts').update({ balance: kasBalance + totalFinal }).eq('code', '1001');
+                        await supabaseClient.from('chart_of_accounts').update({ balance: salesBalance + totalFinal }).eq('code', '4001');
                     }
-                } catch (coaErr) {
-                    console.error("Gagal update COA Penjualan:", coaErr);
-                }
-
+                } catch (coaErr) { console.error("Gagal update COA:", coaErr); }
                 showToast('Transaksi Berhasil!', 'success');
                 clearCart();
                 await fetchProducts();
                 if (document.getElementById('view-laporan')?.classList.contains('flex')) { loadReports(); fetchCOA(); }
                 if (document.getElementById('view-riwayat')?.classList.contains('flex')) loadHistory();
-            } catch (error) {
-                console.error("submitPayment Error:", error);
-                showToast('Gagal memproses transaksi.', 'error');
-            } finally {
-                showLoading(false);
-            }
+            } catch (error) { showToast('Gagal memproses transaksi.', 'error'); }
+            finally { showLoading(false); }
         }
 
         // ==========================================
-        // PRODUK MODULE
+        // PRODUK
         // ==========================================
         function renderProductTable() {
             const tbody = document.getElementById('product-table-body');
@@ -2282,34 +2122,22 @@
                 let status = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-green-100 dark:bg-green-500/10 text-green-600">Normal</span>`;
                 if (p.is_bundle) status = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-600">Bundle</span>`;
                 else if (p.stock <= 0) status = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-600">Habis</span>`;
-                return `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td class="px-4 py-3 font-mono text-xs text-gray-500">${p.barcode || '-'}</td>
-                        <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${p.name}</td>
-                        <td class="px-4 py-3 font-medium text-blue-600 dark:text-neon-cyan text-sm">${formatRp(p.price)}</td>
-                        <td class="px-4 py-3 text-gray-900 dark:text-white text-sm">${p.is_bundle ? '∞' : p.stock} ${status}</td>
-                        <td class="px-4 py-3 text-right">
-                            <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700 mr-2"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4"></i></button>
-                        </td>
-                    </tr>
-                `;
+                return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="px-4 py-3 font-mono text-xs text-gray-500">${p.barcode || '-'}</td>
+                    <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${p.name}</td>
+                    <td class="px-4 py-3 font-medium text-blue-600 dark:text-neon-cyan text-sm">${formatRp(p.price)}</td>
+                    <td class="px-4 py-3 text-gray-900 dark:text-white text-sm">${p.is_bundle ? '∞' : p.stock} ${status}</td>
+                    <td class="px-4 py-3 text-right">
+                        <button onclick="editProduct('${p.id}')" class="text-blue-500 hover:text-blue-700 mr-2"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`;
             }).join('');
             lucide.createIcons();
         }
 
         function generateRandomBarcode() { document.getElementById('prod-barcode').value = Math.floor(100000000000 + Math.random() * 900000000000).toString(); }
-
-        function openProductForm() {
-            document.getElementById('product-form-container').classList.remove('hidden');
-            document.getElementById('form-title').innerText = 'Tambah Produk';
-            document.getElementById('product-form').reset();
-            document.getElementById('prod-id').value = '';
-
-            if (document.getElementById('prod-category')) document.getElementById('prod-category').value = '';
-            if (document.getElementById('prod-order')) document.getElementById('prod-order').value = '0';
-        }
-
+        function openProductForm() { document.getElementById('product-form-container').classList.remove('hidden'); document.getElementById('form-title').innerText = 'Tambah Produk'; document.getElementById('product-form').reset(); document.getElementById('prod-id').value = ''; if (document.getElementById('prod-category')) document.getElementById('prod-category').value = ''; if (document.getElementById('prod-order')) document.getElementById('prod-order').value = '0'; }
         function closeProductForm() { document.getElementById('product-form-container').classList.add('hidden'); }
 
         function editProduct(id) {
@@ -2323,7 +2151,6 @@
             document.getElementById('prod-price').value = p.price;
             document.getElementById('prod-stock').value = p.stock;
             document.getElementById('prod-type').value = p.is_bundle ? 'true' : 'false';
-
             if (document.getElementById('prod-category')) document.getElementById('prod-category').value = p.category || '';
             if (document.getElementById('prod-order')) document.getElementById('prod-order').value = p.order_index != null ? p.order_index : 0;
         }
@@ -2331,33 +2158,14 @@
         async function saveProduct(e) {
             e.preventDefault();
             const id = document.getElementById('prod-id').value;
-
-            const payload = {
-                name: document.getElementById('prod-name').value,
-                price: parseInt(document.getElementById('prod-price').value),
-                stock: parseInt(document.getElementById('prod-stock').value),
-                barcode: document.getElementById('prod-barcode').value || null,
-                is_bundle: document.getElementById('prod-type').value === 'true',
-            };
-
+            const payload = { name: document.getElementById('prod-name').value, price: parseInt(document.getElementById('prod-price').value), stock: parseInt(document.getElementById('prod-stock').value), barcode: document.getElementById('prod-barcode').value || null, is_bundle: document.getElementById('prod-type').value === 'true' };
             if (document.getElementById('prod-category')) payload.category = document.getElementById('prod-category').value || null;
             if (document.getElementById('prod-order')) payload.order_index = parseInt(document.getElementById('prod-order').value) || 0;
-
             showLoading(true);
             try {
-                let res;
-                if (id) res = await supabaseClient.from('products').update(payload).eq('id', id);
-                else res = await supabaseClient.from('products').insert([payload]);
-
-                if (res.error && res.error.message.includes('column')) {
-                    delete payload.barcode; delete payload.is_bundle;
-                    delete payload.category; delete payload.order_index;
-                    if (id) await supabaseClient.from('products').update(payload).eq('id', id);
-                    else await supabaseClient.from('products').insert([payload]);
-                    showToast('Tersimpan dengan fallback. Kolom baru belum ada di DB.', 'warning');
-                } else if (res.error) throw res.error;
-                else showToast('Produk tersimpan!', 'success');
-
+                let res = id ? await supabaseClient.from('products').update(payload).eq('id', id) : await supabaseClient.from('products').insert([payload]);
+                if (res.error) throw res.error;
+                showToast('Produk tersimpan!', 'success');
                 closeProductForm();
                 await fetchProducts();
             } catch (error) { showToast('Gagal: ' + error.message, 'error'); }
@@ -2366,12 +2174,7 @@
 
         async function deleteProduct(id) {
             if (!confirm('Hapus produk ini?')) return;
-            try {
-                const { error } = await supabaseClient.from('products').delete().eq('id', id);
-                if (error) throw error;
-                showToast('Terhapus.', 'success');
-                fetchProducts();
-            } catch (error) { showToast('Gagal (Mungkin ada histori trx).', 'error'); }
+            try { const { error } = await supabaseClient.from('products').delete().eq('id', id); if (error) throw error; showToast('Terhapus.', 'success'); fetchProducts(); } catch (error) { showToast('Gagal (Mungkin ada histori trx).', 'error'); }
         }
 
         function onScanSuccess(decodedText) {
@@ -2380,22 +2183,14 @@
             state.searchQuery = decodedText;
             renderKasirProducts();
             const match = state.products.find(p => p.barcode === decodedText);
-            if (match) {
-                addToCart(match);
-                showToast(`${match.name} ditambahkan`, 'success');
-                document.getElementById('search-product').value = '';
-                state.searchQuery = '';
-                renderKasirProducts();
-            } else showToast('Barcode tidak ditemukan.', 'warning');
+            if (match) { addToCart(match); showToast(`${match.name} ditambahkan`, 'success'); document.getElementById('search-product').value = ''; state.searchQuery = ''; renderKasirProducts(); }
+            else showToast('Barcode tidak ditemukan.', 'warning');
         }
 
-        function closeScanner() {
-            toggleModal('modal-scanner', false);
-            if (state.html5QrcodeScanner) { state.html5QrcodeScanner.clear(); state.html5QrcodeScanner = null; }
-        }
+        function closeScanner() { toggleModal('modal-scanner', false); if (state.html5QrcodeScanner) { state.html5QrcodeScanner.clear(); state.html5QrcodeScanner = null; } }
 
         // ==========================================
-        // BAHAN & RESEP MODULE
+        // BAHAN & RESEP
         // ==========================================
         function switchBahanTab(tabName) {
             ['dasar', 'olahan', 'resep'].forEach(t => {
@@ -2445,11 +2240,7 @@
             toggleModal('modal-bd', true);
         }
 
-        function calcBD() {
-            const cap = parseFloat(document.getElementById('bd-cap').value) || 0;
-            const price = parseFloat(document.getElementById('bd-price').value) || 0;
-            document.getElementById('bd-unit-price').innerText = formatRp(cap > 0 ? price / cap : 0) + ' / satuan';
-        }
+        function calcBD() { const cap = parseFloat(document.getElementById('bd-cap').value) || 0; const price = parseFloat(document.getElementById('bd-price').value) || 0; document.getElementById('bd-unit-price').innerText = formatRp(cap > 0 ? price / cap : 0) + ' / satuan'; }
 
         async function saveBahanDasar() {
             const id = document.getElementById('bd-id').value;
@@ -2473,27 +2264,15 @@
         async function deleteBahanDasar(id) {
             if (!confirm('Hapus bahan dasar ini?')) return;
             showLoading(true);
-            try {
-                const { error } = await supabaseClient.from('raw_materials').delete().eq('id', id);
-                if (error) throw error;
-                showToast('Terhapus.', 'success');
-                await fetchBOMData();
-            } catch (e) { showToast('Gagal.', 'error'); }
+            try { const { error } = await supabaseClient.from('raw_materials').delete().eq('id', id); if (error) throw error; showToast('Terhapus.', 'success'); await fetchBOMData(); }
+            catch (e) { showToast('Gagal.', 'error'); }
             showLoading(false);
         }
 
         function getMaterialSelectHTML(index, selectedId = '') {
             let opts = `<option value="">-- Pilih Bahan --</option>`;
-            if (state.rawMaterials.length > 0) {
-                opts += `<optgroup label="Bahan Dasar">`;
-                state.rawMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="raw" data-price="${m.unitPrice}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.unitPrice)}/${m.unit})</option>`; });
-                opts += `</optgroup>`;
-            }
-            if (state.processedMaterials.length > 0) {
-                opts += `<optgroup label="Bahan Olahan">`;
-                state.processedMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="processed" data-price="${m.hppPerUnit}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.hppPerUnit)}/${m.unit})</option>`; });
-                opts += `</optgroup>`;
-            }
+            if (state.rawMaterials.length > 0) { opts += `<optgroup label="Bahan Dasar">`; state.rawMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="raw" data-price="${m.unitPrice}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.unitPrice)}/${m.unit})</option>`; }); opts += `</optgroup>`; }
+            if (state.processedMaterials.length > 0) { opts += `<optgroup label="Bahan Olahan">`; state.processedMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="processed" data-price="${m.hppPerUnit}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.hppPerUnit)}/${m.unit})</option>`; }); opts += `</optgroup>`; }
             return `<select onchange="updateCompMaterial(${index}, this)" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white">${opts}</select>`;
         }
 
@@ -2533,25 +2312,12 @@
             lucide.createIcons();
         }
 
-        function addCompRow(isCustom = false) {
-            state.compItems.push({ id: isCustom ? 'custom_' + Date.now() : '', type: isCustom ? 'custom' : '', isCustom, customName: '', unitPrice: 0, baseUnit: isCustom ? 'Pcs' : '', inputQty: 0, inputUnit: isCustom ? 'Pcs' : '', baseQty: 0, cost: 0 });
-            renderCompItems();
-        }
+        function addCompRow(isCustom = false) { state.compItems.push({ id: isCustom ? 'custom_' + Date.now() : '', type: isCustom ? 'custom' : '', isCustom, customName: '', unitPrice: 0, baseUnit: isCustom ? 'Pcs' : '', inputQty: 0, inputUnit: isCustom ? 'Pcs' : '', baseQty: 0, cost: 0 }); renderCompItems(); }
         function removeCompRow(index) { state.compItems.splice(index, 1); renderCompItems(); }
         function updateCompMaterial(index, selectEl) {
             const selectedOpt = selectEl.options[selectEl.selectedIndex];
             if (!selectedOpt.value) { state.compItems[index] = { id: '', type: '', unitPrice: 0, baseUnit: '', inputQty: 0, inputUnit: '', baseQty: 0, cost: 0 }; }
-            else {
-                const price = parseFloat(selectedOpt.getAttribute('data-price')) || 0;
-                const type = selectedOpt.getAttribute('data-type');
-                const unit = selectedOpt.getAttribute('data-unit') || '';
-                state.compItems[index].id = selectedOpt.value;
-                state.compItems[index].type = type;
-                state.compItems[index].unitPrice = price;
-                state.compItems[index].baseUnit = unit;
-                state.compItems[index].inputUnit = unit;
-                updateCompCost(index);
-            }
+            else { state.compItems[index].id = selectedOpt.value; state.compItems[index].type = selectedOpt.getAttribute('data-type'); state.compItems[index].unitPrice = parseFloat(selectedOpt.getAttribute('data-price')) || 0; state.compItems[index].baseUnit = selectedOpt.getAttribute('data-unit') || ''; state.compItems[index].inputUnit = selectedOpt.getAttribute('data-unit') || ''; updateCompCost(index); }
             renderCompItems();
         }
         function updateCompCustomName(index, val) { state.compItems[index].customName = val; }
@@ -2586,42 +2352,19 @@
             lucide.createIcons();
         }
 
-        function openModalBahanOlahan() {
-            document.getElementById('comp-mode').value = 'olahan';
-            document.getElementById('title-modal-comp').innerText = 'Buat Bahan Mentah (Olahan)';
-            document.getElementById('comp-header-olahan').classList.remove('hidden');
-            document.getElementById('comp-header-resep').classList.add('hidden');
-            document.getElementById('comp-id').value = '';
-            document.getElementById('comp-ol-name').value = '';
-            document.getElementById('comp-ol-yield').value = '1';
-            state.compItems = [];
-            addCompRow();
-            toggleModal('modal-composition', true);
-        }
+        function openModalBahanOlahan() { document.getElementById('comp-mode').value = 'olahan'; document.getElementById('title-modal-comp').innerText = 'Buat Bahan Mentah (Olahan)'; document.getElementById('comp-header-olahan').classList.remove('hidden'); document.getElementById('comp-header-resep').classList.add('hidden'); document.getElementById('comp-id').value = ''; document.getElementById('comp-ol-name').value = ''; document.getElementById('comp-ol-yield').value = '1'; state.compItems = []; addCompRow(); toggleModal('modal-composition', true); }
 
         function editBahanOlahan(id) {
             const p = state.processedMaterials.find(x => x.id === id);
             if (!p) return;
-            document.getElementById('comp-mode').value = 'olahan';
-            document.getElementById('title-modal-comp').innerText = 'Edit Bahan Olahan';
-            document.getElementById('comp-header-olahan').classList.remove('hidden');
-            document.getElementById('comp-header-resep').classList.add('hidden');
-            document.getElementById('comp-id').value = p.id;
-            document.getElementById('comp-ol-name').value = p.name;
-            document.getElementById('comp-ol-yield').value = p.yield;
+            document.getElementById('comp-mode').value = 'olahan'; document.getElementById('title-modal-comp').innerText = 'Edit Bahan Olahan'; document.getElementById('comp-header-olahan').classList.remove('hidden'); document.getElementById('comp-header-resep').classList.add('hidden'); document.getElementById('comp-id').value = p.id; document.getElementById('comp-ol-name').value = p.name; document.getElementById('comp-ol-yield').value = p.yield;
             state.compItems = p.items ? JSON.parse(JSON.stringify(p.items)) : [];
             if (state.compItems.length === 0) addCompRow();
             renderCompItems();
             toggleModal('modal-composition', true);
         }
 
-        async function deleteBahanOlahan(id) {
-            if (!confirm('Hapus bahan olahan ini?')) return;
-            showLoading(true);
-            try { const { error } = await supabaseClient.from('processed_materials').delete().eq('id', id); if (error) throw error; showToast('Terhapus.', 'success'); await fetchBOMData(); }
-            catch (e) { showToast('Gagal.', 'error'); }
-            showLoading(false);
-        }
+        async function deleteBahanOlahan(id) { if (!confirm('Hapus bahan olahan ini?')) return; showLoading(true); try { const { error } = await supabaseClient.from('processed_materials').delete().eq('id', id); if (error) throw error; showToast('Terhapus.', 'success'); await fetchBOMData(); } catch (e) { showToast('Gagal.', 'error'); } showLoading(false); }
 
         function renderResepTab() {
             const tbody = document.getElementById('table-resep');
@@ -2633,43 +2376,27 @@
                 const sellPrice = product ? product.price : 0;
                 const margin = sellPrice - r.totalHPP;
                 const marginPrc = sellPrice > 0 ? ((margin / sellPrice) * 100).toFixed(1) + '%' : '0%';
-                return `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${prodName}</td>
-                        <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 text-sm">${r.items.length} Item</td>
-                        <td class="px-4 py-3 text-right font-bold text-red-500 text-sm">${formatRp(r.totalHPP)}</td>
-                        <td class="px-4 py-3 text-right text-gray-900 dark:text-white text-sm">${formatRp(sellPrice)}</td>
-                        <td class="px-4 py-3 text-right font-bold text-green-600 dark:text-neon-green bg-green-50/50 dark:bg-green-900/10 text-sm">${formatRp(margin)}<br><span class="text-[10px] font-normal text-gray-500">${marginPrc}</span></td>
-                        <td class="px-4 py-3 text-center">
-                            <button onclick="editResep('${r.id}')" class="text-blue-500 hover:text-blue-700 mr-2"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
-                            <button onclick="deleteResep('${r.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4"></i></button>
-                        </td>
-                    </tr>
-                `;
+                return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${prodName}</td>
+                    <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 text-sm">${r.items.length} Item</td>
+                    <td class="px-4 py-3 text-right font-bold text-red-500 text-sm">${formatRp(r.totalHPP)}</td>
+                    <td class="px-4 py-3 text-right text-gray-900 dark:text-white text-sm">${formatRp(sellPrice)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-green-600 dark:text-neon-green bg-green-50/50 dark:bg-green-900/10 text-sm">${formatRp(margin)}<br><span class="text-[10px] font-normal text-gray-500">${marginPrc}</span></td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="editResep('${r.id}')" class="text-blue-500 hover:text-blue-700 mr-2"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deleteResep('${r.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>`;
             }).join('');
             lucide.createIcons();
         }
 
-        function openModalResep() {
-            document.getElementById('comp-mode').value = 'resep';
-            document.getElementById('title-modal-comp').innerText = 'Kalkulasi HPP & Resep';
-            document.getElementById('comp-header-olahan').classList.add('hidden');
-            document.getElementById('comp-header-resep').classList.remove('hidden');
-            const selProd = document.getElementById('comp-rs-product');
-            selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>' + state.products.map(p => `<option value="${p.id}">${p.name} (${formatRp(p.price)})</option>`).join('');
-            document.getElementById('comp-id').value = '';
-            state.compItems = [];
-            addCompRow();
-            toggleModal('modal-composition', true);
-        }
+        function openModalResep() { document.getElementById('comp-mode').value = 'resep'; document.getElementById('title-modal-comp').innerText = 'Kalkulasi HPP & Resep'; document.getElementById('comp-header-olahan').classList.add('hidden'); document.getElementById('comp-header-resep').classList.remove('hidden'); const selProd = document.getElementById('comp-rs-product'); selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>' + state.products.map(p => `<option value="${p.id}">${p.name} (${formatRp(p.price)})</option>`).join(''); document.getElementById('comp-id').value = ''; state.compItems = []; addCompRow(); toggleModal('modal-composition', true); }
 
         function editResep(id) {
             const r = state.recipes.find(x => x.id === id);
             if (!r) return;
-            document.getElementById('comp-mode').value = 'resep';
-            document.getElementById('title-modal-comp').innerText = 'Edit Resep';
-            document.getElementById('comp-header-olahan').classList.add('hidden');
-            document.getElementById('comp-header-resep').classList.remove('hidden');
+            document.getElementById('comp-mode').value = 'resep'; document.getElementById('title-modal-comp').innerText = 'Edit Resep'; document.getElementById('comp-header-olahan').classList.add('hidden'); document.getElementById('comp-header-resep').classList.remove('hidden');
             const selProd = document.getElementById('comp-rs-product');
             selProd.innerHTML = '<option value="">-- Pilih Produk --</option>' + state.products.map(p => `<option value="${p.id}" ${p.id === r.productId ? 'selected' : ''}>${p.name} (${formatRp(p.price)})</option>`).join('');
             document.getElementById('comp-id').value = r.id;
@@ -2679,13 +2406,7 @@
             toggleModal('modal-composition', true);
         }
 
-        async function deleteResep(id) {
-            if (!confirm('Hapus resep ini?')) return;
-            showLoading(true);
-            try { const { error } = await supabaseClient.from('recipes').delete().eq('id', id); if (error) throw error; showToast('Resep terhapus.', 'success'); await fetchBOMData(); }
-            catch (e) { showToast('Gagal.', 'error'); }
-            showLoading(false);
-        }
+        async function deleteResep(id) { if (!confirm('Hapus resep ini?')) return; showLoading(true); try { const { error } = await supabaseClient.from('recipes').delete().eq('id', id); if (error) throw error; showToast('Resep terhapus.', 'success'); await fetchBOMData(); } catch (e) { showToast('Gagal.', 'error'); } showLoading(false); }
 
         async function saveComposition() {
             const mode = document.getElementById('comp-mode').value;
@@ -2721,9 +2442,8 @@
         }
 
         // ==========================================
-        // LAPORAN MODULE
+        // LAPORAN
         // ==========================================
-
         function openExpenseModal(id = null) {
             state.editingExpenseId = id;
             if (id) {
@@ -2732,11 +2452,9 @@
                     document.getElementById('exp-id').value = exp.id;
                     document.getElementById('exp-date').value = exp.expense_date ? exp.expense_date.split('T')[0] : '';
                     document.getElementById('exp-personal').checked = exp.is_personal;
-
                     const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
                     const radio = document.querySelector(`input[name="exp-category"][value="${cat}"]`);
                     if (radio) radio.checked = true;
-
                     state.expenseItems = exp.items ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items) : [];
                 }
             } else {
@@ -2744,10 +2462,8 @@
                 const today = new Date();
                 document.getElementById('exp-date').value = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
                 document.getElementById('exp-personal').checked = false;
-
                 const radioOpex = document.getElementById('exp-cat-opex');
                 if (radioOpex) radioOpex.checked = true;
-
                 state.expenseItems = [];
                 addExpenseItem();
             }
@@ -2769,7 +2485,7 @@
             let endD = new Date(); endD.setHours(23, 59, 59, 999);
             const filter = document.getElementById('report-filter').value;
             let periodText = "";
-            if (filter === 'today') { periodText = "Hari Ini"; }
+            if (filter === 'today') periodText = "Hari Ini";
             else if (filter === '7days') { startD.setDate(startD.getDate() - 6); periodText = "7 Hari Terakhir"; }
             else if (filter === 'this_month') { startD.setDate(1); periodText = "Bulan Ini"; }
             else if (filter === 'this_year') { startD.setMonth(0, 1); periodText = "Tahun Ini"; }
@@ -2794,48 +2510,17 @@
                 let { data: expData, error: expErr } = await supabaseClient.from('expenses').select('*').gte('expense_date', startISO).lte('expense_date', endISO);
                 if (expErr && expErr.message.includes('relation')) expData = [];
                 state.expensesList = expData || [];
-
                 const salesTotal = (trxData || []).reduce((s, t) => s + parseFloat(t.total_price), 0);
                 let cogs = 0, opex = 0;
-
-                (expData || []).forEach(e => {
-                    const cat = e.category || (e.affects_profit ? 'cogs' : 'opex');
-                    if (cat === 'cogs') cogs += parseFloat(e.amount);
-                    else if (cat === 'opex') opex += parseFloat(e.amount);
-                });
-
+                (expData || []).forEach(e => { const cat = e.category || (e.affects_profit ? 'cogs' : 'opex'); if (cat === 'cogs') cogs += parseFloat(e.amount); else if (cat === 'opex') opex += parseFloat(e.amount); });
                 document.getElementById('stat-sales').innerText = formatRp(salesTotal);
                 document.getElementById('stat-trx').innerText = (trxData || []).length + ' Trx';
                 document.getElementById('stat-cogs').innerText = formatRp(cogs);
                 document.getElementById('stat-expenses').innerText = formatRp(opex);
                 document.getElementById('stat-profit').innerText = formatRp(salesTotal - cogs - opex);
-
-                const chartData = {};
-                const daysDiff = Math.round((endD - startD) / (1000 * 60 * 60 * 24));
-                if (daysDiff <= 31) {
-                    for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) chartData[d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })] = 0;
-                    (trxData || []).forEach(t => { const k = new Date(t.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }); if (chartData[k] !== undefined) chartData[k] += parseFloat(t.total_price); });
-                } else {
-                    let d = new Date(startD); d.setDate(1);
-                    while (d <= endD) { chartData[d.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' })] = 0; d.setMonth(d.getMonth() + 1); }
-                    (trxData || []).forEach(t => { const k = new Date(t.created_at).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }); if (chartData[k] !== undefined) chartData[k] += parseFloat(t.total_price); });
-                }
-                renderChartUI(Object.keys(chartData), Object.values(chartData));
                 renderExpensesTable();
-            } catch (err) { console.error(err); showToast('Gagal memuat laporan.', 'error'); }
+            } catch (err) { showToast('Gagal memuat laporan.', 'error'); }
             finally { showLoading(false); }
-        }
-
-        function renderChartUI(labels, data) {
-            const ctx = document.getElementById('salesChart')?.getContext('2d');
-            if (!ctx) return;
-            if (state.chartInstance) state.chartInstance.destroy();
-            const isDark = document.documentElement.classList.contains('dark');
-            state.chartInstance = new Chart(ctx, {
-                type: 'line',
-                data: { labels, datasets: [{ label: 'Penjualan (Rp)', data, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, tension: 0.4, pointBackgroundColor: '#3b82f6' }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: isDark ? '#1f2937' : '#e2e8f0' }, ticks: { color: isDark ? '#9ca3af' : '#475569' } }, x: { grid: { display: false }, ticks: { color: isDark ? '#9ca3af' : '#475569' } } }, plugins: { legend: { display: false } } }
-            });
         }
 
         function renderExpensesTable() {
@@ -2849,22 +2534,11 @@
                 if (cat === 'opex') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded ml-1">Opex</span>';
                 else if (cat === 'cogs') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded ml-1">Bahan Baku</span>';
                 else if (cat === 'asset') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded ml-1">Aset</span>';
-
-                return `
-                <tr class="border-b border-gray-100 dark:border-gray-800 group hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td class="p-3">
-                        <p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${e.name} ${catBadge}</p>
-                        <p class="text-[10px] text-gray-500 mt-0.5">${new Date(e.expense_date).toLocaleDateString('id-ID')}</p>
-                    </td>
-                    <td class="p-3 text-right">
-                        <p class="text-red-500 font-bold text-sm">${formatRp(e.amount)}</p>
-                        <div class="flex justify-end gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="openExpenseModal('${e.id}')" class="text-[10px] text-blue-500 hover:underline">Edit</button>
-                            <button onclick="deleteExpense('${e.id}')" class="text-[10px] text-red-500 hover:underline">Hapus</button>
-                        </div>
-                    </td>
-                </tr>
-            `}).join('');
+                return `<tr class="border-b border-gray-100 dark:border-gray-800 group hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="p-3"><p class="font-bold text-gray-800 dark:text-gray-200 text-sm">${e.name} ${catBadge}</p><p class="text-[10px] text-gray-500 mt-0.5">${new Date(e.expense_date).toLocaleDateString('id-ID')}</p></td>
+                    <td class="p-3 text-right"><p class="text-red-500 font-bold text-sm">${formatRp(e.amount)}</p><div class="flex justify-end gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="openExpenseModal('${e.id}')" class="text-[10px] text-blue-500 hover:underline">Edit</button><button onclick="deleteExpense('${e.id}')" class="text-[10px] text-red-500 hover:underline">Hapus</button></div></td>
+                </tr>`;
+            }).join('');
         }
 
         function renderExpenseItemRows() {
@@ -2889,119 +2563,51 @@
         async function saveExpense() {
             const dateStr = document.getElementById('exp-date').value;
             const isPersonal = document.getElementById('exp-personal').checked;
-
             const categoryRadio = document.querySelector('input[name="exp-category"]:checked');
             const category = categoryRadio ? categoryRadio.value : 'opex';
-
             const btn = document.getElementById('btn-save-expense');
-
             if (!dateStr) return showToast('Tanggal harus diisi', 'warning');
-
             const validItems = state.expenseItems.filter(i => i.name && i.qty > 0 && i.price >= 0);
             if (validItems.length === 0) return showToast('Minimal 1 item valid', 'warning');
-
-            // --- OTOMATIS: Gabungkan nama item sebagai nama pengeluaran/keterangan ---
-            const nameStr = validItems.map(i => i.name).join(', ');
-
             const total = validItems.reduce((s, i) => s + (i.qty * i.price), 0);
             const affectsProfit = (category === 'cogs');
-
-            const payload = {
-                name: nameStr,
-                amount: total,
-                expense_date: dateStr,
-                is_personal: isPersonal,
-                affects_profit: affectsProfit,
-                category: category,
-                notes: '',
-                items: validItems
-            };
-
+            const payload = { name: validItems.map(i => i.name).join(', '), amount: total, expense_date: dateStr, is_personal: isPersonal, affects_profit: affectsProfit, category: category, notes: '', items: validItems };
             btn.disabled = true;
             btn.innerHTML = `<div class="loader w-4 h-4 border-2"></div>`;
-
             try {
                 let expRes;
-                if (state.editingExpenseId) {
-                    expRes = await supabaseClient.from('expenses').update(payload).eq('id', state.editingExpenseId);
-                } else {
-                    expRes = await supabaseClient.from('expenses').insert([payload]);
-                }
-
-                if (expRes.error && expRes.error.message.includes('column')) {
-                    delete payload.category;
-                    if (state.editingExpenseId) {
-                        await supabaseClient.from('expenses').update(payload).eq('id', state.editingExpenseId);
-                    } else {
-                        await supabaseClient.from('expenses').insert([payload]);
-                    }
-                } else if (expRes.error) throw expRes.error;
+                if (state.editingExpenseId) expRes = await supabaseClient.from('expenses').update(payload).eq('id', state.editingExpenseId);
+                else expRes = await supabaseClient.from('expenses').insert([payload]);
+                if (expRes.error) throw expRes.error;
 
                 let debitCode = '6001';
                 if (category === 'cogs') debitCode = '1101';
                 else if (category === 'asset') debitCode = '1201';
-
                 const creditCode = isPersonal ? '3001' : '1001';
-
                 const { data: coaData, error: coaErr } = await supabaseClient.from('chart_of_accounts').select('code, balance').in('code', [debitCode, creditCode]);
                 if (!coaErr && coaData) {
-                    let debitBalance = 0;
-                    let creditBalance = 0;
-
-                    coaData.forEach(acc => {
-                        if (acc.code === debitCode) debitBalance = parseFloat(acc.balance);
-                        if (acc.code === creditCode) creditBalance = parseFloat(acc.balance);
-                    });
-
-                    const newDebitBalance = debitBalance + total;
-                    let newCreditBalance = creditBalance;
-
-                    if (creditCode === '1001') {
-                        newCreditBalance -= total;
-                    } else if (creditCode === '3001') {
-                        newCreditBalance += total;
-                    }
-
-                    await supabaseClient.from('chart_of_accounts').update({ balance: newDebitBalance }).eq('code', debitCode);
-                    await supabaseClient.from('chart_of_accounts').update({ balance: newCreditBalance }).eq('code', creditCode);
+                    let debitBalance = 0, creditBalance = 0;
+                    coaData.forEach(acc => { if (acc.code === debitCode) debitBalance = parseFloat(acc.balance); if (acc.code === creditCode) creditBalance = parseFloat(acc.balance); });
+                    await supabaseClient.from('chart_of_accounts').update({ balance: debitBalance + total }).eq('code', debitCode);
+                    await supabaseClient.from('chart_of_accounts').update({ balance: creditCode === '1001' ? creditBalance - total : creditBalance + total }).eq('code', creditCode);
                 }
-
-                showToast('Pengeluaran & Jurnal COA berhasil disimpan!', 'success');
+                showToast('Pengeluaran berhasil disimpan!', 'success');
                 toggleModal('modal-expense', false);
-
-                if (document.getElementById('view-laporan')?.classList.contains('flex')) {
-                    loadReports();
-                    fetchCOA();
-                }
-                if (document.getElementById('view-riwayat')?.classList.contains('flex')) {
-                    loadHistory();
-                }
-            } catch (e) {
-                console.error(e);
-                showToast('Gagal memproses transaksi & jurnal.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Simpan`;
-                lucide.createIcons();
-            }
+                if (document.getElementById('view-laporan')?.classList.contains('flex')) { loadReports(); fetchCOA(); }
+                if (document.getElementById('view-riwayat')?.classList.contains('flex')) loadHistory();
+            } catch (e) { showToast('Gagal memproses.', 'error'); }
+            finally { btn.disabled = false; btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Simpan`; lucide.createIcons(); }
         }
 
         async function deleteExpense(id) {
             if (!confirm('Hapus pengeluaran ini?')) return;
             showLoading(true);
-            try {
-                await supabaseClient.from('expenses').delete().eq('id', id);
-                showToast('Terhapus', 'success');
-                if (document.getElementById('view-laporan')?.classList.contains('flex')) loadReports();
-                if (document.getElementById('view-riwayat')?.classList.contains('flex')) loadHistory();
-            } catch (e) { showToast('Gagal menghapus', 'error'); }
+            try { await supabaseClient.from('expenses').delete().eq('id', id); showToast('Terhapus', 'success'); if (document.getElementById('view-laporan')?.classList.contains('flex')) loadReports(); if (document.getElementById('view-riwayat')?.classList.contains('flex')) loadHistory(); }
+            catch (e) { showToast('Gagal menghapus', 'error'); }
             showLoading(false);
         }
 
-        // Khusus hapus dari tombol di tab Riwayat (sama saja fungsinya)
-        async function deleteExpenseFromHistory(id) {
-            deleteExpense(id);
-        }
+        async function deleteExpenseFromHistory(id) { deleteExpense(id); }
 
         function exportToPDF() {
             if (!window.jspdf) return showToast('Library jsPDF belum dimuat.', 'warning');
@@ -3016,75 +2622,39 @@
         }
 
         // ==========================================
-        // INVOICE MODULE
+        // INVOICE
         // ==========================================
         function generateInvoice(id) {
             const trx = state.history.find(t => t.id === id);
             if (!trx) return showToast('Transaksi tidak ditemukan', 'error');
-
             const shortId = trx.id.split('-')[0].toUpperCase();
             document.getElementById('inv-id').innerText = `INV-${shortId}`;
             document.getElementById('inv-date').innerText = formatTime(trx.created_at);
-
-            if (trx.customers) {
-                document.getElementById('inv-customer-name').innerText = trx.customers.name;
-                document.getElementById('inv-customer-phone').innerText = trx.customers.phone || '-';
-            } else {
-                document.getElementById('inv-customer-name').innerText = 'Pelanggan Umum';
-                document.getElementById('inv-customer-phone').innerText = '';
-            }
-
+            if (trx.customers) { document.getElementById('inv-customer-name').innerText = trx.customers.name; document.getElementById('inv-customer-phone').innerText = trx.customers.phone || '-'; }
+            else { document.getElementById('inv-customer-name').innerText = 'Pelanggan Umum'; document.getElementById('inv-customer-phone').innerText = ''; }
             const tbody = document.getElementById('inv-items-body');
             let subtotal = 0;
-
             tbody.innerHTML = trx.transaction_items.map(item => {
                 const activePrice = item.custom_price || item.price;
                 const totalItem = activePrice * item.quantity;
                 subtotal += totalItem;
-
                 const productName = item.products ? item.products.name : 'Produk Terhapus';
                 const notes = item.notes ? `<br><span class="text-[10px] text-gray-500 italic">Catatan: ${item.notes}</span>` : '';
-
-                return `
-                    <tr>
-                        <td class="py-3 px-4 text-sm font-medium text-gray-900">${productName}${notes}</td>
-                        <td class="py-3 px-4 text-sm text-center text-gray-600">${item.quantity}</td>
-                        <td class="py-3 px-4 text-sm text-right text-gray-600">${formatRp(activePrice)}</td>
-                        <td class="py-3 px-4 text-sm text-right font-bold text-gray-900">${formatRp(totalItem)}</td>
-                    </tr>
-                `;
+                return `<tr><td class="py-3 px-4 text-sm font-medium text-gray-900">${productName}${notes}</td><td class="py-3 px-4 text-sm text-center text-gray-600">${item.quantity}</td><td class="py-3 px-4 text-sm text-right text-gray-600">${formatRp(activePrice)}</td><td class="py-3 px-4 text-sm text-right font-bold text-gray-900">${formatRp(totalItem)}</td></tr>`;
             }).join('');
-
             document.getElementById('inv-subtotal').innerText = formatRp(subtotal);
-
             const adjContainer = document.getElementById('inv-adjustment-container');
             if (trx.adjustment_type) {
                 adjContainer.classList.remove('hidden');
-                const adjLabel = document.getElementById('inv-adjustment-label');
-                const adjAmount = document.getElementById('inv-adjustment-amount');
-
-                if (trx.adjustment_type === 'discount') {
-                    adjLabel.innerText = 'Diskon / Potongan';
-                    adjAmount.innerText = `-${formatRp(trx.adjustment_amount)}`;
-                    adjAmount.className = 'font-medium text-red-500';
-                } else if (trx.adjustment_type === 'fee') {
-                    adjLabel.innerText = 'Biaya Tambahan (Fee)';
-                    adjAmount.innerText = `+${formatRp(trx.adjustment_amount)}`;
-                    adjAmount.className = 'font-medium text-orange-500';
-                }
-            } else {
-                adjContainer.classList.add('hidden');
-            }
-
+                if (trx.adjustment_type === 'discount') { document.getElementById('inv-adjustment-label').innerText = 'Diskon / Potongan'; document.getElementById('inv-adjustment-amount').innerText = `-${formatRp(trx.adjustment_amount)}`; document.getElementById('inv-adjustment-amount').className = 'font-medium text-red-500'; }
+                else if (trx.adjustment_type === 'fee') { document.getElementById('inv-adjustment-label').innerText = 'Biaya Tambahan (Fee)'; document.getElementById('inv-adjustment-amount').innerText = `+${formatRp(trx.adjustment_amount)}`; document.getElementById('inv-adjustment-amount').className = 'font-medium text-orange-500'; }
+            } else adjContainer.classList.add('hidden');
             document.getElementById('inv-total').innerText = formatRp(trx.total_price);
             document.getElementById('inv-method').innerText = trx.payment_method || 'Tunai';
-
             toggleModal('modal-invoice', true);
         }
 
-        function printInvoice() {
-            window.print();
-        }
+        function printInvoice() { window.print(); }
 
         // ==========================================
         // RIWAYAT TRANSAKSI
@@ -3096,38 +2666,24 @@
                 if (btn) btn.classList.toggle('active', d === duration);
             });
             const customRow = document.getElementById('hist-custom-date-row');
-            if (duration === 'custom') {
-                customRow.classList.remove('hidden');
-                customRow.classList.add('flex');
-            } else {
-                customRow.classList.add('hidden');
-                customRow.classList.remove('flex');
-                loadHistory();
-            }
+            if (duration === 'custom') { customRow.classList.remove('hidden'); customRow.classList.add('flex'); }
+            else { customRow.classList.add('hidden'); customRow.classList.remove('flex'); loadHistory(); }
         }
 
         async function loadHistory() {
             showLoading(true);
             try {
-                let queryTrx = supabaseClient
-                    .from('transactions')
-                    .select(`*, transaction_items ( id, product_id, quantity, price, custom_price, notes, products ( name, is_bundle ) ), customers ( name, phone )`)
-                    .order('created_at', { ascending: false });
-
-                let queryExp = supabaseClient
-                    .from('expenses')
-                    .select('*')
-                    .order('expense_date', { ascending: false });
+                let queryTrx = supabaseClient.from('transactions').select(`*, transaction_items ( id, product_id, quantity, price, custom_price, notes, products ( name, is_bundle ) ), customers ( name, phone )`).order('created_at', { ascending: false });
+                let queryExp = supabaseClient.from('expenses').select('*').order('expense_date', { ascending: false });
 
                 const duration = state.historyDuration;
                 if (duration !== 'all') {
-                    let startD = new Date();
-                    startD.setHours(0, 0, 0, 0);
+                    let startD = new Date(); startD.setHours(0, 0, 0, 0);
                     let endD = new Date(); endD.setHours(23, 59, 59, 999);
-
                     if (duration === '7d') startD.setDate(startD.getDate() - 6);
                     else if (duration === '30d') startD.setDate(startD.getDate() - 29);
                     else if (duration === '60d') startD.setDate(startD.getDate() - 59);
+                    else if (duration === 'today') { /* startD sudah hari ini */ }
                     else if (duration === 'custom') {
                         const sVal = document.getElementById('hist-start').value;
                         const eVal = document.getElementById('hist-end').value;
@@ -3142,55 +2698,38 @@
                 const customerFilter = document.getElementById('hist-customer-filter')?.value;
                 if (customerFilter) queryTrx = queryTrx.eq('customer_id', customerFilter);
 
-                queryTrx = queryTrx.limit(200);
-                queryExp = queryExp.limit(200);
+                queryTrx = queryTrx.limit(500);
+                queryExp = queryExp.limit(500);
 
                 const [resTrx, resExp] = await Promise.all([queryTrx, queryExp]);
                 if (resTrx.error) throw resTrx.error;
-                if (resExp.error && !resExp.error.message.includes('relation')) throw resExp.error;
-
                 state.history = resTrx.data || [];
-                state.historyExpenses = resExp.data || [];
+                state.historyExpenses = (!resExp.error || !resExp.error.message.includes('relation')) ? (resExp.data || []) : [];
 
                 renderHistoryTable();
 
                 const badge = document.getElementById('hist-summary-badge');
                 if (badge) {
                     const totalTrx = state.history.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
-                    // Filter customer aktif, maka hide pengeluaran di kalkulasi
                     const totalExp = customerFilter ? 0 : state.historyExpenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
-
                     badge.innerHTML = `<span class="text-blue-600 dark:text-neon-cyan font-bold">+ ${formatRp(totalTrx)}</span> <span class="mx-1 text-gray-300 dark:text-gray-600">|</span> <span class="text-red-500 dark:text-red-400 font-bold">- ${formatRp(totalExp)}</span>`;
                 }
-            } catch (err) {
-                console.error(err);
-                showToast('Gagal memuat riwayat.', 'error');
-            } finally {
-                showLoading(false);
-            }
+            } catch (err) { showToast('Gagal memuat riwayat.', 'error'); }
+            finally { showLoading(false); }
         }
 
         function renderHistoryTable() {
             const tbody = document.getElementById('history-table-body');
             const mobileCards = document.getElementById('history-mobile-cards');
             const customerFilter = document.getElementById('hist-customer-filter')?.value;
-
-            // Ambil nilai filter tipe (default 'all' jika belum ada)
             const typeFilter = state.historyTypeFilter || 'all';
 
-            // Gabungkan Transaksi & Pengeluaran
             let combined = [
                 ...state.history.map(t => ({ type: 'trx', date: new Date(t.created_at), data: t })),
-                // Jika sedang difilter berdasarkan pelanggan, jangan tampilkan expense
                 ...(customerFilter ? [] : state.historyExpenses.map(e => ({ type: 'exp', date: new Date(e.expense_date + 'T12:00:00'), data: e })))
             ];
 
-            // --- LOGIKA FILTER TIPE DITERAPKAN DI SINI ---
-            if (typeFilter !== 'all') {
-                combined = combined.filter(item => item.type === typeFilter);
-            }
-
-            // Urutkan dari yang terbaru
+            if (typeFilter !== 'all') combined = combined.filter(item => item.type === typeFilter);
             combined.sort((a, b) => b.date - a.date);
 
             if (combined.length === 0) {
@@ -3199,7 +2738,7 @@
                 return;
             }
 
-            // Render untuk Desktop
+            // Desktop table
             if (tbody) {
                 tbody.innerHTML = combined.map(item => {
                     if (item.type === 'trx') {
@@ -3209,46 +2748,325 @@
                         let adjBadge = '';
                         if (trx.adjustment_type === 'discount') adjBadge = `<br><span class="bg-yellow-100 text-yellow-700 text-[9px] px-1.5 py-0.5 rounded">Diskon: -${formatRp(trx.adjustment_amount)}</span>`;
                         else if (trx.adjustment_type === 'fee') adjBadge = `<br><span class="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded">Fee: +${formatRp(trx.adjustment_amount)}</span>`;
-                        return `
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${formatTime(trx.created_at)}</td>
-                        <td class="px-4 py-3 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
-                        <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">${customerName}</td>
-                        <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
-                        <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
-                        <td class="px-4 py-3 text-right">
-                            <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
-                            <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                            <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </td>
-                    </tr>
-                `;
-                    } else if (item.type === 'exp') {
+                        return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${formatTime(trx.created_at)}</td>
+                            <td class="px-4 py-3 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
+                            <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">${customerName}</td>
+                            <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
+                            <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
+                            <td class="px-4 py-3 text-right">
+                                <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
+                                <button onclick="openEditTrx('${trx.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                <button onclick="deleteTrx('${trx.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>`;
+                    } else {
                         const exp = item.data;
-                        let catBadge = '';
                         const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
+                        let catBadge = '';
                         if (cat === 'opex') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded ml-1">Opex</span>';
                         else if (cat === 'cogs') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-orange-100 text-orange-700 rounded ml-1">Bahan Baku</span>';
                         else if (cat === 'asset') catBadge = '<span class="text-[9px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded ml-1">Aset</span>';
-
-                        return `
-                    <tr class="bg-red-50/30 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                        <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</td>
-                        <td class="px-4 py-3 text-xs font-mono text-gray-500">EXP-${exp.id.substring(0, 6)}</td>
-                        <td class="px-4 py-3 text-xs text-red-600 dark:text-red-400 font-bold">${exp.name} ${catBadge}</td>
-                        <td class="px-4 py-3 font-bold text-red-500 text-sm">- ${formatRp(exp.amount)}</td>
-                        <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">Pengeluaran</span></td>
-                        <td class="px-4 py-3 text-right">
-                            <button onclick="openExpenseModal('${exp.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
-                            <button onclick="deleteExpenseFromHistory('${exp.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </td>
-                    </tr>
-                `;
+                        return `<tr class="bg-red-50/30 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                            <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</td>
+                            <td class="px-4 py-3 text-xs font-mono text-gray-500">EXP-${exp.id.substring(0, 6)}</td>
+                            <td class="px-4 py-3 text-xs text-red-600 dark:text-red-400 font-bold">${exp.name} ${catBadge}</td>
+                            <td class="px-4 py-3 font-bold text-red-500 text-sm">- ${formatRp(exp.amount)}</td>
+                            <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">Pengeluaran</span></td>
+                            <td class="px-4 py-3 text-right">
+                                <button onclick="openExpenseModal('${exp.id}')" class="text-blue-500 hover:text-blue-700 mr-2" title="Edit"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                                <button onclick="deleteExpenseFromHistory('${exp.id}')" class="text-red-500 hover:text-red-700" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>`;
                     }
                 }).join('');
                 lucide.createIcons();
             }
+
+            // Mobile cards
+            if (mobileCards) {
+                mobileCards.innerHTML = combined.slice(0, 50).map(item => {
+                    if (item.type === 'trx') {
+                        const trx = item.data;
+                        const customerName = trx.customers ? trx.customers.name : 'Pelanggan Umum';
+                        return `<div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <p class="font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}</p>
+                                    <p class="text-[10px] text-gray-500">${formatTime(trx.created_at)}</p>
+                                </div>
+                                <span class="text-[9px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-bold">${trx.payment_method || 'Tunai'}</span>
+                            </div>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mb-2">${customerName}</p>
+                            <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
+                                <button onclick="generateInvoice('${trx.id}')" class="flex-1 text-xs text-center text-green-600 font-medium">Invoice</button>
+                                <button onclick="openEditTrx('${trx.id}')" class="flex-1 text-xs text-center text-blue-600 font-medium">Edit</button>
+                                <button onclick="deleteTrx('${trx.id}')" class="flex-1 text-xs text-center text-red-600 font-medium">Hapus</button>
+                            </div>
+                        </div>`;
+                    } else {
+                        const exp = item.data;
+                        return `<div class="bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl p-3 shadow-sm">
+                            <div class="flex justify-between items-start mb-1">
+                                <p class="font-bold text-red-500 text-sm">- ${formatRp(exp.amount)}</p>
+                                <span class="text-[9px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold">Pengeluaran</span>
+                            </div>
+                            <p class="text-xs text-gray-700 dark:text-gray-300 font-medium">${exp.name}</p>
+                            <p class="text-[10px] text-gray-500">${new Date(exp.expense_date).toLocaleDateString('id-ID')}</p>
+                        </div>`;
+                    }
+                }).join('');
+            }
         }
+
+        // ==========================================
+        // ★ DOWNLOAD PDF RIWAYAT TRANSAKSI ★
+        // ==========================================
+        async function downloadHistoryPDF() {
+            if (!window.jspdf) return showToast('Library jsPDF belum dimuat.', 'warning');
+            const { jsPDF } = window.jspdf;
+
+            // Ambil data yang sudah terfilter dari state
+            const customerFilter = document.getElementById('hist-customer-filter')?.value;
+            const typeFilter = state.historyTypeFilter || 'all';
+            const customerName = customerFilter ? state.customers.find(c => c.id === customerFilter)?.name || 'Pelanggan Terfilter' : 'Semua Pelanggan';
+
+            let combined = [
+                ...state.history.map(t => ({ type: 'trx', date: new Date(t.created_at), data: t })),
+                ...(customerFilter ? [] : state.historyExpenses.map(e => ({ type: 'exp', date: new Date(e.expense_date + 'T12:00:00'), data: e })))
+            ];
+            if (typeFilter !== 'all') combined = combined.filter(item => item.type === typeFilter);
+            combined.sort((a, b) => b.date - a.date);
+
+            if (combined.length === 0) return showToast('Tidak ada data untuk di-download.', 'warning');
+
+            showLoading(true);
+
+            try {
+                const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                const pageW = doc.internal.pageSize.getWidth();
+                const pageH = doc.internal.pageSize.getHeight();
+                const margin = 14;
+                const contentW = pageW - margin * 2;
+
+                // ── Header ──
+                // Coba load logo
+                try {
+                    const logoImg = await loadImageAsBase64(LOGO_URL);
+                    doc.addImage(logoImg, 'PNG', margin, 8, 12, 12);
+                } catch (e) { /* logo gagal, skip */ }
+
+                doc.setFontSize(18);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(37, 99, 235); // blue-600
+                doc.text('GurmieKasir', margin + 15, 14);
+
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100, 116, 139); // gray-500
+                doc.text('Sistem Manajemen POS Modern', margin + 15, 19);
+
+                // Garis biru header
+                doc.setDrawColor(37, 99, 235);
+                doc.setLineWidth(0.5);
+                doc.line(margin, 23, pageW - margin, 23);
+
+                // Judul laporan
+                doc.setFontSize(13);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(30, 41, 59); // gray-800
+                doc.text('LAPORAN RIWAYAT TRANSAKSI', margin, 31);
+
+                // Info filter di sebelah kanan
+                const now = new Date();
+                doc.setFontSize(7.5);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(100, 116, 139);
+                const infoLines = [
+                    `Dicetak: ${now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} ${now.toLocaleTimeString('id-ID')}`,
+                    `Periode: ${getPeriodLabel()}`,
+                    `Pelanggan: ${customerName}`,
+                    `Tipe: ${typeFilter === 'all' ? 'Semua' : typeFilter === 'trx' ? 'Pemasukan' : 'Pengeluaran'}`,
+                    `Total Data: ${combined.length} item`
+                ];
+                infoLines.forEach((line, i) => {
+                    doc.text(line, margin, 38 + (i * 4.5));
+                });
+
+                // ── Ringkasan ──
+                const totalPemasukan = combined.filter(i => i.type === 'trx').reduce((s, i) => s + parseFloat(i.data.total_price || 0), 0);
+                const totalPengeluaran = combined.filter(i => i.type === 'exp').reduce((s, i) => s + parseFloat(i.data.amount || 0), 0);
+                const selisih = totalPemasukan - totalPengeluaran;
+
+                const summaryY = 62;
+                const boxW = (contentW - 6) / 3;
+
+                // Box Pemasukan
+                doc.setFillColor(239, 246, 255); // blue-50
+                doc.setDrawColor(191, 219, 254); // blue-200
+                doc.roundedRect(margin, summaryY, boxW, 16, 2, 2, 'FD');
+                doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(59, 130, 246);
+                doc.text('TOTAL PEMASUKAN', margin + 3, summaryY + 5);
+                doc.setFontSize(9.5); doc.setFont('helvetica', 'bold');
+                doc.text(formatRp(totalPemasukan), margin + 3, summaryY + 12);
+
+                // Box Pengeluaran
+                const box2X = margin + boxW + 3;
+                doc.setFillColor(254, 242, 242); // red-50
+                doc.setDrawColor(254, 202, 202); // red-200
+                doc.roundedRect(box2X, summaryY, boxW, 16, 2, 2, 'FD');
+                doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(239, 68, 68);
+                doc.text('TOTAL PENGELUARAN', box2X + 3, summaryY + 5);
+                doc.setFontSize(9.5); doc.setFont('helvetica', 'bold');
+                doc.text(formatRp(totalPengeluaran), box2X + 3, summaryY + 12);
+
+                // Box Selisih
+                const box3X = margin + (boxW + 3) * 2;
+                const isProfit = selisih >= 0;
+                doc.setFillColor(isProfit ? 240 : 254, isProfit ? 253 : 242, isProfit ? 244 : 242);
+                doc.setDrawColor(isProfit ? 187 : 254, isProfit ? 247 : 202, isProfit ? 208 : 202);
+                doc.roundedRect(box3X, summaryY, boxW, 16, 2, 2, 'FD');
+                doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(isProfit ? 16 : 239, isProfit ? 185 : 68, isProfit ? 129 : 68);
+                doc.text('SELISIH (NET)', box3X + 3, summaryY + 5);
+                doc.setFontSize(9.5); doc.setFont('helvetica', 'bold');
+                doc.text(formatRp(selisih), box3X + 3, summaryY + 12);
+
+                // ── Tabel Data ──
+                const tableStartY = summaryY + 22;
+
+                const headers = [['Tanggal', 'ID', 'Keterangan', 'Tipe', 'Metode', 'Total']];
+                const rows = combined.map(item => {
+                    if (item.type === 'trx') {
+                        const trx = item.data;
+                        const custName = trx.customers ? trx.customers.name : 'Umum';
+                        const items = trx.transaction_items || [];
+                        const itemNames = items.slice(0, 2).map(i => i.products ? i.products.name : 'Produk').join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '');
+                        return [
+                            formatTime(trx.created_at),
+                            trx.id.split('-')[0].toUpperCase(),
+                            custName + (itemNames ? `\n${itemNames}` : ''),
+                            'Pemasukan',
+                            trx.payment_method || 'Tunai',
+                            formatRp(trx.total_price)
+                        ];
+                    } else {
+                        const exp = item.data;
+                        const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
+                        const catLabel = cat === 'opex' ? 'Operasional' : cat === 'cogs' ? 'Bahan Baku' : 'Aset';
+                        return [
+                            new Date(exp.expense_date).toLocaleDateString('id-ID'),
+                            'EXP-' + exp.id.substring(0, 6).toUpperCase(),
+                            exp.name + '\n' + catLabel,
+                            'Pengeluaran',
+                            exp.is_personal ? 'Pribadi' : 'Kas',
+                            '- ' + formatRp(exp.amount)
+                        ];
+                    }
+                });
+
+                doc.autoTable({
+                    head: headers,
+                    body: rows,
+                    startY: tableStartY,
+                    margin: { left: margin, right: margin },
+                    styles: {
+                        fontSize: 7.5,
+                        cellPadding: 2.5,
+                        lineColor: [226, 232, 240],
+                        lineWidth: 0.2,
+                        font: 'helvetica',
+                        textColor: [51, 65, 85]
+                    },
+                    headStyles: {
+                        fillColor: [37, 99, 235],
+                        textColor: 255,
+                        fontStyle: 'bold',
+                        fontSize: 8,
+                        cellPadding: 3
+                    },
+                    alternateRowStyles: {
+                        fillColor: [248, 250, 252]
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 30 },
+                        1: { cellWidth: 22 },
+                        2: { cellWidth: 'auto' },
+                        3: { cellWidth: 22, halign: 'center' },
+                        4: { cellWidth: 22, halign: 'center' },
+                        5: { cellWidth: 28, halign: 'right', fontStyle: 'bold' }
+                    },
+                    didParseCell: (data) => {
+                        // Warna merah untuk baris pengeluaran
+                        if (data.section === 'body' && data.row.index < combined.length) {
+                            const item = combined[data.row.index];
+                            if (item && item.type === 'exp') {
+                                data.cell.styles.textColor = [185, 28, 28];
+                                data.cell.styles.fillColor = [255, 245, 245];
+                            }
+                        }
+                    },
+                    didDrawPage: (data) => {
+                        // Footer setiap halaman
+                        const pageCount = doc.internal.getNumberOfPages();
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(148, 163, 184);
+                        doc.text(
+                            `GurmieKasir | Halaman ${data.pageNumber} dari ${pageCount} | Dicetak ${now.toLocaleDateString('id-ID')}`,
+                            pageW / 2, pageH - 6, { align: 'center' }
+                        );
+                        doc.setDrawColor(226, 232, 240);
+                        doc.setLineWidth(0.3);
+                        doc.line(margin, pageH - 9, pageW - margin, pageH - 9);
+                    }
+                });
+
+                // Simpan
+                const durLabel = getPeriodLabel().replace(/\s/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+                doc.save(`Riwayat_GurmieKasir_${durLabel}_${now.getTime()}.pdf`);
+                showToast('PDF Riwayat berhasil diunduh!', 'success');
+            } catch (err) {
+                console.error('PDF Error:', err);
+                showToast('Gagal membuat PDF: ' + err.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function getPeriodLabel() {
+            const dur = state.historyDuration;
+            if (dur === 'today') return 'Hari Ini';
+            if (dur === '7d') return '7 Hari Terakhir';
+            if (dur === '30d') return '30 Hari Terakhir';
+            if (dur === '60d') return '60 Hari Terakhir';
+            if (dur === 'all') return 'Semua Data';
+            if (dur === 'custom') {
+                const s = document.getElementById('hist-start').value;
+                const e = document.getElementById('hist-end').value;
+                if (s && e) return `${new Date(s).toLocaleDateString('id-ID')} - ${new Date(e).toLocaleDateString('id-ID')}`;
+            }
+            return 'Semua Data';
+        }
+
+        function loadImageAsBase64(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    canvas.getContext('2d').drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                };
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        // ==========================================
+        // EDIT TRX
+        // ==========================================
         async function deleteTrx(id) {
             if (!confirm('Hapus transaksi ini? Stok akan dikembalikan.')) return;
             showLoading(true);
@@ -3274,10 +3092,7 @@
             if (!trx) return;
             const dateObj = new Date(trx.created_at);
             const localISOTime = new Date(dateObj.getTime() - (dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-            state.editingTrx = {
-                id: trx.id, date: localISOTime,
-                items: trx.transaction_items.map(i => ({ id: i.id, product_id: i.product_id, name: i.products ? i.products.name : 'Unknown', is_bundle: i.products ? i.products.is_bundle : false, price: i.price, custom_price: i.custom_price, qty: i.quantity, is_new: false, old_qty: i.quantity }))
-            };
+            state.editingTrx = { id: trx.id, date: localISOTime, items: trx.transaction_items.map(i => ({ id: i.id, product_id: i.product_id, name: i.products ? i.products.name : 'Unknown', is_bundle: i.products ? i.products.is_bundle : false, price: i.price, custom_price: i.custom_price, qty: i.quantity, is_new: false, old_qty: i.quantity })) };
             document.getElementById('edit-trx-id').value = trx.id;
             document.getElementById('edit-trx-date').value = state.editingTrx.date;
             const select = document.getElementById('edit-trx-add-select');
@@ -3341,77 +3156,8 @@
                 closeEditTrx();
                 await fetchProducts();
                 loadHistory();
-            } catch (e) { console.error(e); showToast('Gagal menyimpan.', 'error'); }
+            } catch (e) { showToast('Gagal menyimpan.', 'error'); }
             finally { btn.innerHTML = `Simpan`; }
-        }
-
-        // ==========================================
-        // UTILITIES
-        // ==========================================
-        function toggleModal(id, show) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const content = el.querySelector('div');
-            if (show) {
-                el.classList.remove('hidden');
-                setTimeout(() => { el.classList.remove('opacity-0'); if (content?.classList.contains('scale-95')) content.classList.remove('scale-95'); }, 10);
-                if (id === 'modal-held-orders') renderHeldOrders();
-                if (id === 'modal-scanner') {
-                    if (window.Html5QrcodeScanner) {
-                        state.html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-                        state.html5QrcodeScanner.render(onScanSuccess);
-                    } else showToast('Library Scanner belum dimuat.', 'warning');
-                }
-            } else {
-                el.classList.add('opacity-0');
-                if (content?.classList.contains('scale-100')) content.classList.add('scale-95');
-                setTimeout(() => el.classList.add('hidden'), 300);
-            }
-        }
-
-        function switchView(viewName) {
-            ['kasir', 'produk', 'bahan', 'laporan', 'riwayat'].forEach(v => {
-                const viewEl = document.getElementById(`view-${v}`);
-                const navEl = document.getElementById(`nav-${v}`);
-                const mobNavEl = document.getElementById(`mob-nav-${v}`);
-                if (viewEl) { viewEl.classList.add('hidden'); viewEl.classList.remove('flex'); }
-                if (navEl) navEl.className = "nav-btn w-full flex items-center p-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-neon-cyan transition-colors";
-                if (mobNavEl) mobNavEl.className = "mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-gray-400";
-            });
-
-            const activeView = document.getElementById(`view-${viewName}`);
-            if (activeView) { activeView.classList.remove('hidden'); activeView.classList.add('flex'); }
-            const activeNav = document.getElementById(`nav-${viewName}`);
-            if (activeNav) activeNav.className = "nav-btn w-full flex items-center p-3 rounded-xl bg-blue-50 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan shadow-sm transition-colors font-medium";
-            const activeMobNav = document.getElementById(`mob-nav-${viewName}`);
-            if (activeMobNav) activeMobNav.className = "mob-nav-btn flex-1 flex flex-col items-center justify-center gap-1 text-blue-600 dark:text-neon-cyan";
-
-            if (viewName === 'kasir') document.getElementById('search-product')?.focus();
-            else if (viewName === 'bahan') switchBahanTab('dasar');
-            else if (viewName === 'laporan') { loadReports(); fetchCOA(); }
-            else if (viewName === 'riwayat') loadHistory();
-        }
-
-        function showLoading(show) {
-            const el = document.getElementById('global-loader');
-            if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
-        }
-
-        let toastTimeout;
-        function showToast(msg, type = 'info') {
-            const toast = document.getElementById('toast');
-            const msgEl = document.getElementById('toast-msg');
-            const icon = document.getElementById('toast-icon');
-            if (!toast || !msgEl || !icon) return;
-            msgEl.innerText = msg;
-            toast.className = 'fixed bottom-20 md:bottom-5 right-4 transition-all duration-300 px-4 py-3 rounded-xl shadow-xl flex items-center z-[110] transform border translate-y-0 opacity-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white';
-            const types = { success: ['check-circle', 'text-green-500', 'border-l-4', 'border-l-green-500'], error: ['x-circle', 'text-red-500', 'border-l-4', 'border-l-red-500'], warning: ['alert-triangle', 'text-yellow-500', 'border-l-4', 'border-l-yellow-500'], info: ['info', 'text-blue-500', 'border-l-4', 'border-l-blue-500'] };
-            const [iconName, iconClass, ...toastClasses] = types[type] || types.info;
-            toastClasses.forEach(c => toast.classList.add(c));
-            icon.setAttribute('data-lucide', iconName); icon.className = `w-5 h-5 mr-3 ${iconClass}`;
-            lucide.createIcons();
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { toast.classList.replace('translate-y-0', 'translate-y-20'); toast.classList.replace('opacity-100', 'opacity-0'); }, 3000);
         }
 
         // ==========================================
