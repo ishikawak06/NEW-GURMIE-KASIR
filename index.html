@@ -870,28 +870,15 @@
         <section id="view-riwayat" class="h-full flex-col hidden overflow-y-auto">
             <div
                 class="sticky top-0 bg-white dark:bg-panel border-b border-gray-200 dark:border-gray-800 z-10 shadow-sm">
-
-                <!-- Bagian Header & Tombol -->
                 <div class="flex justify-between items-center px-4 py-3">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">Riwayat Transaksi</h2>
-
-                    <!-- Kumpulan Tombol Header Riwayat -->
-                    <div class="flex gap-2">
-                        <button onclick="exportHistoryPDF()"
-                            class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/40 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center shadow-sm"
-                            title="Download PDF Laporan">
-                            <i data-lucide="file-down" class="w-4 h-4 mr-1.5"></i> <span
-                                class="hidden md:inline">Download PDF</span>
-                        </button>
-                        <button onclick="loadHistory()"
-                            class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-lg text-gray-600 dark:text-gray-300 transition-colors shadow-sm"
-                            title="Refresh Data">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                        </button>
-                    </div>
+                    <button onclick="loadHistory()"
+                        class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 p-2 rounded-lg text-gray-600 dark:text-gray-300 transition-colors"
+                        title="Refresh">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
                 </div>
 
-                <!-- Filter Durasi Hari -->
                 <div class="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
                     <button onclick="setHistoryDuration('today')" id="hist-dur-today" class="duration-pill">Hari
                         Ini</button>
@@ -904,7 +891,6 @@
                         class="duration-pill">Custom</button>
                 </div>
 
-                <!-- Input Tanggal Custom (Hidden by default) -->
                 <div id="hist-custom-date-row" class="hidden px-4 pb-3 flex items-center gap-2 flex-wrap">
                     <input type="date" id="hist-start"
                         class="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-xs text-gray-900 dark:text-white focus:outline-none flex-1 min-w-0">
@@ -915,7 +901,7 @@
                         class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold shrink-0">Terapkan</button>
                 </div>
 
-                <!-- Filter Tipe Transaksi & Pelanggan -->
+                <!-- Bagian yang diganti: Tambahan Filter Tipe Transaksi -->
                 <div class="px-4 pb-3 flex items-center gap-2">
                     <i data-lucide="filter" class="w-4 h-4 text-gray-400 shrink-0"></i>
                     <select id="hist-type-filter" onchange="state.historyTypeFilter = this.value; renderHistoryTable();"
@@ -930,694 +916,674 @@
                         class="flex-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs text-gray-900 dark:text-white focus:outline-none focus:border-blue-500">
                         <option value="">Semua Pelanggan</option>
                     </select>
-
                     <span id="hist-summary-badge"
                         class="text-xs text-gray-500 dark:text-gray-400 shrink-0 font-medium bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">Memuat...</span>
                 </div>
             </div>
 
-            <!-- (Di bawah ini biasanya ada div tabel atau list riwayat Anda) -->
-            <!-- BUNGKUSAN TABEL RIWAYAT TRANSAKSI -->
-            <div class="p-4 flex-1">
-                <div
-                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
+            <div class="flex-1 p-3 md:p-4">
+                <div id="history-mobile-cards" class="history-mobile-cards space-y-2"></div>
 
-                    <!-- Tabel Desktop -->
-                    <div class="overflow-x-auto history-desktop-table">
+                <div
+                    class="history-desktop-table bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead
                                 class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase text-xs border-b border-gray-200 dark:border-gray-800">
                                 <tr>
-                                    <th class="px-4 py-3 font-medium">Waktu</th>
-                                    <th class="px-4 py-3 font-medium">ID Ref</th>
-                                    <th class="px-4 py-3 font-medium">Pelanggan / Ket</th>
+                                    <th class="px-4 py-3 font-medium">Tanggal & Waktu</th>
+                                    <th class="px-4 py-3 font-medium">ID</th>
+                                    <th class="px-4 py-3 font-medium">Pelanggan / Keterangan</th>
                                     <th class="px-4 py-3 font-medium">Total</th>
                                     <th class="px-4 py-3 font-medium">Metode</th>
                                     <th class="px-4 py-3 font-medium text-right">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="history-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
-                                <!-- Data akan dirender di sini oleh JavaScript -->
+                            <tbody id="history-table-body" class="divide-y divide-gray-200 dark:divide-gray-800">
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Tampilan Card Mobile -->
-                    <div id="history-mobile-cards" class="history-mobile-cards p-2 space-y-2">
-                        <!-- Data card mobile akan dirender di sini (opsional) -->
-                    </div>
-
                 </div>
             </div>
-            <div id="modal-bd"
-                class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+        </section>
+
+        <div id="modal-bd"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
                 <div
-                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
-                    <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-                        <h3 class="font-bold text-gray-900 dark:text-white text-sm" id="title-modal-bd">Tambah Bahan
-                            Dasar
-                        </h3>
-                        <button onclick="toggleModal('modal-bd', false)"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
-                                class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="p-4 space-y-3">
-                        <input type="hidden" id="bd-id">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Baku</label>
-                            <input type="text" id="bd-name"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
-                        </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Satuan Dasar</label>
-                                <select id="bd-unit"
-                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none text-sm text-gray-900 dark:text-white">
-                                    <option value="Gram (g)">Gram (g)</option>
-                                    <option value="Kilogram (kg)">Kilogram (kg)</option>
-                                    <option value="Mililiter (ml)">Mililiter (ml)</option>
-                                    <option value="Liter (L)">Liter (L)</option>
-                                    <option value="Potong">Potong</option>
-                                    <option value="Lembar">Lembar</option>
-                                    <option value="Bungkus">Bungkus</option>
-                                    <option value="Pcs">Pcs</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Total Kapasitas</label>
-                                <input type="number" id="bd-cap" min="0" step="any" oninput="calcBD()"
-                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Harga Total Pembelian
-                                (Rp)</label>
-                            <input type="number" id="bd-price" min="0" step="any" oninput="calcBD()"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
-                        </div>
-                        <div
-                            class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 flex justify-between items-center">
-                            <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Harga Satuan:</span>
-                            <span id="bd-unit-price" class="font-bold text-blue-600 dark:text-neon-cyan text-sm">Rp 0 /
-                                satuan</span>
-                        </div>
-                    </div>
-                    <div
-                        class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
-                        <button onclick="toggleModal('modal-bd', false)"
-                            class="px-4 py-2 rounded text-sm font-medium text-gray-600 hover:bg-gray-200">Batal</button>
-                        <button onclick="saveBahanDasar()"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded text-sm">Simpan</button>
-                    </div>
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-sm" id="title-modal-bd">Tambah Bahan Dasar
+                    </h3>
+                    <button onclick="toggleModal('modal-bd', false)"
+                        class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
+                            class="w-5 h-5"></i></button>
                 </div>
-            </div>
-
-            <div id="modal-composition"
-                class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
-                <div
-                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
-                    <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-                        <h3 class="font-bold text-gray-900 dark:text-white text-sm" id="title-modal-comp">Buat Form
-                            Komposisi</h3>
-                        <button onclick="toggleModal('modal-composition', false)"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
-                                class="w-5 h-5"></i></button>
+                <div class="p-4 space-y-3">
+                    <input type="hidden" id="bd-id">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Baku</label>
+                        <input type="text" id="bd-name"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
                     </div>
-                    <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                        <input type="hidden" id="comp-mode">
-                        <input type="hidden" id="comp-id">
-                        <div id="comp-header-olahan"
-                            class="grid grid-cols-1 md:grid-cols-3 gap-3 pb-4 border-b border-gray-200 dark:border-gray-800 hidden">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Olahan</label>
-                                <input type="text" id="comp-ol-name"
-                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Satuan Hasil</label>
-                                <select id="comp-ol-unit"
-                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
-                                    <option value="Porsi">Porsi</option>
-                                    <option value="Gram (g)">Gram (g)</option>
-                                    <option value="Kilogram (kg)">Kilogram (kg)</option>
-                                    <option value="Mililiter (ml)">Mililiter (ml)</option>
-                                    <option value="Liter (L)">Liter (L)</option>
-                                    <option value="Pcs">Pcs</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Yield (Kuantitas
-                                    Hasil)</label>
-                                <input type="number" id="comp-ol-yield" min="1" step="any" oninput="calcCompTotal()"
-                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
-                            </div>
-                        </div>
-                        <div id="comp-header-resep" class="pb-4 border-b border-gray-200 dark:border-gray-800 hidden">
-                            <label class="block text-xs font-medium text-gray-500 mb-1">Pilih Produk Final</label>
-                            <select id="comp-rs-product"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white"></select>
-                        </div>
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <h4 class="font-bold text-sm text-gray-800 dark:text-gray-300 mb-2">Komposisi Bahan</h4>
-                            <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-                                <table class="w-full text-left text-xs">
-                                    <thead
-                                        class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
-                                        <tr>
-                                            <th class="p-2 pl-4">Pilih Bahan</th>
-                                            <th class="p-2 w-44 text-center">Qty & Satuan</th>
-                                            <th class="p-2 w-28 text-right">Subtotal</th>
-                                            <th class="p-2 w-10 text-center"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="comp-items-body"
-                                        class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel">
-                                    </tbody>
-                                </table>
-                                <div
-                                    class="bg-gray-50 dark:bg-gray-900 p-3 flex justify-center gap-4 border-t border-gray-200 dark:border-gray-800">
-                                    <button onclick="addCompRow(false)"
-                                        class="text-xs font-bold text-blue-600 dark:text-neon-cyan flex items-center bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded">
-                                        <i data-lucide="database" class="w-3 h-3 mr-1"></i> + Dari Database
-                                    </button>
-                                    <button onclick="addCompRow(true)"
-                                        class="text-xs font-bold text-orange-600 dark:text-orange-400 flex items-center bg-orange-100 dark:bg-orange-900/30 px-3 py-1.5 rounded">
-                                        <i data-lucide="edit-3" class="w-3 h-3 mr-1"></i> + Custom Manual
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div
-                            class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 space-y-2">
-                            <div class="flex justify-between items-center">
-                                <span class="text-sm font-bold text-gray-600 dark:text-gray-400">Total Modal:</span>
-                                <span id="comp-total-modal" class="text-lg font-bold text-gray-900 dark:text-white">Rp
-                                    0</span>
-                            </div>
-                            <div
-                                class="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
-                                <span class="text-sm font-bold text-gray-600 dark:text-gray-400">HPP / Satuan:</span>
-                                <span id="comp-hpp-satuan"
-                                    class="text-xl font-bold text-green-600 dark:text-neon-green">Rp
-                                    0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
-                        <button onclick="toggleModal('modal-composition', false)"
-                            class="px-4 py-2 rounded text-sm font-medium text-gray-600 hover:bg-gray-200">Batal</button>
-                        <button onclick="saveComposition()"
-                            class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-6 py-2 rounded text-sm">Simpan</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="modal-checkout"
-                class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
-                <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl max-h-[95vh] overflow-y-auto"
-                    id="modal-checkout-content">
-                    <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center sticky top-0 z-10">
-                        <h2 class="text-lg font-bold text-gray-900 dark:text-white">Selesaikan Pembayaran</h2>
-                        <button onclick="toggleModal('modal-checkout', false)"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
-                                class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="p-4 space-y-4">
-                        <div
-                            class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan
-                                (Subtotal:
-                                <span id="co-subtotal-display">Rp 0</span>)
-                            </p>
-                            <h1 id="co-total" class="text-3xl font-bold text-blue-600 dark:text-neon-cyan">Rp 0</h1>
-                            <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
-                                <label
-                                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 text-left">Penyesuaian
-                                    Harga</label>
-                                <div class="flex items-center gap-2">
-                                    <select id="co-adj-type"
-                                        class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white"
-                                        onchange="calcCheckoutTotal()">
-                                        <option value="none">-- Pilih --</option>
-                                        <option value="discount">Diskon (-)</option>
-                                        <option value="fee">Biaya Tambahan (+)</option>
-                                    </select>
-                                    <input type="number" id="co-custom-adjustment" placeholder="Nominal Rp" min="0"
-                                        class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white hidden"
-                                        oninput="calcCheckoutTotal()">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="border-t border-gray-200 dark:border-gray-800 pt-3">
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Pelanggan
-                                    (Opsional)</label>
-                                <button onclick="openAddCustomerModal()"
-                                    class="text-xs text-blue-600 dark:text-neon-cyan hover:underline flex items-center"><i
-                                        data-lucide="user-plus" class="w-3 h-3 mr-1"></i> Baru</button>
-                            </div>
-                            <select id="co-customer"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
-                                <option value="">-- Pelanggan Umum / Tanpa Nama --</option>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Satuan Dasar</label>
+                            <select id="bd-unit"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none text-sm text-gray-900 dark:text-white">
+                                <option value="Gram (g)">Gram (g)</option>
+                                <option value="Kilogram (kg)">Kilogram (kg)</option>
+                                <option value="Mililiter (ml)">Mililiter (ml)</option>
+                                <option value="Liter (L)">Liter (L)</option>
+                                <option value="Potong">Potong</option>
+                                <option value="Lembar">Lembar</option>
+                                <option value="Bungkus">Bungkus</option>
+                                <option value="Pcs">Pcs</option>
                             </select>
                         </div>
-
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Metode
-                                    Pembayaran</label>
-                                <select id="co-method" onchange="toggleCustomMethod()"
-                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none text-gray-900 dark:text-white">
-                                    <option value="Tunai">Tunai / Cash</option>
-                                    <option value="Transfer">Transfer / QRIS</option>
-                                    <option value="Custom">Custom...</option>
-                                </select>
-                                <input type="text" id="co-method-custom-name" placeholder="GoPay, OVO, dll"
-                                    class="mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white hidden">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Split
-                                    Bill</label>
-                                <div
-                                    class="flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-                                    <button onclick="adjustSplit(-1)"
-                                        class="px-3 py-2.5 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"><i
-                                            data-lucide="minus" class="w-4 h-4"></i></button>
-                                    <input type="number" id="co-split" value="1" min="1"
-                                        class="w-full bg-transparent text-center focus:outline-none text-gray-900 dark:text-white font-bold"
-                                        readonly>
-                                    <button onclick="adjustSplit(1)"
-                                        class="px-3 py-2.5 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"><i
-                                            data-lucide="plus" class="w-4 h-4"></i></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div id="co-split-info"
-                            class="text-center text-sm text-purple-600 dark:text-neon-purple hidden font-bold bg-purple-50 dark:bg-transparent p-2 rounded">
-                            Masing-masing bayar: <span id="co-split-amount">Rp 0</span>
-                        </div>
-
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nominal
-                                Diterima
-                                (Rp)</label>
-                            <input type="number" id="co-tendered" placeholder="Contoh: 100000"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3 text-xl font-bold focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white"
-                                oninput="calcChange()">
-                            <div class="flex gap-2 mt-2">
-                                <button onclick="setUangPas()"
-                                    class="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded flex-1">Uang
-                                    Pas</button>
-                                <button onclick="addTendered(50000)"
-                                    class="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded flex-1">+50k</button>
-                                <button onclick="addTendered(100000)"
-                                    class="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded flex-1">+100k</button>
-                            </div>
-                        </div>
-
-                        <div
-                            class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-                            <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Kembalian:</span>
-                            <span id="co-change" class="text-2xl font-bold text-green-600 dark:text-green-400">Rp
-                                0</span>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Total Kapasitas</label>
+                            <input type="number" id="bd-cap" min="0" step="any" oninput="calcBD()"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Harga Total Pembelian (Rp)</label>
+                        <input type="number" id="bd-price" min="0" step="any" oninput="calcBD()"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
+                    </div>
                     <div
-                        class="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 sticky bottom-0">
-                        <button onclick="submitPayment()" id="btn-submit-payment"
-                            class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan dark:hover:bg-cyan-400 text-white dark:text-dark font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 shadow-md">
-                            <i data-lucide="check-circle" class="w-5 h-5"></i> KONFIRMASI BAYAR
-                        </button>
+                        class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Harga Satuan:</span>
+                        <span id="bd-unit-price" class="font-bold text-blue-600 dark:text-neon-cyan text-sm">Rp 0 /
+                            satuan</span>
                     </div>
                 </div>
-            </div>
-
-            <div id="modal-cart-edit"
-                class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
                 <div
-                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
-                    <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-                        <h3 class="font-bold text-gray-900 dark:text-white text-sm" id="ce-title">Edit Item</h3>
-                        <button onclick="toggleModal('modal-cart-edit', false)"
-                            class="text-gray-400 hover:text-gray-600 dark:hover:text-white"><i data-lucide="x"
-                                class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="p-4 space-y-3">
-                        <input type="hidden" id="ce-id">
+                    class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
+                    <button onclick="toggleModal('modal-bd', false)"
+                        class="px-4 py-2 rounded text-sm font-medium text-gray-600 hover:bg-gray-200">Batal</button>
+                    <button onclick="saveBahanDasar()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded text-sm">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-composition"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-sm" id="title-modal-comp">Buat Form
+                        Komposisi</h3>
+                    <button onclick="toggleModal('modal-composition', false)"
+                        class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
+                            class="w-5 h-5"></i></button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <input type="hidden" id="comp-mode">
+                    <input type="hidden" id="comp-id">
+                    <div id="comp-header-olahan"
+                        class="grid grid-cols-1 md:grid-cols-3 gap-3 pb-4 border-b border-gray-200 dark:border-gray-800 hidden">
                         <div>
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Harga Custom
-                                (Rp)</label>
-                            <input type="number" id="ce-price"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white">
-                            <p class="text-[10px] text-gray-500 mt-1">Kosongkan untuk harga normal.</p>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Nama Bahan Olahan</label>
+                            <input type="text" id="comp-ol-name"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
                         </div>
                         <div>
-                            <label
-                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Catatan</label>
-                            <textarea id="ce-note" rows="2" placeholder="Contoh: Tanpa es, manis sedang"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-sm text-gray-900 dark:text-white"></textarea>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Satuan Hasil</label>
+                            <select id="comp-ol-unit"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
+                                <option value="Porsi">Porsi</option>
+                                <option value="Gram (g)">Gram (g)</option>
+                                <option value="Kilogram (kg)">Kilogram (kg)</option>
+                                <option value="Mililiter (ml)">Mililiter (ml)</option>
+                                <option value="Liter (L)">Liter (L)</option>
+                                <option value="Pcs">Pcs</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Yield (Kuantitas Hasil)</label>
+                            <input type="number" id="comp-ol-yield" min="1" step="any" oninput="calcCompTotal()"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
                         </div>
                     </div>
-                    <div class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-                        <button onclick="saveCartItemEdit()"
-                            class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold py-2.5 rounded-lg">Simpan</button>
+                    <div id="comp-header-resep" class="pb-4 border-b border-gray-200 dark:border-gray-800 hidden">
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Pilih Produk Final</label>
+                        <select id="comp-rs-product"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 text-sm focus:outline-none text-gray-900 dark:text-white"></select>
                     </div>
-                </div>
-            </div>
-
-            <div id="modal-held-orders"
-                class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
-                <div
-                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh] shadow-xl">
-                    <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-                        <h3 class="font-bold flex items-center text-gray-900 dark:text-white text-sm"><i
-                                data-lucide="pause-circle" class="w-4 h-4 mr-2 text-yellow-500"></i> Pesanan Tertahan
-                        </h3>
-                        <button onclick="toggleModal('modal-held-orders', false)"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
-                                class="w-5 h-5"></i></button>
-                    </div>
-                    <div id="held-orders-list" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
-                </div>
-            </div>
-
-            <div id="modal-scanner"
-                class="fixed inset-0 bg-gray-900/90 dark:bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity">
-                <div
-                    class="bg-white dark:bg-panel p-4 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-sm mx-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-blue-600 dark:text-neon-cyan flex items-center text-sm"><i
-                                data-lucide="camera" class="w-5 h-5 mr-2"></i> Scan Barcode</h3>
-                        <button onclick="closeScanner()"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
-                                class="w-6 h-6"></i></button>
-                    </div>
-                    <div id="reader" class="w-full bg-black rounded-lg overflow-hidden border border-gray-800"></div>
-                    <p class="text-center text-xs text-gray-500 mt-3">Arahkan kamera ke barcode produk.</p>
-                </div>
-            </div>
-
-            <div id="modal-expense"
-                class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
-                <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
-                    id="modal-expense-content">
-                    <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900 sticky top-0">
-                        <h3 class="font-bold text-red-500 dark:text-red-400 flex items-center text-sm"><i
-                                data-lucide="receipt" class="w-4 h-4 mr-2"></i> Form Catat Pengeluaran</h3>
-                        <button onclick="toggleModal('modal-expense', false)"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
-                                class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                        <input type="hidden" id="exp-id">
-                        <div class="grid grid-cols-1 gap-3">
-                                                    <div>
-                                                            <label
-                                    class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tanggal</label>
-                                                            <input type="date" id="exp-date"                            
-                                       
-                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-red-500 focus:outline-none text-gray-900 dark:text-white text-sm">
-                                                        </div>
-                                                </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-gray-800 dark:text-gray-300 mb-2">Komposisi Bahan</h4>
                         <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-                            <div
-                                class="bg-gray-50 dark:bg-gray-900 p-2 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
-                                <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 pl-2">Rincian Item</h4>
-                                <button onclick="addExpenseItem()" type="button"
-                                    class="bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan px-2 py-1 rounded text-xs font-medium">+
-                                    Tambah</button>
-                            </div>
                             <table class="w-full text-left text-xs">
                                 <thead
-                                    class="bg-white dark:bg-panel text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                                    class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
                                     <tr>
-                                        <th class="p-2 pl-4">Nama Item</th>
-                                        <th class="p-2 w-20 text-center">Qty</th>
-                                        <th class="p-2 w-28 text-right">Harga</th>
+                                        <th class="p-2 pl-4">Pilih Bahan</th>
+                                        <th class="p-2 w-44 text-center">Qty & Satuan</th>
+                                        <th class="p-2 w-28 text-right">Subtotal</th>
                                         <th class="p-2 w-10 text-center"></th>
                                     </tr>
                                 </thead>
-                                <tbody id="exp-items-body"
+                                <tbody id="comp-items-body"
                                     class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel">
                                 </tbody>
                             </table>
                             <div
-                                class="bg-gray-50 dark:bg-gray-900 p-3 flex justify-between items-center border-t border-gray-200 dark:border-gray-800">
-                                <span class="text-sm font-bold text-gray-700 dark:text-gray-400">Total:</span>
-                                <span id="exp-total-display" class="text-lg font-bold text-red-500 dark:text-red-400">Rp
-                                    0</span>
+                                class="bg-gray-50 dark:bg-gray-900 p-3 flex justify-center gap-4 border-t border-gray-200 dark:border-gray-800">
+                                <button onclick="addCompRow(false)"
+                                    class="text-xs font-bold text-blue-600 dark:text-neon-cyan flex items-center bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded">
+                                    <i data-lucide="database" class="w-3 h-3 mr-1"></i> + Dari Database
+                                </button>
+                                <button onclick="addCompRow(true)"
+                                    class="text-xs font-bold text-orange-600 dark:text-orange-400 flex items-center bg-orange-100 dark:bg-orange-900/30 px-3 py-1.5 rounded">
+                                    <i data-lucide="edit-3" class="w-3 h-3 mr-1"></i> + Custom Manual
+                                </button>
                             </div>
-                        </div>
-
-                        <div
-                            class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/30 rounded-lg p-4 space-y-4">
-                            <div>
-                                <label class="block text-sm font-bold text-gray-900 dark:text-yellow-500 mb-3">Kategori
-                                    Transaksi:</label>
-                                <div class="space-y-2">
-                                    <label class="flex items-center gap-3 cursor-pointer">
-                                        <input type="radio" name="exp-category" value="opex" id="exp-cat-opex"
-                                            class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
-                                        <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                            Beban Operasional
-                                            <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Listrik,
-                                                sewa, air, dll)</span>
-                                        </span>
-                                    </label>
-                                    <label class="flex items-center gap-3 cursor-pointer">
-                                        <input type="radio" name="exp-category" value="cogs" id="exp-cat-cogs"
-                                            class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                                        <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                            Bahan Baku / HPP
-                                            <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Stok
-                                                jualan)</span>
-                                        </span>
-                                    </label>
-                                    <label class="flex items-center gap-3 cursor-pointer">
-                                        <input type="radio" name="exp-category" value="asset" id="exp-cat-asset"
-                                            class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
-                                        <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
-                                            Pembelian Aset
-                                            <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Meja,
-                                                kursi,
-                                                inventaris)</span>
-                                        </span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <hr class="border-yellow-200 dark:border-yellow-700/30">
-
-                            <label class="flex items-start gap-3 cursor-pointer">
-                                <input type="checkbox" id="exp-personal"
-                                    class="w-4 h-4 text-blue-600 rounded border-gray-300 mt-0.5 focus:ring-blue-500">
-                                <div>
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white">Bayar Uang Pribadi</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Sumber dana ini tidak
-                                        memotong
-                                        kas laci (bisa digabungkan dengan kategori di atas).</p>
-                                </div>
-                            </label>
                         </div>
                     </div>
                     <div
-                        class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2 sticky bottom-0">
-                        <button onclick="toggleModal('modal-expense', false)"
-                            class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">Batal</button>
-                        <button onclick="saveExpense()" id="btn-save-expense"
-                            class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded text-sm shadow-sm flex items-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i> Simpan
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="modal-edit-trx"
-                class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
-                <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
-                    id="modal-edit-trx-content">
-                    <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-                        <h3 class="font-bold text-gray-900 dark:text-white flex items-center text-sm"><i
-                                data-lucide="edit" class="w-4 h-4 mr-2 text-blue-600"></i> Edit Transaksi</h3>
-                        <button onclick="closeEditTrx()"
-                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
-                                class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="flex-1 overflow-y-auto p-4 space-y-4">
-                        <input type="hidden" id="edit-trx-id">
+                        class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-gray-600 dark:text-gray-400">Total Modal:</span>
+                            <span id="comp-total-modal" class="text-lg font-bold text-gray-900 dark:text-white">Rp
+                                0</span>
+                        </div>
                         <div
-                            class="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Waktu
-                                Transaksi</label>
-                            <input type="datetime-local" id="edit-trx-date"
-                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white text-sm">
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <h4 class="font-bold text-sm text-gray-800 dark:text-gray-300">Daftar Item</h4>
-                                <div class="flex gap-2 w-1/2">
-                                    <select id="edit-trx-add-select"
-                                        class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-1 text-xs text-gray-900 dark:text-white focus:outline-none"></select>
-                                    <button onclick="addEditTrxItem()"
-                                        class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-xs font-medium text-gray-800 dark:text-white">Tambah</button>
-                                </div>
-                            </div>
-                            <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
-                                <table class="w-full text-left text-xs">
-                                    <thead
-                                        class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
-                                        <tr>
-                                            <th class="p-2">Produk</th>
-                                            <th class="p-2 w-20">Harga</th>
-                                            <th class="p-2 w-14 text-center">Qty</th>
-                                            <th class="p-2 w-10 text-center"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="edit-trx-items-body"
-                                        class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel">
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="flex justify-between items-center pt-1">
-                            <span class="font-bold text-gray-700 dark:text-gray-400 text-sm">Total Baru:</span>
-                            <span id="edit-trx-total" class="text-xl font-bold text-blue-600 dark:text-neon-cyan">Rp
+                            class="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
+                            <span class="text-sm font-bold text-gray-600 dark:text-gray-400">HPP / Satuan:</span>
+                            <span id="comp-hpp-satuan" class="text-xl font-bold text-green-600 dark:text-neon-green">Rp
                                 0</span>
                         </div>
                     </div>
-                    <div
-                        class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
-                        <button onclick="closeEditTrx()"
-                            class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">Batal</button>
-                        <button onclick="saveEditTrx()" id="btn-save-edit-trx"
-                            class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-6 py-2 rounded text-sm shadow-sm">Simpan</button>
-                    </div>
+                </div>
+                <div
+                    class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
+                    <button onclick="toggleModal('modal-composition', false)"
+                        class="px-4 py-2 rounded text-sm font-medium text-gray-600 hover:bg-gray-200">Batal</button>
+                    <button onclick="saveComposition()"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-6 py-2 rounded text-sm">Simpan</button>
                 </div>
             </div>
+        </div>
 
-            <div id="modal-invoice"
-                class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity p-4">
+        <div id="modal-checkout"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl max-h-[95vh] overflow-y-auto"
+                id="modal-checkout-content">
                 <div
-                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-xl w-full max-w-3xl flex flex-col max-h-[95vh] shadow-2xl relative overflow-hidden">
-
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center sticky top-0 z-10">
+                    <h2 class="text-lg font-bold text-gray-900 dark:text-white">Selesaikan Pembayaran</h2>
+                    <button onclick="toggleModal('modal-checkout', false)"
+                        class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
+                            class="w-5 h-5"></i></button>
+                </div>
+                <div class="p-4 space-y-4">
                     <div
-                        class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center no-print shrink-0">
-                        <h3 class="font-bold text-gray-900 dark:text-white flex items-center text-sm">
-                            <i data-lucide="file-text" class="w-4 h-4 mr-2 text-blue-600"></i> Pratinjau Invoice
-                        </h3>
-                        <div class="flex gap-2">
-                            <button onclick="printInvoice()"
-                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow flex items-center">
-                                <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Cetak / PDF
-                            </button>
-                            <button onclick="toggleModal('modal-invoice', false)"
-                                class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-gray-200 dark:bg-gray-800 p-1.5 rounded-lg">
-                                <i data-lucide="x" class="w-5 h-5"></i>
-                            </button>
+                        class="text-center p-4 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+                        <p class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Total Tagihan (Subtotal:
+                            <span id="co-subtotal-display">Rp 0</span>)
+                        </p>
+                        <h1 id="co-total" class="text-3xl font-bold text-blue-600 dark:text-neon-cyan">Rp 0</h1>
+                        <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-800">
+                            <label
+                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 text-left">Penyesuaian
+                                Harga</label>
+                            <div class="flex items-center gap-2">
+                                <select id="co-adj-type"
+                                    class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white"
+                                    onchange="calcCheckoutTotal()">
+                                    <option value="none">-- Pilih --</option>
+                                    <option value="discount">Diskon (-)</option>
+                                    <option value="fee">Biaya Tambahan (+)</option>
+                                </select>
+                                <input type="number" id="co-custom-adjustment" placeholder="Nominal Rp" min="0"
+                                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white hidden"
+                                    oninput="calcCheckoutTotal()">
+                            </div>
                         </div>
                     </div>
 
-                    <div id="printable-invoice"
-                        class="flex-1 overflow-y-auto p-6 md:p-10 bg-white text-gray-900 relative relative">
-                        <div class="watermark-lunas">LUNAS</div>
+                    <div class="border-t border-gray-200 dark:border-gray-800 pt-3">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Pelanggan
+                                (Opsional)</label>
+                            <button onclick="openAddCustomerModal()"
+                                class="text-xs text-blue-600 dark:text-neon-cyan hover:underline flex items-center"><i
+                                    data-lucide="user-plus" class="w-3 h-3 mr-1"></i> Baru</button>
+                        </div>
+                        <select id="co-customer"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white">
+                            <option value="">-- Pelanggan Umum / Tanpa Nama --</option>
+                        </select>
+                    </div>
 
-                        <div class="flex justify-between items-start border-b-2 border-blue-600 pb-6 mb-6">
-                            <div class="flex items-center gap-3">
-                                <img src="https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png"
-                                    alt="Logo" class="w-12 h-12 object-contain">
-                                <div>
-                                    <h1 class="text-2xl font-black text-blue-600 tracking-wider">GurmieKasir</h1>
-                                    <p class="text-xs text-gray-500">Sistem Manajemen POS Modern</p>
-                                </div>
-                            </div>
-                            <div class="text-right">
-                                <h2 class="text-3xl font-black text-gray-200 tracking-widest uppercase">Invoice</h2>
-                                <p class="text-sm font-bold mt-1" id="inv-id">INV-0000</p>
-                                <p class="text-xs text-gray-500 mt-0.5" id="inv-date">Tanggal</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Metode
+                                Pembayaran</label>
+                            <select id="co-method" onchange="toggleCustomMethod()"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2.5 text-sm focus:outline-none text-gray-900 dark:text-white">
+                                <option value="Tunai">Tunai / Cash</option>
+                                <option value="Transfer">Transfer / QRIS</option>
+                                <option value="Custom">Custom...</option>
+                            </select>
+                            <input type="text" id="co-method-custom-name" placeholder="GoPay, OVO, dll"
+                                class="mt-2 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none text-gray-900 dark:text-white hidden">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Split
+                                Bill</label>
+                            <div
+                                class="flex items-center bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <button onclick="adjustSplit(-1)"
+                                    class="px-3 py-2.5 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"><i
+                                        data-lucide="minus" class="w-4 h-4"></i></button>
+                                <input type="number" id="co-split" value="1" min="1"
+                                    class="w-full bg-transparent text-center focus:outline-none text-gray-900 dark:text-white font-bold"
+                                    readonly>
+                                <button onclick="adjustSplit(1)"
+                                    class="px-3 py-2.5 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500"><i
+                                        data-lucide="plus" class="w-4 h-4"></i></button>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="grid grid-cols-2 gap-8 mb-8">
-                            <div>
-                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Diterbitkan
-                                    Oleh
-                                </h4>
-                                <p class="font-bold text-sm text-gray-900">Penjual: GurmieKasir</p>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Untuk</h4>
-                                <p class="font-bold text-sm text-gray-900">Pembeli: <span
-                                        id="inv-customer-name">Pelanggan
-                                        Umum</span></p>
-                                <p class="text-xs text-gray-600 mt-1" id="inv-customer-phone"></p>
-                            </div>
+                    <div id="co-split-info"
+                        class="text-center text-sm text-purple-600 dark:text-neon-purple hidden font-bold bg-purple-50 dark:bg-transparent p-2 rounded">
+                        Masing-masing bayar: <span id="co-split-amount">Rp 0</span>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Nominal Diterima
+                            (Rp)</label>
+                        <input type="number" id="co-tendered" placeholder="Contoh: 100000"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3 text-xl font-bold focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white"
+                            oninput="calcChange()">
+                        <div class="flex gap-2 mt-2">
+                            <button onclick="setUangPas()"
+                                class="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded flex-1">Uang
+                                Pas</button>
+                            <button onclick="addTendered(50000)"
+                                class="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded flex-1">+50k</button>
+                            <button onclick="addTendered(100000)"
+                                class="text-xs font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded flex-1">+100k</button>
                         </div>
+                    </div>
 
-                        <table class="w-full text-left mb-6">
-                            <thead class="bg-gray-50">
+                    <div
+                        class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <span class="text-gray-500 dark:text-gray-400 text-sm font-medium">Kembalian:</span>
+                        <span id="co-change" class="text-2xl font-bold text-green-600 dark:text-green-400">Rp 0</span>
+                    </div>
+                </div>
+                <div
+                    class="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 sticky bottom-0">
+                    <button onclick="submitPayment()" id="btn-submit-payment"
+                        class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan dark:hover:bg-cyan-400 text-white dark:text-dark font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 shadow-md">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i> KONFIRMASI BAYAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-cart-edit"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-sm" id="ce-title">Edit Item</h3>
+                    <button onclick="toggleModal('modal-cart-edit', false)"
+                        class="text-gray-400 hover:text-gray-600 dark:hover:text-white"><i data-lucide="x"
+                            class="w-5 h-5"></i></button>
+                </div>
+                <div class="p-4 space-y-3">
+                    <input type="hidden" id="ce-id">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Harga Custom
+                            (Rp)</label>
+                        <input type="number" id="ce-price"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white">
+                        <p class="text-[10px] text-gray-500 mt-1">Kosongkan untuk harga normal.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Catatan</label>
+                        <textarea id="ce-note" rows="2" placeholder="Contoh: Tanpa es, manis sedang"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-sm text-gray-900 dark:text-white"></textarea>
+                    </div>
+                </div>
+                <div class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+                    <button onclick="saveCartItemEdit()"
+                        class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold py-2.5 rounded-lg">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-held-orders"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-md overflow-hidden flex flex-col max-h-[80vh] shadow-xl">
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                    <h3 class="font-bold flex items-center text-gray-900 dark:text-white text-sm"><i
+                            data-lucide="pause-circle" class="w-4 h-4 mr-2 text-yellow-500"></i> Pesanan Tertahan</h3>
+                    <button onclick="toggleModal('modal-held-orders', false)"
+                        class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
+                            class="w-5 h-5"></i></button>
+                </div>
+                <div id="held-orders-list" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+            </div>
+        </div>
+
+        <div id="modal-scanner"
+            class="fixed inset-0 bg-gray-900/90 dark:bg-black/90 backdrop-blur-sm z-50 flex flex-col items-center justify-center hidden opacity-0 transition-opacity">
+            <div
+                class="bg-white dark:bg-panel p-4 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-sm mx-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-blue-600 dark:text-neon-cyan flex items-center text-sm"><i
+                            data-lucide="camera" class="w-5 h-5 mr-2"></i> Scan Barcode</h3>
+                    <button onclick="closeScanner()" class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i
+                            data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
+                <div id="reader" class="w-full bg-black rounded-lg overflow-hidden border border-gray-800"></div>
+                <p class="text-center text-xs text-gray-500 mt-3">Arahkan kamera ke barcode produk.</p>
+            </div>
+        </div>
+
+        <div id="modal-expense"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                id="modal-expense-content">
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900 sticky top-0">
+                    <h3 class="font-bold text-red-500 dark:text-red-400 flex items-center text-sm"><i
+                            data-lucide="receipt" class="w-4 h-4 mr-2"></i> Form Catat Pengeluaran</h3>
+                    <button onclick="toggleModal('modal-expense', false)"
+                        class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
+                            class="w-5 h-5"></i></button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <input type="hidden" id="exp-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label
+                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Tanggal</label>
+                            <input type="date" id="exp-date"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-red-500 focus:outline-none text-gray-900 dark:text-white text-sm">
+                        </div>
+                        <div>
+                            <label
+                                class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Keterangan</label>
+                            <input type="text" id="exp-name" placeholder="Misal: Belanja Sayur / Bayar Listrik"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-red-500 focus:outline-none text-gray-900 dark:text-white text-sm">
+                        </div>
+                    </div>
+                    <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+                        <div
+                            class="bg-gray-50 dark:bg-gray-900 p-2 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+                            <h4 class="font-bold text-xs text-gray-700 dark:text-gray-300 pl-2">Rincian Item</h4>
+                            <button onclick="addExpenseItem()" type="button"
+                                class="bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-neon-cyan px-2 py-1 rounded text-xs font-medium">+
+                                Tambah</button>
+                        </div>
+                        <table class="w-full text-left text-xs">
+                            <thead
+                                class="bg-white dark:bg-panel text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
                                 <tr>
-                                    <th
-                                        class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200">
-                                        Info Produk</th>
-                                    <th
-                                        class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-center w-24">
-                                        Jumlah</th>
-                                    <th
-                                        class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-right w-32">
-                                        Harga Satuan</th>
-                                    <th
-                                        class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-right w-32">
-                                        Total Harga</th>
+                                    <th class="p-2 pl-4">Nama Item</th>
+                                    <th class="p-2 w-20 text-center">Qty</th>
+                                    <th class="p-2 w-28 text-right">Harga</th>
+                                    <th class="p-2 w-10 text-center"></th>
                                 </tr>
                             </thead>
-                            <tbody id="inv-items-body" class="divide-y divide-gray-100">
-                            </tbody>
+                            <tbody id="exp-items-body"
+                                class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel"></tbody>
                         </table>
+                        <div
+                            class="bg-gray-50 dark:bg-gray-900 p-3 flex justify-between items-center border-t border-gray-200 dark:border-gray-800">
+                            <span class="text-sm font-bold text-gray-700 dark:text-gray-400">Total:</span>
+                            <span id="exp-total-display" class="text-lg font-bold text-red-500 dark:text-red-400">Rp
+                                0</span>
+                        </div>
+                    </div>
 
-                        <div class="flex justify-end">
-                            <div class="w-1/2 min-w-[250px]">
-                                <div class="flex justify-between py-2 text-sm text-gray-600">
-                                    <span>Subtotal</span>
-                                    <span id="inv-subtotal" class="font-medium text-gray-900">Rp 0</span>
-                                </div>
-                                <div id="inv-adjustment-container"
-                                    class="flex justify-between py-2 text-sm text-gray-600 border-t border-gray-100 hidden">
-                                    <span id="inv-adjustment-label">Penyesuaian</span>
-                                    <span id="inv-adjustment-amount" class="font-medium">Rp 0</span>
-                                </div>
-                                <div
-                                    class="flex justify-between py-3 text-lg font-black text-blue-600 border-t-2 border-gray-200 mt-2">
-                                    <span>Total Tagihan</span>
-                                    <span id="inv-total">Rp 0</span>
-                                </div>
+                    <div
+                        class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/30 rounded-lg p-4 space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-900 dark:text-yellow-500 mb-3">Kategori
+                                Transaksi:</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="exp-category" value="opex" id="exp-cat-opex"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500" checked>
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                        Beban Operasional
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Listrik,
+                                            sewa, air, dll)</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="exp-category" value="cogs" id="exp-cat-cogs"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                        Bahan Baku / HPP
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Stok
+                                            jualan)</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="radio" name="exp-category" value="asset" id="exp-cat-asset"
+                                        class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
+                                    <span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+                                        Pembelian Aset
+                                        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">(Meja, kursi,
+                                            inventaris)</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
 
-                                <div class="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
-                                    <p class="flex justify-between"><span>Metode Pembayaran:</span> <span
-                                            id="inv-method" class="font-bold text-gray-900">Tunai</span></p>
-                                    <p class="flex justify-between mt-1"><span>Status:</span> <span
-                                            class="font-bold text-green-600">LUNAS</span></p>
-                                </div>
+                        <hr class="border-yellow-200 dark:border-yellow-700/30">
+
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" id="exp-personal"
+                                class="w-4 h-4 text-blue-600 rounded border-gray-300 mt-0.5 focus:ring-blue-500">
+                            <div>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white">Bayar Uang Pribadi</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Sumber dana ini tidak memotong
+                                    kas laci (bisa digabungkan dengan kategori di atas).</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div
+                    class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2 sticky bottom-0">
+                    <button onclick="toggleModal('modal-expense', false)"
+                        class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">Batal</button>
+                    <button onclick="saveExpense()" id="btn-save-expense"
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded text-sm shadow-sm flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Simpan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-edit-trx"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
+                id="modal-edit-trx-content">
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
+                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center text-sm"><i data-lucide="edit"
+                            class="w-4 h-4 mr-2 text-blue-600"></i> Edit Transaksi</h3>
+                    <button onclick="closeEditTrx()" class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i
+                            data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <input type="hidden" id="edit-trx-id">
+                    <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Waktu
+                            Transaksi</label>
+                        <input type="datetime-local" id="edit-trx-date"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:border-blue-500 focus:outline-none text-gray-900 dark:text-white text-sm">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <h4 class="font-bold text-sm text-gray-800 dark:text-gray-300">Daftar Item</h4>
+                            <div class="flex gap-2 w-1/2">
+                                <select id="edit-trx-add-select"
+                                    class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-1 text-xs text-gray-900 dark:text-white focus:outline-none"></select>
+                                <button onclick="addEditTrxItem()"
+                                    class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-xs font-medium text-gray-800 dark:text-white">Tambah</button>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+                            <table class="w-full text-left text-xs">
+                                <thead
+                                    class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800">
+                                    <tr>
+                                        <th class="p-2">Produk</th>
+                                        <th class="p-2 w-20">Harga</th>
+                                        <th class="p-2 w-14 text-center">Qty</th>
+                                        <th class="p-2 w-10 text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="edit-trx-items-body"
+                                    class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="font-bold text-gray-700 dark:text-gray-400 text-sm">Total Baru:</span>
+                        <span id="edit-trx-total" class="text-xl font-bold text-blue-600 dark:text-neon-cyan">Rp
+                            0</span>
+                    </div>
+                </div>
+                <div
+                    class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
+                    <button onclick="closeEditTrx()"
+                        class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">Batal</button>
+                    <button onclick="saveEditTrx()" id="btn-save-edit-trx"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-6 py-2 rounded text-sm shadow-sm">Simpan</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-invoice"
+            class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-[70] flex items-center justify-center hidden opacity-0 transition-opacity p-4">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-xl w-full max-w-3xl flex flex-col max-h-[95vh] shadow-2xl relative overflow-hidden">
+
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-between items-center no-print shrink-0">
+                    <h3 class="font-bold text-gray-900 dark:text-white flex items-center text-sm">
+                        <i data-lucide="file-text" class="w-4 h-4 mr-2 text-blue-600"></i> Pratinjau Invoice
+                    </h3>
+                    <div class="flex gap-2">
+                        <button onclick="printInvoice()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow flex items-center">
+                            <i data-lucide="printer" class="w-4 h-4 mr-2"></i> Cetak / PDF
+                        </button>
+                        <button onclick="toggleModal('modal-invoice', false)"
+                            class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-gray-200 dark:bg-gray-800 p-1.5 rounded-lg">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="printable-invoice"
+                    class="flex-1 overflow-y-auto p-6 md:p-10 bg-white text-gray-900 relative relative">
+                    <div class="watermark-lunas">LUNAS</div>
+
+                    <div class="flex justify-between items-start border-b-2 border-blue-600 pb-6 mb-6">
+                        <div class="flex items-center gap-3">
+                            <img src="https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png"
+                                alt="Logo" class="w-12 h-12 object-contain">
+                            <div>
+                                <h1 class="text-2xl font-black text-blue-600 tracking-wider">GurmieKasir</h1>
+                                <p class="text-xs text-gray-500">Sistem Manajemen POS Modern</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <h2 class="text-3xl font-black text-gray-200 tracking-widest uppercase">Invoice</h2>
+                            <p class="text-sm font-bold mt-1" id="inv-id">INV-0000</p>
+                            <p class="text-xs text-gray-500 mt-0.5" id="inv-date">Tanggal</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-8 mb-8">
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Diterbitkan Oleh
+                            </h4>
+                            <p class="font-bold text-sm text-gray-900">Penjual: GurmieKasir</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Untuk</h4>
+                            <p class="font-bold text-sm text-gray-900">Pembeli: <span id="inv-customer-name">Pelanggan
+                                    Umum</span></p>
+                            <p class="text-xs text-gray-600 mt-1" id="inv-customer-phone"></p>
+                        </div>
+                    </div>
+
+                    <table class="w-full text-left mb-6">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200">
+                                    Info Produk</th>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-center w-24">
+                                    Jumlah</th>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-right w-32">
+                                    Harga Satuan</th>
+                                <th
+                                    class="py-3 px-4 text-xs font-bold text-gray-600 uppercase border-y border-gray-200 text-right w-32">
+                                    Total Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inv-items-body" class="divide-y divide-gray-100">
+                        </tbody>
+                    </table>
+
+                    <div class="flex justify-end">
+                        <div class="w-1/2 min-w-[250px]">
+                            <div class="flex justify-between py-2 text-sm text-gray-600">
+                                <span>Subtotal</span>
+                                <span id="inv-subtotal" class="font-medium text-gray-900">Rp 0</span>
+                            </div>
+                            <div id="inv-adjustment-container"
+                                class="flex justify-between py-2 text-sm text-gray-600 border-t border-gray-100 hidden">
+                                <span id="inv-adjustment-label">Penyesuaian</span>
+                                <span id="inv-adjustment-amount" class="font-medium">Rp 0</span>
+                            </div>
+                            <div
+                                class="flex justify-between py-3 text-lg font-black text-blue-600 border-t-2 border-gray-200 mt-2">
+                                <span>Total Tagihan</span>
+                                <span id="inv-total">Rp 0</span>
+                            </div>
+
+                            <div class="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
+                                <p class="flex justify-between"><span>Metode Pembayaran:</span> <span id="inv-method"
+                                        class="font-bold text-gray-900">Tunai</span></p>
+                                <p class="flex justify-between mt-1"><span>Status:</span> <span
+                                        class="font-bold text-green-600">LUNAS</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div id="toast"
-                class="fixed bottom-20 md:bottom-5 right-4 transform translate-y-20 opacity-0 transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white px-4 py-3 rounded-xl shadow-xl flex items-center z-[110]">
-                <i id="toast-icon" data-lucide="info" class="w-5 h-5 mr-3"></i>
-                <span id="toast-msg" class="text-sm font-medium">Message</span>
-            </div>
+        <div id="toast"
+            class="fixed bottom-20 md:bottom-5 right-4 transform translate-y-20 opacity-0 transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white px-4 py-3 rounded-xl shadow-xl flex items-center z-[110]">
+            <i id="toast-icon" data-lucide="info" class="w-5 h-5 mr-3"></i>
+            <span id="toast-msg" class="text-sm font-medium">Message</span>
+        </div>
     </main>
     <script>
         // ==========================================
@@ -2771,6 +2737,7 @@
                 if (exp) {
                     document.getElementById('exp-id').value = exp.id;
                     document.getElementById('exp-date').value = exp.expense_date ? exp.expense_date.split('T')[0] : '';
+                    document.getElementById('exp-name').value = exp.name;
                     document.getElementById('exp-personal').checked = exp.is_personal;
 
                     const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
@@ -2783,6 +2750,7 @@
                 document.getElementById('exp-id').value = '';
                 const today = new Date();
                 document.getElementById('exp-date').value = new Date(today.getTime() - (today.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                document.getElementById('exp-name').value = '';
                 document.getElementById('exp-personal').checked = false;
 
                 const radioOpex = document.getElementById('exp-cat-opex');
@@ -2928,6 +2896,7 @@
 
         async function saveExpense() {
             const dateStr = document.getElementById('exp-date').value;
+            const nameStr = document.getElementById('exp-name').value;
             const isPersonal = document.getElementById('exp-personal').checked;
 
             const categoryRadio = document.querySelector('input[name="exp-category"]:checked');
@@ -2935,13 +2904,9 @@
 
             const btn = document.getElementById('btn-save-expense');
 
-            if (!dateStr) return showToast('Tanggal harus diisi', 'warning');
-
+            if (!dateStr || !nameStr) return showToast('Tanggal dan keterangan harus diisi', 'warning');
             const validItems = state.expenseItems.filter(i => i.name && i.qty > 0 && i.price >= 0);
             if (validItems.length === 0) return showToast('Minimal 1 item valid', 'warning');
-
-            // --- OTOMATIS: Gabungkan nama item sebagai nama pengeluaran/keterangan ---
-            const nameStr = validItems.map(i => i.name).join(', ');
 
             const total = validItems.reduce((s, i) => s + (i.qty * i.price), 0);
             const affectsProfit = (category === 'cogs');
@@ -3042,197 +3007,7 @@
         async function deleteExpenseFromHistory(id) {
             deleteExpense(id);
         }
-        // ==========================================
-        // EKSPOR PDF RIWAYAT TRANSAKSI (DARI DATA)
-        // ==========================================
 
-        // Helper: Convert URL gambar menjadi Base64 (Mencegah error CORS jsPDF)
-        function getBase64ImageFromURL(url) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.crossOrigin = "Anonymous";
-                img.onload = () => {
-                    const canvas = document.createElement("canvas");
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(img, 0, 0);
-                    resolve(canvas.toDataURL("image/png"));
-                };
-                img.onerror = error => reject(error);
-                img.src = url;
-            });
-        }
-
-        // Fungsi Utama: Ekspor Data ke PDF
-        async function exportHistoryPDF() {
-            if (!window.jspdf) return showToast('Library jsPDF belum dimuat.', 'warning');
-
-            showLoading(true);
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF('p', 'mm', 'a4');
-                const logoUrl = "https://raw.githubusercontent.com/ishikawak06/keuangan-gurmie/refs/heads/main/ChatGPT%20Image%20Apr%2017%2C%202026%2C%2009_57_39%20PM.png";
-
-                // 1. Desain Header & Logo
-                try {
-                    const logoBase64 = await getBase64ImageFromURL(logoUrl);
-                    doc.addImage(logoBase64, 'PNG', 14, 15, 12, 12);
-                    doc.setFontSize(20);
-                    doc.setTextColor(37, 99, 235); // Blue-600
-                    doc.text("GurmieKasir", 29, 23);
-                } catch (e) {
-                    // Fallback apabila gambar bermasalah karena network
-                    doc.setFontSize(20);
-                    doc.setTextColor(37, 99, 235);
-                    doc.text("GurmieKasir", 14, 23);
-                }
-
-                doc.setFontSize(14);
-                doc.setTextColor(17, 24, 39);
-                doc.text("Laporan Riwayat Transaksi", 14, 33);
-
-                doc.setFontSize(9);
-                doc.setTextColor(107, 114, 128);
-
-                // 2. Baca Filter yang Sedang Aktif
-                const typeFilter = state.historyTypeFilter || 'all';
-                const customerFilter = document.getElementById('hist-customer-filter')?.value;
-
-                let periodText = state.historyDuration === 'all' ? 'Semua Waktu' : state.historyDuration;
-                if (state.historyDuration === 'custom') {
-                    const sVal = document.getElementById('hist-start').value;
-                    const eVal = document.getElementById('hist-end').value;
-                    periodText = `${sVal} s/d ${eVal}`;
-                }
-
-                let typeText = "Semua Tipe";
-                if (typeFilter === 'trx') typeText = "Pemasukan (Penjualan)";
-                if (typeFilter === 'exp') typeText = "Pengeluaran";
-
-                doc.text(`Periode     : ${periodText}`, 14, 40);
-                doc.text(`Filter Tipe  : ${typeText}`, 14, 45);
-                doc.text(`Dicetak      : ${new Date().toLocaleString('id-ID')}`, 14, 50);
-
-                // 3. Olah & Gabungkan Data Sesuai Filter
-                let combined = [
-                    ...state.history.map(t => ({ type: 'trx', date: new Date(t.created_at), data: t })),
-                    ...(customerFilter ? [] : state.historyExpenses.map(e => ({ type: 'exp', date: new Date(e.expense_date + 'T12:00:00'), data: e })))
-                ];
-
-                if (typeFilter !== 'all') {
-                    combined = combined.filter(item => item.type === typeFilter);
-                }
-                combined.sort((a, b) => b.date - a.date);
-
-                let totalPemasukan = 0;
-                let totalPengeluaran = 0;
-
-                // 4. Format Data untuk jsPDF AutoTable
-                const tableData = combined.map(item => {
-                    const dateStr = formatTime(item.date);
-                    if (item.type === 'trx') {
-                        const trx = item.data;
-                        const custName = trx.customers ? trx.customers.name : 'Umum';
-                        const total = parseFloat(trx.total_price);
-                        totalPemasukan += total;
-                        return [
-                            dateStr,
-                            'Pemasukan',
-                            trx.id.split('-')[0].toUpperCase(),
-                            custName,
-                            trx.payment_method || 'Tunai',
-                            formatRp(total)
-                        ];
-                    } else {
-                        const exp = item.data;
-                        const total = parseFloat(exp.amount);
-                        totalPengeluaran += total;
-                        let catName = 'Opex';
-                        if (exp.category === 'cogs' || exp.affects_profit) catName = 'Bahan Baku';
-                        if (exp.category === 'asset') catName = 'Aset';
-                        return [
-                            dateStr,
-                            'Pengeluaran',
-                            'EXP',
-                            `${exp.name} (${catName})`,
-                            '-',
-                            formatRp(total)
-                        ];
-                    }
-                });
-
-                // 5. Render Tabel Bersih
-                doc.autoTable({
-                    startY: 55,
-                    head: [['Tanggal & Waktu', 'Tipe', 'ID/Ref', 'Keterangan / Pelanggan', 'Metode', 'Total']],
-                    body: tableData,
-                    theme: 'grid',
-                    headStyles: { fillColor: [59, 130, 246], halign: 'center' },
-                    styles: { fontSize: 8, cellPadding: 3 },
-                    columnStyles: {
-                        1: { halign: 'center' },
-                        4: { halign: 'center' },
-                        5: { halign: 'right', fontStyle: 'bold' }
-                    },
-                    didParseCell: function (data) {
-                        // Kustomisasi warna teks kolom "Total" berdasarkan Tipe
-                        if (data.section === 'body' && data.column.index === 5) {
-                            const type = data.row.raw[1];
-                            if (type === 'Pengeluaran') {
-                                data.cell.styles.textColor = [239, 68, 68]; // text-red-500
-                            } else {
-                                data.cell.styles.textColor = [37, 99, 235]; // text-blue-600
-                            }
-                        }
-                    }
-                });
-
-                // 6. Box Summary / Ringkasan (Bottom of the table)
-                const finalY = doc.lastAutoTable.finalY + 10;
-                const net = totalPemasukan - totalPengeluaran;
-
-                doc.setFillColor(249, 250, 251); // bg-gray-50
-                doc.setDrawColor(229, 231, 235); // border-gray-200
-                doc.rect(14, finalY, 182, 30, 'FD');
-
-                doc.setFontSize(10);
-                doc.setTextColor(55, 65, 81);
-                doc.text("Ringkasan Data Terfilter:", 18, finalY + 8);
-
-                doc.text(`Total Pemasukan`, 18, finalY + 16);
-                doc.setTextColor(37, 99, 235);
-                doc.text(`: ${formatRp(totalPemasukan)}`, 55, finalY + 16);
-
-                doc.setTextColor(55, 65, 81);
-                doc.text(`Total Pengeluaran`, 18, finalY + 23);
-                doc.setTextColor(239, 68, 68);
-                doc.text(`: ${formatRp(totalPengeluaran)}`, 55, finalY + 23);
-
-                doc.setFontSize(12);
-                doc.setTextColor(17, 24, 39);
-                doc.text(`Total Bersih / Laba`, 115, finalY + 16);
-                doc.setFontSize(14);
-
-                // Hijau jika positif/0, Merah jika minus
-                if (net >= 0) {
-                    doc.setTextColor(16, 185, 129);
-                } else {
-                    doc.setTextColor(220, 38, 38);
-                }
-                doc.text(`: ${formatRp(net)}`, 150, finalY + 16);
-
-                // Eksekusi Unduhan File
-                doc.save(`Riwayat_Transaksi_GurmieKasir_${new Date().getTime()}.pdf`);
-                showToast('PDF berhasil diunduh.', 'success');
-
-            } catch (error) {
-                console.error('Export PDF Error:', error);
-                showToast('Gagal memproses PDF dari data.', 'error');
-            } finally {
-                showLoading(false);
-            }
-        }
         function exportToPDF() {
             if (!window.jspdf) return showToast('Library jsPDF belum dimuat.', 'warning');
             const { jsPDF } = window.jspdf;
