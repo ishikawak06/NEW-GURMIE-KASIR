@@ -871,7 +871,6 @@
                 <div class="flex justify-between items-center px-4 py-3">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">Riwayat Transaksi</h2>
                     <div class="flex items-center gap-2">
-                        <!-- ★ TOMBOL DOWNLOAD PDF RIWAYAT ★ -->
                         <button onclick="downloadHistoryPDF()" id="btn-download-history-pdf" class="btn-pdf-history"
                             title="Download PDF sesuai filter aktif">
                             <i data-lucide="file-down" class="w-4 h-4"></i>
@@ -953,7 +952,7 @@
             </div>
         </section>
 
-        <!-- ==================== ALL MODALS (same as original) ==================== -->
+        <!-- ==================== ALL MODALS ==================== -->
 
         <div id="modal-bd"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
@@ -1571,6 +1570,24 @@
         const formatRp = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(n || 0);
         const formatTime = (d) => new Date(d).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date(d).toLocaleDateString('id-ID');
 
+        // Helper Cerdas untuk mendapatkan nilai Net Price dari transaksi 
+        // Ini memastikan transaksi lama dimana diskon belum dipotong, tetap terhitung benar!
+        function getTrxNetPrice(trx) {
+            let net = parseFloat(trx.total_price || 0);
+            if (!trx.transaction_items) return net;
+
+            const gross = trx.transaction_items.reduce((sum, i) => sum + ((parseFloat(i.custom_price) || parseFloat(i.price) || 0) * (parseFloat(i.quantity) || 0)), 0);
+
+            // Jika total_price database SAMA dengan harga kotor (bug lama), paksa hitung diskon disini
+            if (trx.adjustment_type === 'discount' && net === gross && parseFloat(trx.adjustment_amount) > 0) {
+                net -= parseFloat(trx.adjustment_amount);
+            } else if (trx.adjustment_type === 'fee' && net === gross && parseFloat(trx.adjustment_amount) > 0) {
+                net += parseFloat(trx.adjustment_amount);
+            }
+
+            return Math.max(0, net);
+        }
+
         // ==========================================
         // PWA
         // ==========================================
@@ -2074,14 +2091,25 @@
             else info.classList.add('hidden');
         }
 
+        // ==========================================
+        // ★ PATCH 1: submitPayment - FIXED ★
+        // Hitung ulang totalFinal secara inline agar diskon/fee selalu teraplikasi
+        // ==========================================
         async function submitPayment() {
-            const totalFinal = getCheckoutFinalTotal();
+            // Recalculate inline - prevent stale value if calcCheckoutTotal wasn't called
+            const _baseTotal = getCartTotal();
+            const _adjType = document.getElementById('co-adj-type').value;
+            const _adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
+            let totalFinal = _baseTotal;
+            if (_adjType === 'discount') totalFinal = Math.max(0, _baseTotal - _adjVal);
+            else if (_adjType === 'fee') totalFinal = _baseTotal + _adjVal;
+
             const methodSelect = document.getElementById('co-method').value;
             const method = methodSelect === 'Custom' ? (document.getElementById('co-method-custom-name').value || 'Custom') : methodSelect;
             const tendered = parseFloat(document.getElementById('co-tendered').value) || 0;
             const split = parseInt(document.getElementById('co-split').value) || 1;
-            const adjType = document.getElementById('co-adj-type').value;
-            const adjVal = parseFloat(document.getElementById('co-custom-adjustment').value) || 0;
+            const adjType = _adjType;
+            const adjVal = _adjVal;
             const customerSelect = document.getElementById('co-customer');
             const customerId = customerSelect ? customerSelect.value : null;
             if (methodSelect === 'Tunai' && tendered < totalFinal) return showToast('Nominal pembayaran kurang!', 'error');
@@ -2509,12 +2537,17 @@
             document.getElementById('title-opex').innerText = `Biaya Operasional (${periodText})`;
             document.getElementById('title-profit').innerText = `Laba Bersih (${periodText})`;
             try {
-                const { data: trxData, error: trxErr } = await supabaseClient.from('transactions').select('total_price, created_at').gte('created_at', startISO).lte('created_at', endISO);
+                // Perlu memanggil transaction_items agar helper getTrxNetPrice dapat bekerja untuk data sebelum patch
+                const { data: trxData, error: trxErr } = await supabaseClient.from('transactions')
+                    .select('total_price, created_at, adjustment_type, adjustment_amount, transaction_items ( price, custom_price, quantity )')
+                    .gte('created_at', startISO).lte('created_at', endISO);
                 if (trxErr) throw trxErr;
+
                 let { data: expData, error: expErr } = await supabaseClient.from('expenses').select('*').gte('expense_date', startISO).lte('expense_date', endISO);
                 if (expErr && expErr.message.includes('relation')) expData = [];
                 state.expensesList = expData || [];
-                const salesTotal = (trxData || []).reduce((s, t) => s + parseFloat(t.total_price), 0);
+
+                const salesTotal = (trxData || []).reduce((s, t) => s + getTrxNetPrice(t), 0);
                 let cogs = 0, opex = 0;
                 (expData || []).forEach(e => { const cat = e.category || (e.affects_profit ? 'cogs' : 'opex'); if (cat === 'cogs') cogs += parseFloat(e.amount); else if (cat === 'opex') opex += parseFloat(e.amount); });
                 document.getElementById('stat-sales').innerText = formatRp(salesTotal);
@@ -2653,7 +2686,8 @@
                 if (trx.adjustment_type === 'discount') { document.getElementById('inv-adjustment-label').innerText = 'Diskon / Potongan'; document.getElementById('inv-adjustment-amount').innerText = `-${formatRp(trx.adjustment_amount)}`; document.getElementById('inv-adjustment-amount').className = 'font-medium text-red-500'; }
                 else if (trx.adjustment_type === 'fee') { document.getElementById('inv-adjustment-label').innerText = 'Biaya Tambahan (Fee)'; document.getElementById('inv-adjustment-amount').innerText = `+${formatRp(trx.adjustment_amount)}`; document.getElementById('inv-adjustment-amount').className = 'font-medium text-orange-500'; }
             } else adjContainer.classList.add('hidden');
-            document.getElementById('inv-total').innerText = formatRp(trx.total_price);
+
+            document.getElementById('inv-total').innerText = formatRp(getTrxNetPrice(trx));
             document.getElementById('inv-method').innerText = trx.payment_method || 'Tunai';
             toggleModal('modal-invoice', true);
         }
@@ -2714,7 +2748,7 @@
 
                 const badge = document.getElementById('hist-summary-badge');
                 if (badge) {
-                    const totalTrx = state.history.reduce((s, t) => s + parseFloat(t.total_price || 0), 0);
+                    const totalTrx = state.history.reduce((s, t) => s + getTrxNetPrice(t), 0);
                     const totalExp = customerFilter ? 0 : state.historyExpenses.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
                     badge.innerHTML = `<span class="text-blue-600 dark:text-neon-cyan font-bold">+ ${formatRp(totalTrx)}</span> <span class="mx-1 text-gray-300 dark:text-gray-600">|</span> <span class="text-red-500 dark:text-red-400 font-bold">- ${formatRp(totalExp)}</span>`;
                 }
@@ -2752,11 +2786,12 @@
                         let adjBadge = '';
                         if (trx.adjustment_type === 'discount') adjBadge = `<br><span class="bg-yellow-100 text-yellow-700 text-[9px] px-1.5 py-0.5 rounded">Diskon: -${formatRp(trx.adjustment_amount)}</span>`;
                         else if (trx.adjustment_type === 'fee') adjBadge = `<br><span class="bg-orange-100 text-orange-700 text-[9px] px-1.5 py-0.5 rounded">Fee: +${formatRp(trx.adjustment_amount)}</span>`;
+
                         return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                             <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-200 text-sm">${formatTime(trx.created_at)}</td>
                             <td class="px-4 py-3 text-xs font-mono text-gray-500">${trx.id.split('-')[0]}...</td>
                             <td class="px-4 py-3 text-xs text-gray-600 dark:text-gray-400">${customerName}</td>
-                            <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
+                            <td class="px-4 py-3 font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(getTrxNetPrice(trx))}<br><span class="text-[10px] text-gray-500 font-normal">${itemsCount} item</span>${adjBadge}</td>
                             <td class="px-4 py-3"><span class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs text-gray-600 dark:text-gray-300">${trx.payment_method || 'Tunai'}</span></td>
                             <td class="px-4 py-3 text-right">
                                 <button onclick="generateInvoice('${trx.id}')" class="text-green-500 hover:text-green-700 mr-2" title="Cetak Invoice"><i data-lucide="printer" class="w-4 h-4"></i></button>
@@ -2796,7 +2831,7 @@
                         return `<div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl p-3 shadow-sm">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
-                                    <p class="font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(trx.total_price)}</p>
+                                    <p class="font-bold text-blue-600 dark:text-neon-cyan text-sm">${formatRp(getTrxNetPrice(trx))}</p>
                                     <p class="text-[10px] text-gray-500">${formatTime(trx.created_at)}</p>
                                 </div>
                                 <span class="text-[9px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 px-2 py-1 rounded font-bold">${trx.payment_method || 'Tunai'}</span>
@@ -2822,7 +2857,6 @@
                 }).join('');
             }
         }
-
         // ==========================================
         // ★ DOWNLOAD PDF RIWAYAT TRANSAKSI ★
         // ==========================================
@@ -2830,7 +2864,6 @@
             if (!window.jspdf) return showToast('Library jsPDF belum dimuat.', 'warning');
             const { jsPDF } = window.jspdf;
 
-            // Ambil data yang sudah terfilter dari state
             const customerFilter = document.getElementById('hist-customer-filter')?.value;
             const typeFilter = state.historyTypeFilter || 'all';
             const customerName = customerFilter ? state.customers.find(c => c.id === customerFilter)?.name || 'Pelanggan Terfilter' : 'Semua Pelanggan';
@@ -2852,6 +2885,32 @@
                 const pageH = doc.internal.pageSize.getHeight();
                 const margin = 14;
                 const contentW = pageW - margin * 2;
+
+                // Fungsi bantuan untuk load logo base64
+                function loadImageAsBase64(url) {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.crossOrigin = 'Anonymous';
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = img.width; canvas.height = img.height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/png'));
+                        };
+                        img.onerror = reject;
+                        img.src = url;
+                    });
+                }
+
+                function getPeriodLabel() {
+                    const s = document.getElementById('hist-start')?.value;
+                    const e = document.getElementById('hist-end')?.value;
+                    if (state.historyDuration === 'custom' && s && e) {
+                        return `${new Date(s).toLocaleDateString('id-ID')} - ${new Date(e).toLocaleDateString('id-ID')}`;
+                    }
+                    return document.querySelector('.duration-pill.active')?.innerText || 'Semua Waktu';
+                }
 
                 // ── Header ──
                 try {
@@ -2897,7 +2956,7 @@
                 });
 
                 // ── Ringkasan ──
-                const totalPemasukan = combined.filter(i => i.type === 'trx').reduce((s, i) => s + parseFloat(i.data.total_price || 0), 0);
+                const totalPemasukan = combined.filter(i => i.type === 'trx').reduce((s, i) => s + getTrxNetPrice(i.data), 0);
                 const totalPengeluaran = combined.filter(i => i.type === 'exp').reduce((s, i) => s + parseFloat(i.data.amount || 0), 0);
                 const selisih = totalPemasukan - totalPengeluaran;
 
@@ -2914,310 +2973,242 @@
                 doc.text(formatRp(totalPemasukan), margin + 3, summaryY + 12);
 
                 // Box Pengeluaran
-                const box2X = margin + boxW + 3;
                 doc.setFillColor(254, 242, 242);
                 doc.setDrawColor(254, 202, 202);
-                doc.roundedRect(box2X, summaryY, boxW, 16, 2, 2, 'FD');
+                doc.roundedRect(margin + boxW + 3, summaryY, boxW, 16, 2, 2, 'FD');
                 doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(239, 68, 68);
-                doc.text('TOTAL PENGELUARAN', box2X + 3, summaryY + 5);
+                doc.text('TOTAL PENGELUARAN', margin + boxW + 6, summaryY + 5);
                 doc.setFontSize(9.5); doc.setFont('helvetica', 'bold');
-                doc.text(formatRp(totalPengeluaran), box2X + 3, summaryY + 12);
+                doc.text(formatRp(totalPengeluaran), margin + boxW + 6, summaryY + 12);
 
                 // Box Selisih
-                const box3X = margin + (boxW + 3) * 2;
-                const isProfit = selisih >= 0;
-                doc.setFillColor(isProfit ? 240 : 254, isProfit ? 253 : 242, isProfit ? 244 : 242);
-                doc.setDrawColor(isProfit ? 187 : 254, isProfit ? 247 : 202, isProfit ? 208 : 202);
-                doc.roundedRect(box3X, summaryY, boxW, 16, 2, 2, 'FD');
-                doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(isProfit ? 16 : 239, isProfit ? 185 : 68, isProfit ? 129 : 68);
-                doc.text('SELISIH (NET)', box3X + 3, summaryY + 5);
+                const selisihColor = selisih >= 0 ? [16, 185, 129] : [239, 68, 68];
+                const selisihFill = selisih >= 0 ? [236, 253, 245] : [254, 242, 242];
+                const selisihBorder = selisih >= 0 ? [167, 243, 208] : [254, 202, 202];
+
+                doc.setFillColor(...selisihFill);
+                doc.setDrawColor(...selisihBorder);
+                doc.roundedRect(margin + (boxW * 2) + 6, summaryY, boxW, 16, 2, 2, 'FD');
+                doc.setFontSize(7); doc.setFont('helvetica', 'normal'); doc.setTextColor(...selisihColor);
+                doc.text('SELISIH / NET', margin + (boxW * 2) + 9, summaryY + 5);
                 doc.setFontSize(9.5); doc.setFont('helvetica', 'bold');
-                doc.text(formatRp(selisih), box3X + 3, summaryY + 12);
+                doc.text((selisih >= 0 ? '+' : '') + formatRp(selisih), margin + (boxW * 2) + 9, summaryY + 12);
 
                 // ── Tabel Data ──
-                const tableStartY = summaryY + 22;
-
-                // [UPDATE] Tambahkan Kolom Uang Pribadi di Header
-                const headers = [['Tanggal', 'ID', 'Keterangan', 'Tipe', 'Metode', 'Total', 'Uang Pribadi']];
-
-                const rows = combined.map(item => {
+                const tableHead = [['Tanggal', 'ID', 'Keterangan / Pelanggan', 'Tipe', 'Metode', 'Nominal']];
+                const tableBody = combined.map(item => {
+                    const dateStr = item.date.toLocaleDateString('id-ID') + ' ' + item.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                     if (item.type === 'trx') {
                         const trx = item.data;
-                        const custName = trx.customers ? trx.customers.name : 'Umum';
-                        const items = trx.transaction_items || [];
-                        const itemNames = items.slice(0, 2).map(i => i.products ? i.products.name : 'Produk').join(', ') + (items.length > 2 ? ` +${items.length - 2}` : '');
+                        const cName = trx.customers ? trx.customers.name : 'Pelanggan Umum';
                         return [
-                            formatTime(trx.created_at),
-                            trx.id.split('-')[0].toUpperCase(),
-                            custName + (itemNames ? `\n${itemNames}` : ''),
+                            dateStr,
+                            'TRX-' + trx.id.substring(0, 6).toUpperCase(),
+                            cName,
                             'Pemasukan',
                             trx.payment_method || 'Tunai',
-                            formatRp(trx.total_price),
-                            '-' // [UPDATE] Transaksi pemasukan diset strip (-) karena tidak menggunakan uang pribadi
+                            { content: '+' + formatRp(getTrxNetPrice(trx)), styles: { textColor: [37, 99, 235], fontStyle: 'bold' } }
                         ];
                     } else {
                         const exp = item.data;
-                        const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
-                        const catLabel = cat === 'opex' ? 'Operasional' : cat === 'cogs' ? 'Bahan Baku' : 'Aset';
                         return [
-                            new Date(exp.expense_date).toLocaleDateString('id-ID'),
+                            dateStr,
                             'EXP-' + exp.id.substring(0, 6).toUpperCase(),
-                            exp.name + '\n' + catLabel,
+                            exp.name,
                             'Pengeluaran',
-                            exp.is_personal ? 'Pribadi' : 'Kas',
-                            '- ' + formatRp(exp.amount),
-                            exp.is_personal ? 'Ya' : 'Tidak' // [UPDATE] Mapping data uang pribadi
+                            'Kas/Bank',
+                            { content: '-' + formatRp(exp.amount), styles: { textColor: [239, 68, 68], fontStyle: 'bold' } }
                         ];
                     }
                 });
 
                 doc.autoTable({
-                    head: headers,
-                    body: rows,
-                    startY: tableStartY,
-                    margin: { left: margin, right: margin },
-                    styles: {
-                        fontSize: 7.5,
-                        cellPadding: 2.5,
-                        lineColor: [226, 232, 240],
-                        lineWidth: 0.2,
-                        font: 'helvetica',
-                        textColor: [51, 65, 85]
-                    },
-                    headStyles: {
-                        fillColor: [37, 99, 235],
-                        textColor: 255,
-                        fontStyle: 'bold',
-                        fontSize: 8,
-                        cellPadding: 3
-                    },
-                    alternateRowStyles: {
-                        fillColor: [248, 250, 252]
-                    },
-                    // [UPDATE] Penyesuaian lebar kolom karena ada kolom baru
+                    startY: summaryY + 22,
+                    head: tableHead,
+                    body: tableBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: [248, 250, 252], textColor: [71, 85, 105], fontStyle: 'bold', fontSize: 8, halign: 'center' },
+                    bodyStyles: { fontSize: 8, textColor: [30, 41, 59] },
                     columnStyles: {
-                        0: { cellWidth: 26 },
-                        1: { cellWidth: 18 },
+                        0: { cellWidth: 30 },
+                        1: { cellWidth: 25 },
                         2: { cellWidth: 'auto' },
-                        3: { cellWidth: 20, halign: 'center' },
-                        4: { cellWidth: 16, halign: 'center' },
-                        5: { cellWidth: 24, halign: 'right', fontStyle: 'bold' },
-                        6: { cellWidth: 20, halign: 'center' } // Pengaturan lebar kolom Uang Pribadi
+                        3: { cellWidth: 25, halign: 'center' },
+                        4: { cellWidth: 20, halign: 'center' },
+                        5: { cellWidth: 35, halign: 'right' }
                     },
-                    didParseCell: (data) => {
-                        if (data.section === 'body' && data.row.index < combined.length) {
-                            const item = combined[data.row.index];
-                            if (item && item.type === 'exp') {
-                                data.cell.styles.textColor = [185, 28, 28];
-                                data.cell.styles.fillColor = [255, 245, 245];
-                            }
-                        }
-                    },
-                    didDrawPage: (data) => {
-                        const pageCount = doc.internal.getNumberOfPages();
-                        doc.setFontSize(7);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(148, 163, 184);
-                        doc.text(
-                            `GurmieKasir | Halaman ${data.pageNumber} dari ${pageCount} | Dicetak ${now.toLocaleDateString('id-ID')}`,
-                            pageW / 2, pageH - 6, { align: 'center' }
-                        );
-                        doc.setDrawColor(226, 232, 240);
-                        doc.setLineWidth(0.3);
-                        doc.line(margin, pageH - 9, pageW - margin, pageH - 9);
-                    }
+                    alternateRowStyles: { fillColor: [250, 250, 250] },
+                    margin: { left: margin, right: margin }
                 });
 
-                const durLabel = getPeriodLabel().replace(/\s/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-                doc.save(`Riwayat_GurmieKasir_${durLabel}_${now.getTime()}.pdf`);
-                showToast('PDF Riwayat berhasil diunduh!', 'success');
+                doc.save(`Riwayat_Transaksi_GurmieKasir_${new Date().getTime()}.pdf`);
+                showToast('PDF Riwayat berhasil diunduh.', 'success');
+
             } catch (err) {
-                console.error('PDF Error:', err);
-                showToast('Gagal membuat PDF: ' + err.message, 'error');
+                console.error(err);
+                showToast('Gagal membuat PDF.', 'error');
             } finally {
                 showLoading(false);
             }
         }
 
-        function getPeriodLabel() {
-            const dur = state.historyDuration;
-            if (dur === 'today') return 'Hari Ini';
-            if (dur === '7d') return '7 Hari Terakhir';
-            if (dur === '30d') return '30 Hari Terakhir';
-            if (dur === '60d') return '60 Hari Terakhir';
-            if (dur === 'all') return 'Semua Data';
-            if (dur === 'custom') {
-                const s = document.getElementById('hist-start').value;
-                const e = document.getElementById('hist-end').value;
-                if (s && e) return `${new Date(s).toLocaleDateString('id-ID')} - ${new Date(e).toLocaleDateString('id-ID')}`;
-            }
-            return 'Semua Data';
-        }
-
-        function loadImageAsBase64(url) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    canvas.getContext('2d').drawImage(img, 0, 0);
-                    resolve(canvas.toDataURL('image/png'));
-                };
-                img.onerror = reject;
-                img.src = url;
-            });
-        }
-
         // ==========================================
-        // EDIT TRX
+        // EDIT & DELETE TRANSAKSI
         // ==========================================
-        async function deleteTrx(id) {
-            if (!confirm('Hapus transaksi ini? Stok akan dikembalikan.')) return;
-            showLoading(true);
-            try {
-                const trx = state.history.find(t => t.id === id);
-                if (trx?.transaction_items) {
-                    for (let item of trx.transaction_items) {
-                        const prod = state.products.find(p => p.id === item.product_id);
-                        if (prod && !prod.is_bundle) await supabaseClient.from('products').update({ stock: prod.stock + item.quantity }).eq('id', item.product_id);
-                    }
-                }
-                const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
-                if (error) throw error;
-                showToast('Transaksi dihapus & stok dipulihkan.', 'success');
-                await fetchProducts();
-                loadHistory();
-            } catch (err) { showToast('Gagal menghapus.', 'error'); }
-            finally { showLoading(false); }
-        }
-
         function openEditTrx(id) {
             const trx = state.history.find(t => t.id === id);
             if (!trx) return;
-            const dateObj = new Date(trx.created_at);
-            const localISOTime = new Date(dateObj.getTime() - (dateObj.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-            state.editingTrx = { id: trx.id, date: localISOTime, items: trx.transaction_items.map(i => ({ id: i.id, product_id: i.product_id, name: i.products ? i.products.name : 'Unknown', is_bundle: i.products ? i.products.is_bundle : false, price: i.price, custom_price: i.custom_price, qty: i.quantity, is_new: false, old_qty: i.quantity })) };
-            document.getElementById('edit-trx-id').value = trx.id;
-            document.getElementById('edit-trx-date').value = state.editingTrx.date;
-            const select = document.getElementById('edit-trx-add-select');
-            select.innerHTML = '<option value="">-- Tambah Produk --</option>' + state.products.map(p => `<option value="${p.id}">${p.name} - ${formatRp(p.price)}</option>`).join('');
+            state.editingTrx.id = trx.id;
+
+            // Format datetime-local: YYYY-MM-DDThh:mm
+            const d = new Date(trx.created_at);
+            const pad = n => n.toString().padStart(2, '0');
+            document.getElementById('edit-trx-date').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+            state.editingTrx.items = trx.transaction_items.map(i => ({
+                id: i.id, // ID item di DB (jika ada)
+                product_id: i.product_id,
+                name: i.products ? i.products.name : 'Unknown',
+                price: i.custom_price || i.price,
+                qty: i.quantity,
+                isNew: false
+            }));
+
+            // Populate Add Select
+            const sel = document.getElementById('edit-trx-add-select');
+            sel.innerHTML = state.products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+
             renderEditTrxItems();
             toggleModal('modal-edit-trx', true);
         }
 
+        function closeEditTrx() {
+            toggleModal('modal-edit-trx', false);
+            state.editingTrx = { id: null, date: '', items: [] };
+        }
+
+        function addEditTrxItem() {
+            const sel = document.getElementById('edit-trx-add-select');
+            const pId = sel.value;
+            const prod = state.products.find(p => p.id === pId);
+            if (!prod) return;
+            state.editingTrx.items.push({
+                product_id: prod.id,
+                name: prod.name,
+                price: prod.price,
+                qty: 1,
+                isNew: true
+            });
+            renderEditTrxItems();
+        }
+
+        function updateEditTrxItemPrice(index, val) {
+            state.editingTrx.items[index].price = parseFloat(val) || 0;
+            renderEditTrxItems();
+        }
+
+        function updateEditTrxItemQty(index, val) {
+            state.editingTrx.items[index].qty = parseFloat(val) || 0;
+            renderEditTrxItems();
+        }
+
+        function removeEditTrxItem(index) {
+            state.editingTrx.items.splice(index, 1);
+            renderEditTrxItems();
+        }
+
         function renderEditTrxItems() {
             const tbody = document.getElementById('edit-trx-items-body');
-            if (!tbody) return;
-            if (state.editingTrx.items.length === 0) { tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-xs text-red-500">Minimal 1 item.</td></tr>`; document.getElementById('edit-trx-total').innerText = formatRp(0); return; }
             let total = 0;
-            tbody.innerHTML = state.editingTrx.items.map((item, index) => {
-                const currentPrice = item.custom_price || item.price;
-                total += currentPrice * item.qty;
-                return `<tr><td class="p-2 font-medium text-gray-900 dark:text-gray-200 text-xs">${item.name}</td><td class="p-2"><input type="number" onchange="updateEditItemPrice(${index}, this.value)" value="${currentPrice}" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-1 py-1 text-xs focus:outline-none text-gray-900 dark:text-white"></td><td class="p-2"><input type="number" onchange="updateEditItemQty(${index}, this.value)" value="${item.qty}" min="1" class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-1 py-1 text-xs text-center focus:outline-none text-gray-900 dark:text-white"></td><td class="p-2 text-center"><button onclick="removeEditItem(${index})" class="text-red-500 hover:text-red-700"><i data-lucide="x-circle" class="w-4 h-4 mx-auto"></i></button></td></tr>`;
+            tbody.innerHTML = state.editingTrx.items.map((item, i) => {
+                total += item.price * item.qty;
+                return `<tr>
+                    <td class="p-2 truncate font-medium text-gray-800 dark:text-gray-200">${item.name}</td>
+                    <td class="p-2"><input type="number" value="${item.price}" oninput="updateEditTrxItemPrice(${i}, this.value)" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 text-xs rounded focus:outline-none"></td>
+                    <td class="p-2"><input type="number" value="${item.qty}" oninput="updateEditTrxItemQty(${i}, this.value)" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 p-1 text-center text-xs rounded focus:outline-none"></td>
+                    <td class="p-2 text-center"><button onclick="removeEditTrxItem(${i})" class="text-red-500 hover:text-red-700"><i data-lucide="minus-circle" class="w-4 h-4 mx-auto"></i></button></td>
+                </tr>`;
             }).join('');
             document.getElementById('edit-trx-total').innerText = formatRp(total);
             lucide.createIcons();
         }
 
-        function updateEditItemQty(index, val) { state.editingTrx.items[index].qty = parseInt(val) || 1; renderEditTrxItems(); }
-        function updateEditItemPrice(index, val) { state.editingTrx.items[index].custom_price = parseFloat(val) || 0; renderEditTrxItems(); }
-        function removeEditItem(index) { state.editingTrx.items.splice(index, 1); renderEditTrxItems(); }
-        function addEditTrxItem() {
-            const select = document.getElementById('edit-trx-add-select');
-            const prodId = select.value;
-            if (!prodId) return;
-            const prod = state.products.find(p => p.id === prodId);
-            if (!prod) return;
-            const existing = state.editingTrx.items.find(i => i.product_id === prodId && !i.custom_price);
-            if (existing) existing.qty += 1;
-            else state.editingTrx.items.push({ id: null, product_id: prod.id, name: prod.name, is_bundle: prod.is_bundle, price: prod.price, custom_price: null, qty: 1, is_new: true, old_qty: 0 });
-            select.value = '';
-            renderEditTrxItems();
-        }
-
-        function closeEditTrx() { toggleModal('modal-edit-trx', false); }
-
         async function saveEditTrx() {
-            if (state.editingTrx.items.length === 0) return showToast('Tidak boleh kosong', 'error');
-            const btn = document.getElementById('btn-save-edit-trx');
-            btn.innerHTML = `<div class="loader w-4 h-4 border-2"></div>`;
+            const tId = state.editingTrx.id;
+            const newDateStr = document.getElementById('edit-trx-date').value;
+            if (!newDateStr) return showToast('Tanggal tidak boleh kosong', 'warning');
+            if (state.editingTrx.items.length === 0) return showToast('Transaksi minimal 1 item', 'warning');
+
+            const totalNew = state.editingTrx.items.reduce((acc, i) => acc + (i.price * i.qty), 0);
+            const newDateISO = new Date(newDateStr).toISOString();
+
+            showLoading(true);
             try {
-                const trxId = state.editingTrx.id;
-                const newDate = new Date(document.getElementById('edit-trx-date').value).toISOString();
-                const total = state.editingTrx.items.reduce((s, i) => s + ((i.custom_price || i.price) * i.qty), 0);
-                const { error: errTrx } = await supabaseClient.from('transactions').update({ total_price: total, created_at: newDate }).eq('id', trxId);
-                if (errTrx) throw errTrx;
-                const originalTrx = state.history.find(t => t.id === trxId);
-                let stockMap = {};
-                originalTrx.transaction_items.forEach(old => { if (!stockMap[old.product_id]) stockMap[old.product_id] = 0; stockMap[old.product_id] += old.quantity; });
-                state.editingTrx.items.forEach(newI => { if (!stockMap[newI.product_id]) stockMap[newI.product_id] = 0; stockMap[newI.product_id] -= newI.qty; });
-                for (const [pId, diff] of Object.entries(stockMap)) {
-                    if (diff !== 0) { const prod = state.products.find(p => p.id === pId); if (prod && !prod.is_bundle) await supabaseClient.from('products').update({ stock: prod.stock + diff }).eq('id', pId); }
-                }
-                await supabaseClient.from('transaction_items').delete().eq('transaction_id', trxId);
-                await supabaseClient.from('transaction_items').insert(state.editingTrx.items.map(i => ({ transaction_id: trxId, product_id: i.product_id, quantity: i.qty, price: i.price, custom_price: i.custom_price || null })));
-                showToast('Transaksi diperbarui!', 'success');
+                // Update trx header
+                const { error: errHeader } = await supabaseClient.from('transactions')
+                    .update({ created_at: newDateISO, total_price: totalNew })
+                    .eq('id', tId);
+                if (errHeader) throw errHeader;
+
+                // Delete old items
+                await supabaseClient.from('transaction_items').delete().eq('transaction_id', tId);
+
+                // Insert new items
+                const newItemsPayload = state.editingTrx.items.map(i => ({
+                    transaction_id: tId,
+                    product_id: i.product_id,
+                    quantity: i.qty,
+                    price: i.price,
+                    custom_price: i.price // set as custom if edited
+                }));
+                const { error: errItems } = await supabaseClient.from('transaction_items').insert(newItemsPayload);
+                if (errItems) throw errItems;
+
+                showToast('Transaksi berhasil diperbarui.', 'success');
                 closeEditTrx();
-                await fetchProducts();
                 loadHistory();
-            } catch (e) { showToast('Gagal menyimpan.', 'error'); }
-            finally { btn.innerHTML = `Simpan`; }
+            } catch (e) {
+                showToast('Gagal update transaksi: ' + e.message, 'error');
+            }
+            showLoading(false);
+        }
+
+        async function deleteTrx(id) {
+            if (!confirm('Peringatan: Menghapus transaksi akan menghapusnya secara permanen. Lanjutkan?')) return;
+            showLoading(true);
+            try {
+                await supabaseClient.from('transaction_items').delete().eq('transaction_id', id);
+                const { error } = await supabaseClient.from('transactions').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Transaksi dihapus', 'success');
+                loadHistory();
+            } catch (err) {
+                showToast('Gagal menghapus transaksi', 'error');
+            }
+            showLoading(false);
         }
 
         // ==========================================
-        // INIT
+        // INITIALIZATION
         // ==========================================
-        window.onload = () => {
-            updateThemeUI();
-            if (window.lucide) lucide.createIcons();
-            fetchProducts();
-            fetchBOMData();
-            fetchCustomers();
-            switchView('kasir');
+        window.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+
+            await fetchProducts();
+            await fetchCustomers();
+            await fetchBOMData();
+
+            renderCart();
             updateHeldBadge();
-        };
 
-        // ==========================================
-        // TOUCH/SWIPE LISTENER UNTUK PANEL PESANAN
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', () => {
-            const cartPanel = document.getElementById('kasir-cart-panel');
-            let startY = 0;
-            let currentY = 0;
-
-            cartPanel.addEventListener('touchstart', (e) => {
-                if (e.target.closest('.panel-drag-handle') || e.target.closest('.bg-gray-50')) {
-                    startY = e.touches[0].clientY;
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 767) {
+                    document.getElementById('kasir-cart-panel')?.classList.remove('expanded');
+                    cartPanelExpanded = false;
                 }
-            }, { passive: true });
-
-            cartPanel.addEventListener('touchmove', (e) => {
-                if (!startY) return;
-                currentY = e.touches[0].clientY;
-            }, { passive: true });
-
-            cartPanel.addEventListener('touchend', (e) => {
-                if (!startY || !currentY) {
-                    startY = 0;
-                    currentY = 0;
-                    return;
-                }
-
-                const diffY = currentY - startY;
-
-                if (diffY < -30 && !cartPanelExpanded) {
-                    expandCartPanel();
-                }
-                else if (diffY > 30 && cartPanelExpanded) {
-                    toggleCartPanel();
-                }
-
-                startY = 0;
-                currentY = 0;
             });
         });
+
     </script>
 </body>
 
