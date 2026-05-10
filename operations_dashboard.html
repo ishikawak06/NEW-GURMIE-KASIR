@@ -1082,6 +1082,24 @@
                 </div>
             </div>
         </div>
+        <div id="hpp-filter-modal" class="modal-overlay">
+            <div class="modal-content" style="max-width:420px;">
+                <h2 class="modal-title" style="font-size:1.4rem;">Download HPP</h2>
+                <p class="stat-sub" style="margin-bottom:1rem;">Pilih produk yang ingin ditampilkan:</p>
+                <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+                    <button class="btn-secondary" style="font-size:0.65rem;padding:3px 8px;"
+                        onclick="document.querySelectorAll('.hpp-chk').forEach(c=>c.checked=true)">PILIH SEMUA</button>
+                    <button class="btn-secondary" style="font-size:0.65rem;padding:3px 8px;"
+                        onclick="document.querySelectorAll('.hpp-chk').forEach(c=>c.checked=false)">HAPUS SEMUA</button>
+                </div>
+                <div id="hpp-product-checklist" class="overflow-panel"
+                    style="max-height:260px;border:1.5px solid var(--border);padding:0.75rem;"></div>
+                <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;">
+                    <button class="btn-secondary" onclick="closeModal('hpp-filter-modal')">BATAL</button>
+                    <button class="btn-primary" onclick="downloadHPPImage()">DOWNLOAD PDF</button>
+                </div>
+            </div>
+        </div>
 
         <div id="create-decision-modal" class="modal-overlay">
             <div class="modal-content">
@@ -1672,311 +1690,361 @@
             }, 100);
         }
 
-        function downloadImage() {
-            const btn = $('btn-download-img');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ PROSES...';
-
-            setTimeout(() => {
-                try {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 800;
-                    canvas.height = 800;
-                    const ctx = canvas.getContext('2d');
-
-                    ctx.fillStyle = '#f5f0e8';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                    const ink = '#0a0a0f';
-                    const muted = '#8a8070';
-                    const border = 'rgba(10, 10, 15, 0.12)';
-
-                    if (logoImg && logoImg.complete && logoImg.naturalWidth !== 0) {
-                        ctx.drawImage(logoImg, 50, 42, 38, 38);
-                        ctx.fillStyle = ink;
-                        ctx.font = 'bold 34px sans-serif';
-                        ctx.fillText('Ringkasan Kinerja Bisnis', 100, 72);
-                    } else {
-                        ctx.fillStyle = ink;
-                        ctx.font = 'bold 34px sans-serif';
-                        ctx.fillText('Ringkasan Kinerja Bisnis', 50, 72);
-                    }
-
-                    ctx.fillStyle = muted;
-                    ctx.font = '16px monospace';
-                    ctx.fillText(`Periode: ${getPeriodText()} | Dicetak: ${new Date().toLocaleString('id-ID')}`, 50, 105);
-
-                    const revText = $('kpi-revenue').innerText;
-                    const expText = $('kpi-expense').innerText;
-                    const pftText = $('kpi-profit').innerText;
-
-                    const drawBox = (x, y, label, value, accentColor) => {
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(x, y, 220, 110);
-                        ctx.strokeStyle = ink;
-                        ctx.lineWidth = 2;
-                        ctx.strokeRect(x, y, 220, 110);
-                        ctx.fillStyle = accentColor;
-                        ctx.fillRect(x, y, 220, 4);
-
-                        ctx.fillStyle = muted;
-                        ctx.font = 'bold 14px monospace';
-                        ctx.fillText(label.toUpperCase(), x + 20, y + 40);
-
-                        ctx.fillStyle = ink;
-                        ctx.font = 'bold 26px serif';
-                        ctx.fillText(value, x + 20, y + 80, 180);
-                    };
-
-                    drawBox(50, 150, 'Total Revenue', revText, '#4a7c59');
-                    drawBox(290, 150, 'Pengeluaran', expText, '#c84b31');
-                    drawBox(530, 150, 'Laba Bersih', pftText, '#d4a843');
-
-                    ctx.fillStyle = ink;
-                    ctx.font = 'bold 24px serif';
-                    ctx.fillText('Top 5 Produk Terlaris', 50, 330);
-
-                    ctx.strokeStyle = border;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(50, 350);
-                    ctx.lineTo(750, 350);
-                    ctx.stroke();
-
-                    const agg = {};
-                    (S.I || []).forEach(i => {
-                        if (!agg[i.product_id]) agg[i.product_id] = { qty: 0, rev: 0, discount: 0 };
-                        let qty = parseFloat(i.quantity || 1);
-                        agg[i.product_id].qty += qty;
-                        agg[i.product_id].rev += (i.net_revenue || 0);
-                        agg[i.product_id].discount += (i.total_discount || 0);
-                    });
-
-                    const top5 = Object.entries(agg)
-                        .sort((a, b) => b[1].qty - a[1].qty)
-                        .slice(0, 5);
-
-                    let listY = 390;
-
-                    if (top5.length === 0) {
-                        ctx.fillStyle = muted;
-                        ctx.font = 'italic 18px sans-serif';
-                        ctx.fillText('Belum ada data penjualan produk untuk periode ini.', 50, listY);
-                    } else {
-                        top5.forEach(([pid, data], idx) => {
-                            const name = ((S.P || []).find(p => p.id === pid) || { name: '(Produk Dihapus)' }).name;
-
-                            ctx.fillStyle = muted;
-                            ctx.font = 'bold 20px serif';
-                            ctx.fillText(`#${idx + 1}`, 50, listY);
-
-                            ctx.fillStyle = ink;
-                            ctx.font = 'bold 18px sans-serif';
-                            ctx.fillText(name, 90, listY, 450);
-
-                            ctx.fillStyle = muted;
-                            ctx.font = '16px monospace';
-                            ctx.fillText(`${data.qty} unit terjual`, 90, listY + 24);
-
-                            ctx.fillStyle = '#4a7c59';
-                            ctx.font = 'bold 18px monospace';
-                            ctx.textAlign = 'right';
-                            ctx.fillText(fmtS(data.rev), 750, listY);
-
-                            if (data.discount > 0.1) {
-                                ctx.fillStyle = '#c84b31';
-                                ctx.font = '14px monospace';
-                                ctx.fillText(`Diskon ${fmtS(data.discount)}`, 750, listY + 24);
-                            }
-
-                            ctx.textAlign = 'left';
-
-                            ctx.strokeStyle = border;
-                            ctx.beginPath();
-                            ctx.moveTo(50, listY + 45);
-                            ctx.lineTo(750, listY + 45);
-                            ctx.stroke();
-
-                            listY += 70;
-                        });
-                    }
-
-                    ctx.fillStyle = muted;
-                    ctx.font = '12px monospace';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('Dihasilkan otomatis melalui GurmieKasir Intelligence', 400, 770);
-
-                    const link = document.createElement('a');
-                    link.download = `Infografis_Kinerja.png`;
-                    link.href = canvas.toDataURL('image/png', 1.0);
-                    link.click();
-
-                    btn.innerHTML = originalText;
-
-                } catch (err) {
-                    console.error(err);
-                    alert('Gagal menghasilkan infografis gambar: ' + err.message);
-                    btn.innerHTML = originalText;
-                }
-            }, 100);
-        }
-
-        function downloadHPPImage() {
+        async function downloadHPPImage() {
             const btn = $('btn-download-hpp');
             const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ PROSES...';
+            btn.innerHTML = '... AMBIL DATA...';
 
-            setTimeout(() => {
-                try {
-                    const M = S.M || [];
-                    const R = S.R || [];
-                    const E = S.E || [];
+            try {
+                const [recR, rawR, procR, packR] = await Promise.all([
+                    sb.from('recipes').select('*, products(name, price)').order('total_hpp', { ascending: false }),
+                    sb.from('raw_materials').select('*'),
+                    sb.from('processed_materials').select('*'),
+                    sb.from('packagings').select('*')
+                ]);
 
-                    const rowH = 55;
-                    const maxRows = Math.max(M.length, R.length);
-                    const height = Math.max(400, 320 + maxRows * rowH);
+                const recipes = recR.data || [];
+                const rawMats = rawR.data || [];
+                const procMats = procR.data || [];
+                const packMats = packR.data || [];
 
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1600;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4');
+                const PW = doc.internal.pageSize.getWidth();
+                const PH = doc.internal.pageSize.getHeight();
+                const ML = 14;
+                const MR = 14;
+                const CW = PW - ML - MR;
 
-                    ctx.fillStyle = '#f5f0e8';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                const C = {
+                    ink: [10, 10, 15],
+                    paper: [245, 240, 232],
+                    cream: [237, 232, 220],
+                    accent: [200, 75, 49],
+                    gold: [212, 168, 67],
+                    sage: [74, 124, 89],
+                    slate: [61, 74, 92],
+                    muted: [138, 128, 112],
+                    white: [255, 255, 255]
+                };
 
-                    const ink = '#0a0a0f';
-                    const muted = '#8a8070';
-                    const border = 'rgba(10, 10, 15, 0.12)';
-
-                    ctx.strokeStyle = ink;
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(40, 40, 740, height - 80);
-
-                    ctx.fillStyle = ink;
-                    ctx.font = 'bold 36px serif';
-                    ctx.fillText('Bahan Dasar', 70, 110);
-
-                    ctx.strokeStyle = border;
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(290, 85, 110, 26);
-                    ctx.fillStyle = muted;
-                    ctx.font = '12px monospace';
-                    ctx.fillText('RAW MATERIALS', 298, 103);
-
-                    ctx.fillStyle = muted;
-                    ctx.font = 'bold 11px monospace';
-                    ctx.fillText('NAMA', 70, 180);
-                    ctx.fillText('SATUAN', 300, 180);
-                    ctx.fillText('KAPASITAS', 450, 180);
-                    ctx.fillText('HARGA SATUAN', 600, 180);
-
-                    ctx.beginPath();
-                    ctx.moveTo(70, 195);
-                    ctx.lineTo(760, 195);
-                    ctx.stroke();
-
-                    let yL = 235;
-                    M.forEach(m => {
-                        ctx.fillStyle = ink;
-                        ctx.font = '16px sans-serif';
-                        ctx.fillText(m.name, 70, yL);
-
-                        ctx.fillStyle = 'rgba(61, 74, 92, 0.12)';
-                        ctx.fillRect(300, yL - 18, 90, 26);
-                        ctx.fillStyle = '#3d4a5c';
-                        ctx.font = 'bold 12px monospace';
-                        ctx.fillText((m.unit || '').toUpperCase(), 308, yL - 1);
-
-                        ctx.fillStyle = ink;
-                        ctx.font = '14px monospace';
-                        ctx.fillText(m.capacity || '-', 450, yL);
-                        ctx.fillText(fmtS(m.unit_price), 600, yL);
-
-                        ctx.strokeStyle = 'rgba(10, 10, 15, 0.06)';
-                        ctx.beginPath(); ctx.moveTo(70, yL + 15); ctx.lineTo(760, yL + 15); ctx.stroke();
-                        yL += rowH;
-                    });
-
-                    ctx.strokeStyle = ink;
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(820, 40, 740, height - 80);
-
-                    ctx.fillStyle = ink;
-                    ctx.font = 'bold 36px serif';
-                    ctx.fillText('HPP Resep Produk', 850, 110);
-
-                    ctx.strokeStyle = border;
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(1180, 85, 120, 26);
-                    ctx.fillStyle = muted;
-                    ctx.font = '12px monospace';
-                    ctx.fillText('COGS PER ITEM', 1188, 103);
-
-                    const totalExp = E.reduce((s, e) => s + parseFloat(e.amount || 0), 0);
-                    ctx.font = '14px monospace';
-                    ctx.fillText(`*Penjualan per Pcs (Balik Modal Keseluruhan) = Total Pengeluaran yakni ${fmtS(totalExp)} ÷ Laba`, 850, 150);
-                    ctx.fillText(` Bersih per Pcs.`, 850, 170);
-
-                    ctx.font = 'bold 11px monospace';
-                    ctx.fillText('PRODUK', 850, 220);
-                    ctx.fillText('HPP (BAHAN)', 980, 220);
-                    ctx.fillText('HARGA JUAL', 1100, 220);
-                    ctx.fillText('LABA / PCS', 1220, 220);
-                    ctx.fillText('PENJUALAN / PCS (BALIK MODAL)', 1360, 220);
-
-                    ctx.strokeStyle = border;
-                    ctx.beginPath(); ctx.moveTo(850, 235); ctx.lineTo(1540, 235); ctx.stroke();
-
-                    let yR = 275;
-                    R.forEach(r => {
-                        const name = r.products ? r.products.name : '—';
-                        const sp = r.products ? parseFloat(r.products.price) : 0;
-                        const hpp = parseFloat(r.total_hpp || 0);
-                        const laba = sp - hpp;
-                        const mgn = sp > 0 ? (laba / sp * 100).toFixed(1) : '0';
-
-                        let targetText = '—';
-                        if (laba > 0 && totalExp > 0) targetText = Math.ceil(totalExp / laba) + ' pcs';
-                        else if (totalExp === 0) targetText = 'Belum ada Exp';
-                        else if (laba <= 0) targetText = 'Rugi/Balik';
-
-                        ctx.fillStyle = ink;
-                        ctx.font = '16px sans-serif';
-                        ctx.fillText(name, 850, yR);
-
-                        ctx.fillStyle = '#c84b31';
-                        ctx.font = '14px monospace';
-                        ctx.fillText(fmtS(hpp), 980, yR);
-
-                        ctx.fillStyle = ink;
-                        ctx.fillText(fmtS(sp), 1100, yR);
-
-                        const mc = parseFloat(mgn) > 30 ? '#4a7c59' : parseFloat(mgn) > 0 ? '#d4a843' : '#c84b31';
-                        ctx.fillStyle = mc;
-                        ctx.font = 'bold 14px monospace';
-                        ctx.fillText(`${fmtS(laba)} (${mgn}%)`, 1220, yR);
-
-                        ctx.fillStyle = ink;
-                        ctx.font = 'bold 15px monospace';
-                        ctx.fillText(targetText, 1360, yR);
-
-                        ctx.strokeStyle = 'rgba(10, 10, 15, 0.06)';
-                        ctx.beginPath(); ctx.moveTo(850, yR + 15); ctx.lineTo(1540, yR + 15); ctx.stroke();
-                        yR += rowH;
-                    });
-
-                    const link = document.createElement('a');
-                    link.download = `GurmieKasir_Bahan_HPP.png`;
-                    link.href = canvas.toDataURL('image/png', 1.0);
-                    link.click();
-
-                    btn.innerHTML = originalText;
-                } catch (err) {
-                    console.error(err);
-                    alert('Gagal menghasilkan gambar HPP: ' + err.message);
-                    btn.innerHTML = originalText;
+                function lookupMat(type, id) {
+                    if (!id) return null;
+                    if (type === 'raw') return rawMats.find(m => m.id === id) || null;
+                    if (type === 'processed') return procMats.find(m => m.id === id) || null;
+                    if (type === 'packaging') return packMats.find(m => m.id === id) || null;
+                    return null;
                 }
-            }, 100);
+
+                let pageNum = 0;
+                let y = 0;
+
+                function newPage() {
+                    if (pageNum > 0) doc.addPage();
+                    pageNum++;
+                    doc.setFillColor(...C.paper);
+                    doc.rect(0, 0, PW, PH, 'F');
+                    // gold top bar
+                    doc.setFillColor(...C.gold);
+                    doc.rect(0, 0, PW, 2, 'F');
+                    y = 10;
+                }
+
+                function addFooter() {
+                    const total = doc.internal.getNumberOfPages();
+                    for (let i = 1; i <= total; i++) {
+                        doc.setPage(i);
+                        doc.setFillColor(...C.slate);
+                        doc.rect(0, PH - 9, PW, 9, 'F');
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(...C.paper);
+                        doc.text(
+                            'GurmieKasir Intelligence  -  Laporan HPP Detail  -  ' +
+                            new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+                            PW / 2, PH - 3.5, { align: 'center' }
+                        );
+                        doc.text(i + ' / ' + total, PW - ML, PH - 3.5, { align: 'right' });
+                    }
+                }
+
+                // ── COVER ──────────────────────────────────────────────────────
+                newPage();
+
+                doc.setFillColor(...C.slate);
+                doc.rect(0, 0, PW, 80, 'F');
+                doc.setFillColor(...C.gold);
+                doc.rect(0, 80, PW, 3, 'F');
+                doc.setFillColor(...C.sage);
+                doc.rect(0, 0, 6, 80, 'F');
+
+                if (logoBase64) doc.addImage(logoBase64, 'PNG', ML + 8, 16, 20, 20);
+
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(26);
+                doc.setTextColor(...C.paper);
+                doc.text('LAPORAN HPP', ML + 8 + (logoBase64 ? 26 : 0), 30);
+                doc.text('DETAIL PRODUK', ML + 8 + (logoBase64 ? 26 : 0), 44);
+
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                doc.setTextColor(...C.gold);
+                doc.text('HARGA POKOK PRODUKSI  -  BAHAN BAKU  -  KEMASAN', ML + 8 + (logoBase64 ? 26 : 0), 55);
+
+                doc.setTextColor(180, 170, 155);
+                doc.text('Dicetak: ' + new Date().toLocaleString('id-ID') + '   Data langsung dari Supabase', ML + 8 + (logoBase64 ? 26 : 0), 63);
+                doc.text('Total Produk: ' + recipes.length, ML + 8 + (logoBase64 ? 26 : 0), 71);
+
+                y = 96;
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.setTextColor(...C.ink);
+                doc.text('DAFTAR PRODUK', ML, y);
+                doc.setFillColor(...C.gold);
+                doc.rect(ML, y + 2, 28, 1.5, 'F');
+                y += 12;
+
+                recipes.forEach((r, i) => {
+                    const name = r.products?.name || '(Produk Dihapus)';
+                    const sp = parseFloat(r.products?.price || 0);
+                    const hpp = parseFloat(r.total_hpp || 0);
+                    const mgn = sp > 0 ? ((sp - hpp) / sp * 100).toFixed(1) : '0';
+                    const col = parseFloat(mgn) >= 30 ? C.sage : parseFloat(mgn) > 0 ? C.gold : C.accent;
+
+                    if (y > 270) return;
+
+                    doc.setFillColor(...(i % 2 === 0 ? C.cream : C.white));
+                    doc.rect(ML, y - 5, CW, 8.5, 'F');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(...C.ink);
+                    doc.text((i + 1) + '.  ' + name, ML + 3, y);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...C.muted);
+                    doc.text('HPP ' + fmtS(hpp) + '  -  Jual ' + fmtS(sp), ML + 68, y);
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(...col);
+                    doc.text(mgn + '%', PW - MR - 3, y, { align: 'right' });
+
+                    y += 9.5;
+                });
+
+                // ── PER PRODUK ─────────────────────────────────────────────────
+                for (let ri = 0; ri < recipes.length; ri++) {
+                    const recipe = recipes[ri];
+                    const prodName = recipe.products?.name || '(Produk Dihapus)';
+                    const prodSP = parseFloat(recipe.products?.price || 0);
+                    const totalHPP = parseFloat(recipe.total_hpp || 0);
+                    const laba = prodSP - totalHPP;
+                    const margin = prodSP > 0 ? (laba / prodSP * 100) : 0;
+                    const items = Array.isArray(recipe.items) ? recipe.items : [];
+
+                    newPage();
+
+                    // Header produk - warna sage
+                    doc.setFillColor(...C.sage);
+                    doc.rect(0, y, PW, 30, 'F');
+                    doc.setFillColor(...C.gold);
+                    doc.rect(0, y + 30, PW, 2, 'F');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(15);
+                    doc.setTextColor(...C.paper);
+                    doc.text(prodName.toUpperCase(), ML, y + 13);
+
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...C.cream);
+                    doc.text('KALKULATOR HPP - ANALISIS BIAYA PER PORSI', ML, y + 22);
+
+                    // badge harga jual
+                    doc.setFillColor(...C.ink);
+                    doc.rect(PW - MR - 50, y + 5, 50, 20, 'F');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(6.5);
+                    doc.setTextColor(...C.gold);
+                    doc.text('HARGA JUAL', PW - MR - 25, y + 11, { align: 'center' });
+                    doc.setFontSize(12);
+                    doc.setTextColor(...C.paper);
+                    doc.text(fmtS(prodSP), PW - MR - 25, y + 22, { align: 'center' });
+
+                    y += 38;
+
+                    // pisahkan bahan & kemasan
+                    const bahanRows = [];
+                    const kemasanRows = [];
+                    let totalBahan = 0;
+                    let totalKemasan = 0;
+
+                    items.forEach(item => {
+                        const mat = lookupMat(item.type, item.id || item.material_id);
+                        const nama = mat?.name || item.name || '-';
+                        const unit = mat?.unit || item.unit || '-';
+                        const unitPrice = mat
+                            ? parseFloat(mat.unit_price || mat.hpp_per_unit || 0)
+                            : parseFloat(item.unit_price || item.hpp_per_unit || 0);
+                        const qty = parseFloat(item.qty_used || item.qty || item.quantity || 0);
+                        const cost = item.cost != null ? parseFloat(item.cost) : unitPrice * qty;
+
+                        const row = [
+                            nama,
+                            unit,
+                            unitPrice > 0 ? fmtS(unitPrice) : '-',
+                            qty > 0 ? qty.toLocaleString('id-ID') : '-',
+                            fmtS(cost)
+                        ];
+
+                        if (item.type === 'packaging') {
+                            kemasanRows.push(row);
+                            totalKemasan += cost;
+                        } else {
+                            bahanRows.push(row);
+                            totalBahan += cost;
+                        }
+                    });
+
+                    const colHdr = ['BAHAN / MATERIAL', 'SATUAN', 'HARGA / SATUAN (Rp)', 'QTY / PORSI', 'BIAYA / PORSI (Rp)'];
+
+                    // Section A - Bahan Baku
+                    doc.setFillColor(...C.sage);
+                    doc.rect(ML, y, 3, 7, 'F');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(...C.sage);
+                    doc.text('A.  BAHAN BAKU', ML + 6, y + 5.5);
+                    y += 10;
+
+                    if (bahanRows.length === 0) {
+                        doc.setFont('helvetica', 'italic');
+                        doc.setFontSize(8);
+                        doc.setTextColor(...C.muted);
+                        doc.text('Tidak ada data bahan baku.', ML + 6, y + 4);
+                        y += 10;
+                    } else {
+                        doc.autoTable({
+                            startY: y,
+                            head: [colHdr],
+                            body: bahanRows,
+                            foot: [['', '', '', 'TOTAL BAHAN BAKU', fmtS(totalBahan)]],
+                            theme: 'plain',
+                            headStyles: { fillColor: C.sage, textColor: [255, 255, 255], fontSize: 7.5, fontStyle: 'bold', cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+                            bodyStyles: { fontSize: 8, textColor: C.ink, cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 } },
+                            footStyles: { fillColor: C.sage, textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold', cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+                            alternateRowStyles: { fillColor: C.cream },
+                            margin: { left: ML, right: MR },
+                            tableWidth: CW,
+                            showFoot: 'lastPage'
+                        });
+                        y = doc.lastAutoTable.finalY + 8;
+                    }
+
+                    // cek halaman baru sebelum kemasan
+                    if (y + 60 > PH - 18) {
+                        newPage();
+                    }
+
+                    // Section B - Kemasan
+                    doc.setFillColor(...C.slate);
+                    doc.rect(ML, y, 3, 7, 'F');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(...C.slate);
+                    doc.text('B.  KEMASAN / PACKAGING', ML + 6, y + 5.5);
+                    y += 10;
+
+                    if (kemasanRows.length === 0) {
+                        doc.setFont('helvetica', 'italic');
+                        doc.setFontSize(8);
+                        doc.setTextColor(...C.muted);
+                        doc.text('Tidak ada data kemasan.', ML + 6, y + 4);
+                        y += 10;
+                    } else {
+                        doc.autoTable({
+                            startY: y,
+                            head: [colHdr],
+                            body: kemasanRows,
+                            foot: [['', '', '', 'TOTAL KEMASAN', fmtS(totalKemasan)]],
+                            theme: 'plain',
+                            headStyles: { fillColor: C.slate, textColor: [255, 255, 255], fontSize: 7.5, fontStyle: 'bold', cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+                            bodyStyles: { fontSize: 8, textColor: C.ink, cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 } },
+                            footStyles: { fillColor: C.slate, textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold', cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+                            alternateRowStyles: { fillColor: C.cream },
+                            margin: { left: ML, right: MR },
+                            tableWidth: CW,
+                            showFoot: 'lastPage'
+                        });
+                        y = doc.lastAutoTable.finalY + 8;
+                    }
+
+                    // cek halaman baru sebelum summary
+                    if (y + 55 > PH - 18) {
+                        newPage();
+                    }
+
+                    // Summary
+                    y += 2;
+                    const margColor = margin >= 30 ? C.sage : margin > 0 ? C.gold : C.accent;
+
+                    doc.setFillColor(...C.slate);
+                    doc.rect(ML, y, CW, 50, 'F');
+                    doc.setFillColor(...C.gold);
+                    doc.rect(ML, y, CW, 9, 'F');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(7.5);
+                    doc.setTextColor(...C.ink);
+                    doc.text('SUMMARY PERHITUNGAN HPP', ML + 5, y + 6.5);
+                    y += 13;
+
+                    const cols4 = [
+                        { label: 'Total HPP Bahan', val: fmtS(totalBahan), col: C.paper },
+                        { label: 'Total HPP Kemasan', val: fmtS(totalKemasan), col: C.paper },
+                        { label: 'Total HPP Keseluruhan', val: fmtS(totalHPP), col: C.gold },
+                        { label: 'Harga Jual', val: fmtS(prodSP), col: C.sage },
+                    ];
+                    const cw4 = CW / 4;
+                    cols4.forEach((si, i) => {
+                        const sx = ML + i * cw4;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(6.5);
+                        doc.setTextColor(...C.muted);
+                        doc.text(si.label, sx + 4, y);
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(9.5);
+                        doc.setTextColor(...si.col);
+                        doc.text(si.val, sx + 4, y + 8, { maxWidth: cw4 - 6 });
+                    });
+
+                    y += 19;
+
+                    doc.setFillColor(...margColor);
+                    doc.rect(ML + 3, y, CW - 6, 13, 'F');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(8.5);
+                    doc.setTextColor(...C.ink);
+                    doc.text('LABA / PORSI: ' + fmtS(laba), ML + 8, y + 8.5);
+                    doc.setFontSize(11);
+                    doc.text('MARGIN: ' + margin.toFixed(1) + '%', PW / 2, y + 8.5, { align: 'center' });
+                    doc.setFontSize(8.5);
+                    doc.text('Jual ' + fmtS(prodSP) + '  -  HPP ' + fmtS(totalHPP), PW - MR - 8, y + 8.5, { align: 'right' });
+
+                    y += 18;
+                }
+
+                addFooter();
+                doc.save('GurmieKasir_HPP_Detail_' + new Date().toISOString().split('T')[0] + '.pdf');
+
+            } catch (err) {
+                console.error(err);
+                alert('Gagal generate PDF HPP: ' + err.message);
+            }
+
+            btn.innerHTML = originalText;
         }
 
         async function loadAllData() {
