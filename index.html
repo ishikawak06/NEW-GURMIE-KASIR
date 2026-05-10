@@ -675,6 +675,8 @@
                 <button onclick="switchBahanTab('resep')" id="btn-tab-resep"
                     class="px-3 md:px-4 py-2.5 font-medium text-xs md:text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 whitespace-nowrap">Resep
                     Produk</button>
+                <button onclick="switchBahanTab('packaging')" id="btn-tab-packaging"
+                    class="px-3 md:px-4 py-2.5 font-medium text-xs md:text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 whitespace-nowrap transition-colors">Packaging</button>
             </div>
             <div id="tab-dasar" class="tab-content active flex-1">
                 <div class="flex justify-between items-center mb-3">
@@ -747,6 +749,32 @@
                             </tr>
                         </thead>
                         <tbody id="table-resep" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- ==================== TAB PACKAGING ==================== -->
+            <div id="tab-packaging" class="tab-content flex-1">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-gray-800 dark:text-gray-200 text-sm">Daftar Packaging</h3>
+                    <button onclick="openModalPackaging()"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
+                        <i data-lucide="plus" class="w-3 h-3 mr-1"></i> Tambah
+                    </button>
+                </div>
+                <div
+                    class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-x-auto shadow-sm">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400 uppercase text-xs">
+                            <tr>
+                                <th class="px-4 py-3 font-medium">Nama Packaging</th>
+                                <th class="px-4 py-3 font-medium">Kuantitas & Satuan</th>
+                                <th class="px-4 py-3 font-medium text-right">Harga Total</th>
+                                <th class="px-4 py-3 font-medium text-right bg-blue-50/50 dark:bg-blue-900/10">
+                                    Harga/Satuan</th>
+                                <th class="px-4 py-3 font-medium text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-packaging" class="divide-y divide-gray-100 dark:divide-gray-800"></tbody>
                     </table>
                 </div>
             </div>
@@ -984,6 +1012,12 @@
                                 <option value="Lembar">Lembar</option>
                                 <option value="Bungkus">Bungkus</option>
                                 <option value="Pcs">Pcs</option>
+                                <!-- Tambahan Satuan Packaging -->
+                                <option value="Pack">Pack</option>
+                                <option value="Box">Box</option>
+                                <option value="Cup">Cup</option>
+                                <option value="Botol">Botol</option>
+                                <option value="Bowl">Bowl</option>
                             </select>
                         </div>
                         <div><label class="block text-xs font-medium text-gray-500 mb-1">Total Kapasitas</label><input
@@ -1041,6 +1075,11 @@
                                 <option value="Mililiter (ml)">Mililiter (ml)</option>
                                 <option value="Liter (L)">Liter (L)</option>
                                 <option value="Pcs">Pcs</option>
+                                <!-- Tambahan Satuan Packaging -->
+                                <option value="Pack">Pack</option>
+                                <option value="Box">Box</option>
+                                <option value="Cup">Cup</option>
+                                <option value="Botol">Botol</option>
                             </select>
                         </div>
                         <div><label class="block text-xs font-medium text-gray-500 mb-1">Yield (Kuantitas
@@ -1283,7 +1322,72 @@
                 <p class="text-center text-xs text-gray-500 mt-3">Arahkan kamera ke barcode produk.</p>
             </div>
         </div>
+        <!-- Modal Packaging -->
+        <div id="modal-packaging"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-md shadow-2xl flex flex-col">
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900 rounded-t-2xl">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-sm">Form Packaging</h3>
+                    <button onclick="toggleModal('modal-packaging', false)"
+                        class="text-gray-400 hover:text-gray-700 dark:hover:text-white"><i data-lucide="x"
+                            class="w-5 h-5"></i></button>
+                </div>
 
+                <div class="p-4 space-y-3">
+                    <input type="hidden" id="packId">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Nama Packaging</label>
+                        <input type="text" id="packName" placeholder="Contoh: Thinwall 500ml"
+                            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="col-span-1">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Total Beli (Rp)</label>
+                            <input type="number" id="packTotalPrice" oninput="calculatePackUnit()"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Jumlah (Qty)</label>
+                            <input type="number" id="packQty" oninput="calculatePackUnit()"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none focus:border-blue-500 text-sm text-gray-900 dark:text-white">
+                        </div>
+                        <div class="col-span-1">
+                            <label class="block text-xs font-medium text-gray-500 mb-1">Satuan</label>
+                            <select id="packUnit"
+                                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded p-2 focus:outline-none text-sm text-gray-900 dark:text-white">
+                                <option value="Pcs">Pcs</option>
+                                <option value="Set">Set</option>
+                                <option value="Pack">Pack</option>
+                                <option value="Box">Box</option>
+                                <option value="Cup">Cup</option>
+                                <option value="Botol">Botol</option>
+                                <option value="Bowl">Bowl</option>
+                                <option value="Roll">Roll</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800 flex justify-between items-center mt-2">
+                        <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Harga Satuan:</span>
+                        <input type="text" id="packUnitPrice" disabled
+                            class="bg-transparent font-bold text-blue-600 dark:text-neon-cyan text-sm text-right outline-none w-1/2"
+                            value="Rp 0">
+                    </div>
+                </div>
+
+                <div
+                    class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-b-2xl flex justify-end gap-2">
+                    <button onclick="toggleModal('modal-packaging', false)"
+                        class="px-4 py-2 rounded text-sm font-medium text-gray-600 hover:bg-gray-200 dark:text-gray-400 dark:hover:bg-gray-800">Batal</button>
+                    <button onclick="savePackaging()"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-6 py-2 rounded text-sm">Simpan</button>
+                </div>
+            </div>
+        </div>
         <div id="modal-expense"
             class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
             <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
@@ -1542,6 +1646,55 @@
     </main>
 
     <script>
+        // Asumsi ini adalah state/array resep yang sedang dibuat
+        let currentRecipe = {
+            ingredients: [
+                { name: "Mie Basah", type: "raw_material", qtyUsed: 1, unit: "Porsi", costPerUnit: 3000 },
+                { name: "Ayam Cincang", type: "semi_finished", qtyUsed: 50, unit: "Gram", costPerUnit: 40 }
+            ],
+            packaging: [
+                { name: "Paper Bowl", type: "packaging", qtyUsed: 1, unit: "Pcs", costPerUnit: 1200 },
+                { name: "Sendok Plastik", type: "packaging", qtyUsed: 1, unit: "Set", costPerUnit: 300 }
+            ]
+        };
+
+        function calculateTotalHPP() {
+            let totalBahan = 0;
+            let totalPackaging = 0;
+
+            // 1. Hitung total biaya bahan baku / olahan
+            currentRecipe.ingredients.forEach(item => {
+                totalBahan += (item.qtyUsed * item.costPerUnit);
+            });
+
+            // 2. Hitung total biaya packaging
+            currentRecipe.packaging.forEach(pack => {
+                totalPackaging += (pack.qtyUsed * pack.costPerUnit);
+            });
+
+            // 3. Kalkulasi Grand Total
+            const grandTotalHPP = totalBahan + totalPackaging;
+
+            console.log(`Total Biaya Bahan: Rp ${totalBahan}`);
+            console.log(`Total Biaya Packaging: Rp ${totalPackaging}`);
+            console.log(`Grand Total HPP: Rp ${grandTotalHPP}`);
+
+            // Nanti nilai ini di-render ke UI
+            return grandTotalHPP;
+        }
+        // Logika Penghitungan Otomatis
+        function calculatePackUnit() {
+            const total = parseFloat(document.getElementById('packTotalPrice').value) || 0;
+            const qty = parseFloat(document.getElementById('packQty').value) || 0;
+
+            if (total > 0 && qty > 0) {
+                const unitPrice = total / qty;
+                // Format ke Rupiah
+                document.getElementById('packUnitPrice').value = Math.round(unitPrice);
+            } else {
+                document.getElementById('packUnitPrice').value = 0;
+            }
+        }
         // ==========================================
         // CONFIG & SUPABASE INIT
         // ==========================================
@@ -2225,19 +2378,26 @@
         // BAHAN & RESEP
         // ==========================================
         function switchBahanTab(tabName) {
-            ['dasar', 'olahan', 'resep'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.remove('active');
+            // Tambahkan 'packaging' ke dalam array
+            ['dasar', 'olahan', 'resep', 'packaging'].forEach(t => {
+                const tabEl = document.getElementById(`tab-${t}`);
+                if (tabEl) tabEl.classList.remove('active');
+
                 const btn = document.getElementById(`btn-tab-${t}`);
-                btn.className = "px-3 md:px-4 py-2.5 font-medium text-xs md:text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 whitespace-nowrap transition-colors";
+                if (btn) btn.className = "px-3 md:px-4 py-2.5 font-medium text-xs md:text-sm border-b-2 border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 whitespace-nowrap transition-colors";
             });
-            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            if (activeTab) activeTab.classList.add('active');
+
             const activeBtn = document.getElementById(`btn-tab-${tabName}`);
-            activeBtn.className = "px-3 md:px-4 py-2.5 font-bold text-xs md:text-sm border-b-2 border-blue-600 dark:border-neon-cyan text-blue-600 dark:text-neon-cyan whitespace-nowrap transition-colors";
+            if (activeBtn) activeBtn.className = "px-3 md:px-4 py-2.5 font-bold text-xs md:text-sm border-b-2 border-blue-600 dark:border-neon-cyan text-blue-600 dark:text-neon-cyan whitespace-nowrap transition-colors";
+
             if (tabName === 'dasar') renderBahanDasar();
             if (tabName === 'olahan') renderBahanOlahan();
             if (tabName === 'resep') renderResepTab();
+            if (tabName === 'packaging') renderPackaging(); // Panggil fungsi render packaging
         }
-
         function renderBahanDasar() {
             const tbody = document.getElementById('table-bahan-dasar');
             if (!tbody) return;
@@ -3208,7 +3368,86 @@
                 }
             });
         });
+        // ==========================================
+        // PACKAGING
+        // ==========================================
 
+        // State sementara untuk menampung data packaging (Pastikan ada tabel packagings di Supabase)
+        state.packagings = state.packagings || [];
+
+        // Fungsi untuk membuka modal Tambah Packaging
+        function openModalPackaging() {
+            document.getElementById('packId').value = '';
+            document.getElementById('packName').value = '';
+            document.getElementById('packTotalPrice').value = '';
+            document.getElementById('packQty').value = '';
+            document.getElementById('packUnit').value = 'Pcs';
+            document.getElementById('packUnitPrice').value = 'Rp 0';
+            toggleModal('modal-packaging', true);
+        }
+
+        // Fungsi untuk menampilkan data ke dalam Tabel Packaging
+        function renderPackaging() {
+            const tbody = document.getElementById('table-packaging');
+            if (!tbody) return;
+
+            if (state.packagings.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 text-xs">Belum ada data packaging.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = state.packagings.map(p => `
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                    <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${p.name}</td>
+                    <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-sm">${p.quantity} ${p.unit}</td>
+                    <td class="px-4 py-3 text-right text-red-500 text-sm">${formatRp(p.total_price)}</td>
+                    <td class="px-4 py-3 text-right font-bold text-blue-600 dark:text-neon-cyan bg-blue-50/50 dark:bg-blue-900/10 text-sm">${formatRp(p.unit_price)}</td>
+                    <td class="px-4 py-3 text-center">
+                        <button onclick="editPackaging('${p.id}')" class="text-blue-500 hover:text-blue-700 mr-2"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="deletePackaging('${p.id}')" class="text-red-500 hover:text-red-700"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Fungsi untuk menyimpan data ke Supabase
+        async function savePackaging() {
+            const id = document.getElementById('packId').value;
+            const name = document.getElementById('packName').value;
+            const total_price = parseFloat(document.getElementById('packTotalPrice').value) || 0;
+            const quantity = parseFloat(document.getElementById('packQty').value) || 0;
+            const unit = document.getElementById('packUnit').value;
+
+            if (!name || total_price <= 0 || quantity <= 0) {
+                return showToast('Harap isi semua kolom dengan benar', 'error');
+            }
+
+            const unit_price = total_price / quantity;
+            const payload = { name, total_price, quantity, unit, unit_price };
+
+            showLoading(true);
+            try {
+                // Catatan: Pastikan Anda sudah membuat tabel 'packagings' di Supabase
+                let res;
+                if (id) {
+                    res = await supabaseClient.from('packagings').update(payload).eq('id', id);
+                } else {
+                    res = await supabaseClient.from('packagings').insert([payload]);
+                }
+
+                if (res.error) throw res.error;
+                showToast('Packaging tersimpan!', 'success');
+                toggleModal('modal-packaging', false);
+
+                // Refresh data (Nantinya Anda bisa tambahkan fetch khusus packaging)
+                // await fetchPackagings(); 
+
+            } catch (e) {
+                showToast('Gagal menyimpan packaging: ' + e.message, 'error');
+            }
+            showLoading(false);
+        }
     </script>
 </body>
 
