@@ -3413,40 +3413,16 @@
 
         // Fungsi untuk menyimpan data ke Supabase
         async function savePackaging() {
-            const id = document.getElementById('packId').value;
-            const name = document.getElementById('packName').value;
-            const total_price = parseFloat(document.getElementById('packTotalPrice').value) || 0;
-            const quantity = parseFloat(document.getElementById('packQty').value) || 0;
-            const unit = document.getElementById('packUnit').value;
+            // ... pengambilan data dari form ...
+            const payload = {
+                name: packName,
+                total_price: packTotalPrice,
+                qty: packQty,
+                unit: packUnit
+                // ✅ Biarkan Supabase yang menghitung dan mengisi unit_price otomatis
+            };
 
-            if (!name || total_price <= 0 || quantity <= 0) {
-                return showToast('Harap isi semua kolom dengan benar', 'error');
-            }
-
-            const unit_price = total_price / quantity;
-            const payload = { name, total_price, quantity, unit, unit_price };
-
-            showLoading(true);
-            try {
-                // Catatan: Pastikan Anda sudah membuat tabel 'packagings' di Supabase
-                let res;
-                if (id) {
-                    res = await supabaseClient.from('packagings').update(payload).eq('id', id);
-                } else {
-                    res = await supabaseClient.from('packagings').insert([payload]);
-                }
-
-                if (res.error) throw res.error;
-                showToast('Packaging tersimpan!', 'success');
-                toggleModal('modal-packaging', false);
-
-                // Refresh data (Nantinya Anda bisa tambahkan fetch khusus packaging)
-                // await fetchPackagings(); 
-
-            } catch (e) {
-                showToast('Gagal menyimpan packaging: ' + e.message, 'error');
-            }
-            showLoading(false);
+            const { error } = await supabaseClient.from('packaging').insert([payload]);
         }
     </script>
 </body>
