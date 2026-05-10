@@ -1127,6 +1127,16 @@
                                 class="text-sm font-bold text-gray-600 dark:text-gray-400">Total Modal:</span><span
                                 id="comp-total-modal" class="text-lg font-bold text-gray-900 dark:text-white">Rp
                                 0</span></div>
+                        <div id="comp-overhead-row"
+                            class="hidden flex-col gap-1 pt-2 border-t border-blue-200 dark:border-blue-800">
+                            <label class="text-xs font-bold text-gray-600 dark:text-gray-400">
+                                Biaya Overhead per Porsi (Listrik, Gaji, dll)
+                                <span class="font-normal text-gray-400"> — opsional, untuk estimasi HPP realistis</span>
+                            </label>
+                            <input type="number" id="comp-overhead" min="0" placeholder="Contoh: 500"
+                                oninput="calcCompTotal()"
+                                class="w-full bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white">
+                        </div>
                         <div
                             class="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
                             <span class="text-sm font-bold text-gray-600 dark:text-gray-400">HPP / Satuan:</span><span
@@ -2521,8 +2531,20 @@
             const mode = document.getElementById('comp-mode').value;
             const totalModal = state.compItems.reduce((sum, item) => sum + item.cost, 0);
             document.getElementById('comp-total-modal').innerText = formatRp(totalModal);
-            if (mode === 'olahan') { const yieldVal = parseFloat(document.getElementById('comp-ol-yield').value) || 1; document.getElementById('comp-hpp-satuan').innerText = formatRp(totalModal / yieldVal); }
-            else document.getElementById('comp-hpp-satuan').innerText = formatRp(totalModal);
+
+            // Tampilkan / sembunyikan field overhead sesuai mode
+            const overheadRow = document.getElementById('comp-overhead-row');
+            if (overheadRow) overheadRow.classList.toggle('hidden', mode !== 'resep');
+
+            const overhead = parseFloat(document.getElementById('comp-overhead')?.value) || 0;
+
+            if (mode === 'olahan') {
+                const yieldVal = parseFloat(document.getElementById('comp-ol-yield').value) || 1;
+                document.getElementById('comp-hpp-satuan').innerText = formatRp(totalModal / yieldVal);
+            } else {
+                // mode resep: tambahkan overhead ke HPP
+                document.getElementById('comp-hpp-satuan').innerText = formatRp(totalModal + overhead);
+            }
         }
 
         function renderBahanOlahan() {
@@ -3357,6 +3379,7 @@
             await fetchProducts();
             await fetchCustomers();
             await fetchBOMData();
+            await fetchPackagings();
 
             renderCart();
             updateHeldBadge();
@@ -3369,13 +3392,15 @@
             });
         });
         // ==========================================
-        // PACKAGING
+        // PACKAGING — FIXED
         // ==========================================
-
-        // State sementara untuk menampung data packaging (Pastikan ada tabel packagings di Supabase)
         state.packagings = state.packagings || [];
 
-        // Fungsi untuk membuka modal Tambah Packaging
+        async function fetchPackagings() {
+            const { data, error } = await supabaseClient.from('packagings').select('*').order('name');
+            if (!error && data) { state.packagings = data; renderPackaging(); }
+        }
+
         function openModalPackaging() {
             document.getElementById('packId').value = '';
             document.getElementById('packName').value = '';
@@ -3386,16 +3411,37 @@
             toggleModal('modal-packaging', true);
         }
 
-        // Fungsi untuk menampilkan data ke dalam Tabel Packaging
+        function editPackaging(id) {
+            const p = state.packagings.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('packId').value = p.id;
+            document.getElementById('packName').value = p.name;
+            document.getElementById('packTotalPrice').value = p.total_price;
+            document.getElementById('packQty').value = p.quantity;
+            document.getElementById('packUnit').value = p.unit;
+            document.getElementById('packUnitPrice').value = Math.round(p.unit_price || 0);
+            toggleModal('modal-packaging', true);
+        }
+
+        async function deletePackaging(id) {
+            if (!confirm('Hapus packaging ini?')) return;
+            showLoading(true);
+            try {
+                const { error } = await supabaseClient.from('packagings').delete().eq('id', id);
+                if (error) throw error;
+                showToast('Packaging terhapus.', 'success');
+                await fetchPackagings();
+            } catch (e) { showToast('Gagal menghapus.', 'error'); }
+            showLoading(false);
+        }
+
         function renderPackaging() {
             const tbody = document.getElementById('table-packaging');
             if (!tbody) return;
-
             if (state.packagings.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 text-xs">Belum ada data packaging.</td></tr>`;
                 return;
             }
-
             tbody.innerHTML = state.packagings.map(p => `
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${p.name}</td>
@@ -3411,18 +3457,28 @@
             lucide.createIcons();
         }
 
-        // Fungsi untuk menyimpan data ke Supabase
         async function savePackaging() {
-            // ... pengambilan data dari form ...
-            const payload = {
-                name: packName,
-                total_price: packTotalPrice,
-                qty: packQty,
-                unit: packUnit
-                // ✅ Biarkan Supabase yang menghitung dan mengisi unit_price otomatis
-            };
+            const id = document.getElementById('packId').value;
+            const name = document.getElementById('packName').value.trim();
+            const totalPrice = parseFloat(document.getElementById('packTotalPrice').value) || 0;
+            const qty = parseFloat(document.getElementById('packQty').value) || 0;
+            const unit = document.getElementById('packUnit').value;
 
-            const { error } = await supabaseClient.from('packaging').insert([payload]);
+            if (!name) return showToast('Nama packaging wajib diisi.', 'warning');
+            if (totalPrice <= 0 || qty <= 0) return showToast('Harga total dan jumlah harus lebih dari 0.', 'warning');
+
+            const payload = { name, total_price: totalPrice, quantity: qty, unit };
+            showLoading(true);
+            try {
+                let res = id
+                    ? await supabaseClient.from('packagings').update(payload).eq('id', id)
+                    : await supabaseClient.from('packagings').insert([payload]);
+                if (res.error) throw res.error;
+                showToast('Packaging berhasil disimpan!', 'success');
+                toggleModal('modal-packaging', false);
+                await fetchPackagings();
+            } catch (e) { showToast('Gagal menyimpan: ' + e.message, 'error'); }
+            showLoading(false);
         }
     </script>
 </body>
