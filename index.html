@@ -1128,14 +1128,22 @@
                                 id="comp-total-modal" class="text-lg font-bold text-gray-900 dark:text-white">Rp
                                 0</span></div>
                         <div id="comp-overhead-row"
-                            class="hidden flex-col gap-1 pt-2 border-t border-blue-200 dark:border-blue-800">
-                            <label class="text-xs font-bold text-gray-600 dark:text-gray-400">
-                                Biaya Overhead per Porsi (Listrik, Gaji, dll)
-                                <span class="font-normal text-gray-400"> — opsional, untuk estimasi HPP realistis</span>
-                            </label>
-                            <input type="number" id="comp-overhead" min="0" placeholder="Contoh: 500"
-                                oninput="calcCompTotal()"
-                                class="w-full bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 rounded p-2 text-sm focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white">
+                            class="flex-col gap-2 pt-2 border-t border-blue-200 dark:border-blue-800">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-bold text-gray-600 dark:text-gray-400">
+                                    Biaya Overhead <span class="font-normal text-gray-400">(Listrik, Gas, Gaji,
+                                        dll)</span>
+                                </label>
+                                <button type="button" onclick="addOverheadItem()"
+                                    class="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 px-2 py-1 rounded font-bold flex items-center gap-1">
+                                    <i data-lucide="plus" class="w-3 h-3"></i> Tambah
+                                </button>
+                            </div>
+                            <div id="comp-overhead-list" class="space-y-1.5"></div>
+                            <div class="flex justify-between items-center text-xs pt-1">
+                                <span class="text-gray-500 dark:text-gray-400">Total Overhead:</span>
+                                <span id="comp-overhead-total" class="font-bold text-orange-500">Rp 0</span>
+                            </div>
                         </div>
                         <div
                             class="flex justify-between items-center pt-2 border-t border-blue-200 dark:border-blue-800">
@@ -1723,8 +1731,8 @@
             editingTrx: { id: null, date: '', items: [] },
             expensesList: [], editingExpenseId: null, expenseItems: [],
             reportPeriodText: '7 Hari Terakhir',
-            rawMaterials: [], processedMaterials: [], recipes: [],
-            compItems: [], customers: [],
+            rawMaterials: [], processedMaterials: [], recipes: [], packagingList: [],
+            compItems: [], overheadItems: [], customers: [],
             historyDuration: 'all', historyCustomerFilter: '',
             historyTypeFilter: 'all',
             coaList: []
@@ -2473,8 +2481,9 @@
 
         function getMaterialSelectHTML(index, selectedId = '') {
             let opts = `<option value="">-- Pilih Bahan --</option>`;
-            if (state.rawMaterials.length > 0) { opts += `<optgroup label="Bahan Dasar">`; state.rawMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="raw" data-price="${m.unitPrice}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.unitPrice)}/${m.unit})</option>`; }); opts += `</optgroup>`; }
-            if (state.processedMaterials.length > 0) { opts += `<optgroup label="Bahan Olahan">`; state.processedMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="processed" data-price="${m.hppPerUnit}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.hppPerUnit)}/${m.unit})</option>`; }); opts += `</optgroup>`; }
+            if (state.rawMaterials.length > 0) { opts += `<optgroup label="🥩 Bahan Dasar">`; state.rawMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="raw" data-price="${m.unitPrice}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.unitPrice)}/${m.unit})</option>`; }); opts += `</optgroup>`; }
+            if (state.processedMaterials.length > 0) { opts += `<optgroup label="🍳 Bahan Olahan">`; state.processedMaterials.forEach(m => { opts += `<option value="${m.id}" data-type="processed" data-price="${m.hppPerUnit}" data-unit="${m.unit}" ${selectedId === m.id ? 'selected' : ''}>${m.name} (${formatRp(m.hppPerUnit)}/${m.unit})</option>`; }); opts += `</optgroup>`; }
+            if (state.packagings && state.packagings.length > 0) { opts += `<optgroup label="📦 Packaging">`; state.packagings.forEach(p => { opts += `<option value="${p.id}" data-type="packaging" data-price="${p.unit_price}" data-unit="${p.unit}" ${selectedId === p.id ? 'selected' : ''}>${p.name} (${formatRp(p.unit_price)}/${p.unit})</option>`; }); opts += `</optgroup>`; }
             return `<select onchange="updateCompMaterial(${index}, this)" class="w-full bg-transparent border-b border-gray-300 dark:border-gray-700 p-1 text-xs focus:outline-none focus:border-blue-500 text-gray-900 dark:text-white">${opts}</select>`;
         }
 
@@ -2529,32 +2538,74 @@
 
         function calcCompTotal() {
             const mode = document.getElementById('comp-mode').value;
-            const totalModal = state.compItems.reduce((sum, item) => sum + item.cost, 0);
-            document.getElementById('comp-total-modal').innerText = formatRp(totalModal);
+            const totalBahan = state.compItems.reduce((sum, item) => sum + item.cost, 0);
+            document.getElementById('comp-total-modal').innerText = formatRp(totalBahan);
 
-            // Tampilkan / sembunyikan field overhead sesuai mode
-            const overheadRow = document.getElementById('comp-overhead-row');
-            if (overheadRow) overheadRow.classList.toggle('hidden', mode !== 'resep');
-
-            const overhead = parseFloat(document.getElementById('comp-overhead')?.value) || 0;
+            const totalOverhead = (state.overheadItems || []).reduce((s, i) => s + (i.amount || 0), 0);
 
             if (mode === 'olahan') {
                 const yieldVal = parseFloat(document.getElementById('comp-ol-yield').value) || 1;
-                document.getElementById('comp-hpp-satuan').innerText = formatRp(totalModal / yieldVal);
+                document.getElementById('comp-hpp-satuan').innerText = formatRp((totalBahan + totalOverhead) / yieldVal);
             } else {
-                // mode resep: tambahkan overhead ke HPP
-                document.getElementById('comp-hpp-satuan').innerText = formatRp(totalModal + overhead);
+                document.getElementById('comp-hpp-satuan').innerText = formatRp(totalBahan + totalOverhead);
             }
         }
+        // ==========================================
+        // OVERHEAD MULTI-ROW
+        // ==========================================
+        function addOverheadItem() {
+            state.overheadItems.push({ name: '', amount: 0 });
+            renderOverheadItems();
+        }
 
+        function removeOverheadItem(index) {
+            state.overheadItems.splice(index, 1);
+            renderOverheadItems();
+        }
+
+        function updateOverheadItemName(index, val) {
+            state.overheadItems[index].name = val;
+        }
+
+        function updateOverheadItemAmount(index, val) {
+            state.overheadItems[index].amount = parseFloat(val) || 0;
+            const totalEl = document.getElementById('comp-overhead-total');
+            if (totalEl) totalEl.innerText = formatRp(state.overheadItems.reduce((s, i) => s + i.amount, 0));
+            calcCompTotal();
+        }
+
+        function renderOverheadItems() {
+            const container = document.getElementById('comp-overhead-list');
+            if (!container) return;
+            if (state.overheadItems.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 dark:text-gray-500 italic pl-1">Belum ada overhead. Klik "+ Tambah" untuk input listrik, gas, gaji, dll.</p>`;
+            } else {
+                container.innerHTML = state.overheadItems.map((item, i) => `
+                    <div class="flex items-center gap-2">
+                        <input type="text" oninput="updateOverheadItemName(${i}, this.value)" value="${item.name}"
+                            placeholder="Nama (Listrik, Gas, Gaji...)"
+                            class="flex-1 bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800 rounded p-1.5 text-xs focus:outline-none text-gray-900 dark:text-white">
+                        <input type="number" oninput="updateOverheadItemAmount(${i}, this.value)" value="${item.amount || ''}"
+                            placeholder="Rp/porsi" min="0"
+                            class="w-28 bg-white dark:bg-gray-800 border border-orange-200 dark:border-orange-800 rounded p-1.5 text-xs text-right focus:outline-none text-gray-900 dark:text-white">
+                        <button type="button" onclick="removeOverheadItem(${i})" class="text-red-500 hover:text-red-700 shrink-0">
+                            <i data-lucide="minus-circle" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
+            const totalEl = document.getElementById('comp-overhead-total');
+            if (totalEl) totalEl.innerText = formatRp(state.overheadItems.reduce((s, i) => s + i.amount, 0));
+            lucide.createIcons();
+            calcCompTotal();
+        }
         function renderBahanOlahan() {
             const tbody = document.getElementById('table-bahan-olahan');
             if (!tbody) return;
             if (state.processedMaterials.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500 text-xs">Belum ada bahan olahan.</td></tr>`; return; }
             tbody.innerHTML = state.processedMaterials.map(p => `
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                    <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${p.name}<br><span class="text-[10px] text-gray-500">${p.items.length} Komposisi</span></td>
-                    <td class="px-4 py-3 text-center text-sm">${p.yield} ${p.unit}</td>
+<td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${p.name}<br><span class="text-[10px] text-gray-500">${p.items.filter(i => i.type !== 'overhead').length} Bahan${p.items.filter(i => i.type === 'overhead').length > 0 ? ' + ' + p.items.filter(i => i.type === 'overhead').length + ' Overhead' : ''}</span></td>                    <td class="px-4 py-3 text-center text-sm">${p.yield} ${p.unit}</td>
                     <td class="px-4 py-3 text-right text-gray-600 dark:text-gray-400 text-sm">${formatRp(p.totalModal)}</td>
                     <td class="px-4 py-3 text-right font-bold text-purple-600 dark:text-neon-purple bg-purple-50/50 dark:bg-purple-900/10 text-sm">${formatRp(p.hppPerUnit)}</td>
                     <td class="px-4 py-3 text-center">
@@ -2566,15 +2617,37 @@
             lucide.createIcons();
         }
 
-        function openModalBahanOlahan() { document.getElementById('comp-mode').value = 'olahan'; document.getElementById('title-modal-comp').innerText = 'Buat Bahan Mentah (Olahan)'; document.getElementById('comp-header-olahan').classList.remove('hidden'); document.getElementById('comp-header-resep').classList.add('hidden'); document.getElementById('comp-id').value = ''; document.getElementById('comp-ol-name').value = ''; document.getElementById('comp-ol-yield').value = '1'; state.compItems = []; addCompRow(); toggleModal('modal-composition', true); }
+        function openModalBahanOlahan() {
+            document.getElementById('comp-mode').value = 'olahan';
+            document.getElementById('title-modal-comp').innerText = 'Buat Bahan Mentah (Olahan)';
+            document.getElementById('comp-header-olahan').classList.remove('hidden');
+            document.getElementById('comp-header-resep').classList.add('hidden');
+            document.getElementById('comp-id').value = '';
+            document.getElementById('comp-ol-name').value = '';
+            document.getElementById('comp-ol-yield').value = '1';
+            state.compItems = [];
+            state.overheadItems = [];
+            renderOverheadItems();
+            addCompRow();
+            toggleModal('modal-composition', true);
+        }
 
         function editBahanOlahan(id) {
             const p = state.processedMaterials.find(x => x.id === id);
             if (!p) return;
-            document.getElementById('comp-mode').value = 'olahan'; document.getElementById('title-modal-comp').innerText = 'Edit Bahan Olahan'; document.getElementById('comp-header-olahan').classList.remove('hidden'); document.getElementById('comp-header-resep').classList.add('hidden'); document.getElementById('comp-id').value = p.id; document.getElementById('comp-ol-name').value = p.name; document.getElementById('comp-ol-yield').value = p.yield;
-            state.compItems = p.items ? JSON.parse(JSON.stringify(p.items)) : [];
+            document.getElementById('comp-mode').value = 'olahan';
+            document.getElementById('title-modal-comp').innerText = 'Edit Bahan Olahan';
+            document.getElementById('comp-header-olahan').classList.remove('hidden');
+            document.getElementById('comp-header-resep').classList.add('hidden');
+            document.getElementById('comp-id').value = p.id;
+            document.getElementById('comp-ol-name').value = p.name;
+            document.getElementById('comp-ol-yield').value = p.yield;
+            const allItems = p.items ? JSON.parse(JSON.stringify(p.items)) : [];
+            state.compItems = allItems.filter(i => i.type !== 'overhead');
+            state.overheadItems = allItems.filter(i => i.type === 'overhead').map(i => ({ name: i.name || '', amount: i.amount || i.cost || 0 }));
             if (state.compItems.length === 0) addCompRow();
             renderCompItems();
+            renderOverheadItems();
             toggleModal('modal-composition', true);
         }
 
@@ -2592,8 +2665,7 @@
                 const marginPrc = sellPrice > 0 ? ((margin / sellPrice) * 100).toFixed(1) + '%' : '0%';
                 return `<tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <td class="px-4 py-3 font-bold text-gray-900 dark:text-gray-200 text-sm">${prodName}</td>
-                    <td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 text-sm">${r.items.length} Item</td>
-                    <td class="px-4 py-3 text-right font-bold text-red-500 text-sm">${formatRp(r.totalHPP)}</td>
+<td class="px-4 py-3 text-center text-gray-600 dark:text-gray-400 text-sm">${r.items.filter(i => i.type !== 'overhead').length} Bahan${r.items.filter(i => i.type === 'overhead').length > 0 ? '<br><span class="text-[9px] text-orange-500">+' + r.items.filter(i => i.type === 'overhead').length + ' Overhead</span>' : ''}</td>                    <td class="px-4 py-3 text-right font-bold text-red-500 text-sm">${formatRp(r.totalHPP)}</td>
                     <td class="px-4 py-3 text-right text-gray-900 dark:text-white text-sm">${formatRp(sellPrice)}</td>
                     <td class="px-4 py-3 text-right font-bold text-green-600 dark:text-neon-green bg-green-50/50 dark:bg-green-900/10 text-sm">${formatRp(margin)}<br><span class="text-[10px] font-normal text-gray-500">${marginPrc}</span></td>
                     <td class="px-4 py-3 text-center">
@@ -2605,18 +2677,37 @@
             lucide.createIcons();
         }
 
-        function openModalResep() { document.getElementById('comp-mode').value = 'resep'; document.getElementById('title-modal-comp').innerText = 'Kalkulasi HPP & Resep'; document.getElementById('comp-header-olahan').classList.add('hidden'); document.getElementById('comp-header-resep').classList.remove('hidden'); const selProd = document.getElementById('comp-rs-product'); selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>' + state.products.map(p => `<option value="${p.id}">${p.name} (${formatRp(p.price)})</option>`).join(''); document.getElementById('comp-id').value = ''; state.compItems = []; addCompRow(); toggleModal('modal-composition', true); }
+        function openModalResep() {
+            document.getElementById('comp-mode').value = 'resep';
+            document.getElementById('title-modal-comp').innerText = 'Kalkulasi HPP & Resep';
+            document.getElementById('comp-header-olahan').classList.add('hidden');
+            document.getElementById('comp-header-resep').classList.remove('hidden');
+            const selProd = document.getElementById('comp-rs-product');
+            selProd.innerHTML = '<option value="">-- Pilih Produk Final --</option>' + state.products.map(p => `<option value="${p.id}">${p.name} (${formatRp(p.price)})</option>`).join('');
+            document.getElementById('comp-id').value = '';
+            state.compItems = [];
+            state.overheadItems = [];
+            renderOverheadItems();
+            addCompRow();
+            toggleModal('modal-composition', true);
+        }
 
         function editResep(id) {
             const r = state.recipes.find(x => x.id === id);
             if (!r) return;
-            document.getElementById('comp-mode').value = 'resep'; document.getElementById('title-modal-comp').innerText = 'Edit Resep'; document.getElementById('comp-header-olahan').classList.add('hidden'); document.getElementById('comp-header-resep').classList.remove('hidden');
+            document.getElementById('comp-mode').value = 'resep';
+            document.getElementById('title-modal-comp').innerText = 'Edit Resep';
+            document.getElementById('comp-header-olahan').classList.add('hidden');
+            document.getElementById('comp-header-resep').classList.remove('hidden');
             const selProd = document.getElementById('comp-rs-product');
             selProd.innerHTML = '<option value="">-- Pilih Produk --</option>' + state.products.map(p => `<option value="${p.id}" ${p.id === r.productId ? 'selected' : ''}>${p.name} (${formatRp(p.price)})</option>`).join('');
             document.getElementById('comp-id').value = r.id;
-            state.compItems = r.items ? JSON.parse(JSON.stringify(r.items)) : [];
+            const allItems = r.items ? JSON.parse(JSON.stringify(r.items)) : [];
+            state.compItems = allItems.filter(i => i.type !== 'overhead');
+            state.overheadItems = allItems.filter(i => i.type === 'overhead').map(i => ({ name: i.name || '', amount: i.amount || i.cost || 0 }));
             if (state.compItems.length === 0) addCompRow();
             renderCompItems();
+            renderOverheadItems();
             toggleModal('modal-composition', true);
         }
 
@@ -2627,7 +2718,12 @@
             const compId = document.getElementById('comp-id').value;
             const validItems = state.compItems.filter(i => (i.id !== '' || i.isCustom) && i.inputQty > 0).map(i => ({ id: i.isCustom ? i.id : i.id, isCustom: i.isCustom || false, customName: i.customName || null, type: i.type, unitPrice: i.unitPrice, qty: i.baseQty, inputQty: i.inputQty, inputUnit: i.inputUnit, baseUnit: i.baseUnit, cost: i.cost }));
             if (validItems.length === 0) return showToast('Minimal 1 bahan dengan qty > 0', 'warning');
-            const totalModal = validItems.reduce((s, i) => s + i.cost, 0);
+            const totalBahan = validItems.reduce((s, i) => s + i.cost, 0);
+            const validOverhead = (state.overheadItems || []).filter(i => i.name && i.amount > 0);
+            const totalOverhead = validOverhead.reduce((s, i) => s + i.amount, 0);
+            const totalModal = totalBahan + totalOverhead;
+            const overheadAsItems = validOverhead.map(i => ({ type: 'overhead', isOverhead: true, name: i.name, amount: i.amount, cost: i.amount }));
+            const allItems = [...validItems, ...overheadAsItems];
             showLoading(true);
             try {
                 if (mode === 'olahan') {
@@ -2635,15 +2731,13 @@
                     const unit = document.getElementById('comp-ol-unit').value;
                     const yieldVal = parseFloat(document.getElementById('comp-ol-yield').value) || 0;
                     if (!name || yieldVal <= 0) { showLoading(false); return showToast('Nama dan Yield harus diisi', 'error'); }
-                    const payload = { name, unit, yield_qty: yieldVal, total_modal: totalModal, hpp_per_unit: totalModal / yieldVal, items: validItems };
-                    let res = compId ? await supabaseClient.from('processed_materials').update(payload).eq('id', compId) : await supabaseClient.from('processed_materials').insert([payload]);
+                    const payload = { name, unit, yield_qty: yieldVal, total_modal: totalModal, hpp_per_unit: totalModal / yieldVal, items: allItems }; let res = compId ? await supabaseClient.from('processed_materials').update(payload).eq('id', compId) : await supabaseClient.from('processed_materials').insert([payload]);
                     if (res.error) throw res.error;
                     showToast('Bahan Olahan tersimpan!', 'success');
                 } else if (mode === 'resep') {
                     const prodId = document.getElementById('comp-rs-product').value;
                     if (!prodId) { showLoading(false); return showToast('Harap pilih produk!', 'error'); }
-                    const payload = { product_id: prodId, total_hpp: totalModal, items: validItems };
-                    let res;
+                    const payload = { product_id: prodId, total_hpp: totalModal, items: allItems }; let res;
                     if (compId) res = await supabaseClient.from('recipes').update(payload).eq('id', compId);
                     else { const existing = state.recipes.find(r => r.productId === prodId); res = existing ? await supabaseClient.from('recipes').update(payload).eq('id', existing.id) : await supabaseClient.from('recipes').insert([payload]); }
                     if (res.error) throw res.error;
