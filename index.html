@@ -734,6 +734,10 @@
                         class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm"><i
                             data-lucide="plus" class="w-3 h-3 mr-1"></i> Setup</button>
                 </div>
+                <button onclick="openHPPFilter()"
+                    class="bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 font-bold px-3 py-1.5 rounded text-xs flex items-center shadow-sm">
+                    <i data-lucide="file-down" class="w-3 h-3 mr-1"></i> PDF HPP
+                </button>
                 <div
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl overflow-x-auto shadow-sm">
                     <table class="w-full text-left text-sm whitespace-nowrap">
@@ -1660,6 +1664,35 @@
             class="fixed bottom-20 md:bottom-5 right-4 transform translate-y-20 opacity-0 transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white px-4 py-3 rounded-xl shadow-xl flex items-center z-[110]">
             <i id="toast-icon" data-lucide="info" class="w-5 h-5 mr-3"></i>
             <span id="toast-msg" class="text-sm font-medium">Message</span>
+        </div>
+        <div id="modal-hpp-filter"
+            class="fixed inset-0 bg-gray-900/50 dark:bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div
+                class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl flex flex-col">
+                <div
+                    class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900 rounded-t-2xl">
+                    <h3 class="font-bold text-gray-900 dark:text-white text-sm">Pilih Produk HPP</h3>
+                    <button onclick="toggleModal('modal-hpp-filter',false)" class="text-gray-400 hover:text-gray-700"><i
+                            data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div class="p-4">
+                    <div class="flex gap-2 mb-3">
+                        <button onclick="document.querySelectorAll('.hpp-chk').forEach(c=>c.checked=true)"
+                            class="text-xs px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">Semua</button>
+                        <button onclick="document.querySelectorAll('.hpp-chk').forEach(c=>c.checked=false)"
+                            class="text-xs px-3 py-1.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium">Hapus</button>
+                    </div>
+                    <div id="hpp-checklist" class="space-y-1 max-h-60 overflow-y-auto"></div>
+                </div>
+                <div
+                    class="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-b-2xl flex justify-end gap-2">
+                    <button onclick="toggleModal('modal-hpp-filter',false)"
+                        class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">Batal</button>
+                    <button onclick="downloadHPPPDF()"
+                        class="bg-blue-600 hover:bg-blue-700 dark:bg-neon-cyan text-white dark:text-dark font-bold px-5 py-2 rounded text-sm">Download
+                        PDF</button>
+                </div>
+            </div>
         </div>
     </main>
 
@@ -3574,6 +3607,220 @@
             } catch (e) { showToast('Gagal menyimpan: ' + e.message, 'error'); }
             showLoading(false);
         }
+        function openHPPFilter() {
+            const list = document.getElementById('hpp-checklist');
+            list.innerHTML = state.recipes.map(r => {
+                const prod = state.products.find(p => p.id === r.productId);
+                const name = prod ? prod.name : '(Produk Dihapus)';
+                const hpp = parseFloat(r.totalHPP || 0);
+                return `<label class="flex items-center gap-2 py-2 border-b border-gray-100 dark:border-gray-800 cursor-pointer text-sm">
+            <input type="checkbox" class="hpp-chk w-4 h-4" value="${r.id}" checked>
+            <span class="flex-1 text-gray-800 dark:text-gray-200 font-medium">${name}</span>
+            <span class="text-xs text-gray-400 font-mono">${formatRp(hpp)}</span>
+        </label>`;
+            }).join('') || '<p class="text-xs text-gray-500 text-center py-4">Belum ada resep.</p>';
+            toggleModal('modal-hpp-filter', true);
+            lucide.createIcons();
+        }
+
+        function downloadHPPPDF() {
+            const selected = [...document.querySelectorAll('.hpp-chk:checked')].map(c => c.value);
+            if (!selected.length) return showToast('Pilih minimal 1 produk.', 'warning');
+            toggleModal('modal-hpp-filter', false);
+
+            if (!window.jspdf) return showToast('Library jsPDF belum dimuat.', 'warning');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const PW = doc.internal.pageSize.getWidth();
+            const PH = doc.internal.pageSize.getHeight();
+            const ML = 14, MR = 14, CW = PW - ML - MR;
+
+            const INK = [20, 20, 20];
+            const GRAY = [120, 120, 120];
+            const LIGHT = [220, 220, 220];
+            const BG = [246, 246, 246];
+            const GREEN = [50, 110, 70];
+            const RED = [180, 55, 40];
+            const GOLD = [150, 110, 30];
+
+            let pageNum = 0, y = 0;
+
+            function newPage() {
+                if (pageNum > 0) doc.addPage();
+                pageNum++;
+                doc.setFillColor(255, 255, 255);
+                doc.rect(0, 0, PW, PH, 'F');
+                y = 14;
+            }
+
+            function checkY(need) {
+                if (y + need > PH - 16) newPage();
+            }
+
+            function hline(bold) {
+                doc.setDrawColor(...(bold ? INK : LIGHT));
+                doc.setLineWidth(bold ? 0.5 : 0.2);
+                doc.line(ML, y, PW - MR, y);
+                y += bold ? 5 : 3;
+            }
+
+            // Header
+            newPage();
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14);
+            doc.setTextColor(...INK);
+            doc.text('Laporan HPP - Bahan & Resep', ML, y);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...GRAY);
+            doc.text(new Date().toLocaleString('id-ID'), PW - MR, y, { align: 'right' });
+            y += 6;
+            hline(true);
+
+            const pickedRecipes = state.recipes.filter(r => selected.includes(r.id));
+
+            pickedRecipes.forEach((recipe, ri) => {
+                const prod = state.products.find(p => p.id === recipe.productId);
+                const prodName = prod ? prod.name : '(Produk Dihapus)';
+                const prodSP = prod ? parseFloat(prod.price) : 0;
+                const totalHPP = parseFloat(recipe.totalHPP || 0);
+                const laba = prodSP - totalHPP;
+                const margin = prodSP > 0 ? (laba / prodSP * 100) : 0;
+                const items = Array.isArray(recipe.items) ? recipe.items : [];
+
+                checkY(40);
+
+                // Nama produk
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(10);
+                doc.setTextColor(...INK);
+                doc.text(prodName.toUpperCase(), ML, y);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8);
+                doc.setTextColor(...GRAY);
+                doc.text('Harga Jual: ' + formatRp(prodSP), PW - MR, y, { align: 'right' });
+                y += 5;
+                hline(false);
+
+                // Pisah bahan & kemasan & overhead
+                const bahanRows = [], kemasanRows = [], overheadRows = [];
+                let totalBahan = 0, totalKemasan = 0, totalOverhead = 0;
+
+                items.forEach(item => {
+                    if (item.type === 'overhead' || item.isOverhead) {
+                        const c = parseFloat(item.cost || item.amount || 0);
+                        overheadRows.push([item.name || item.customName || '-', fmtUnit(''), '', '', formatRp(c)]);
+                        totalOverhead += c;
+                        return;
+                    }
+                    let nama = '', unit = '', unitPrice = 0;
+                    if (item.isCustom) {
+                        nama = item.customName || '-';
+                        unit = item.inputUnit || '-';
+                        unitPrice = parseFloat(item.unitPrice || 0);
+                    } else {
+                        const mat = item.type === 'raw'
+                            ? state.rawMaterials.find(m => m.id === item.id)
+                            : item.type === 'processed'
+                                ? state.processedMaterials.find(m => m.id === item.id)
+                                : state.packagings.find(m => m.id === item.id);
+                        nama = mat ? mat.name : (item.customName || '-');
+                        unit = mat ? (mat.unit || '-') : (item.baseUnit || '-');
+                        unitPrice = mat
+                            ? parseFloat(mat.unitPrice || mat.unit_price || mat.hppPerUnit || 0)
+                            : parseFloat(item.unitPrice || 0);
+                    }
+                    const qty = parseFloat(item.inputQty || item.qty || 0);
+                    const cost = parseFloat(item.cost || 0);
+                    const row = [nama, unit, formatRp(unitPrice), qty > 0 ? qty.toLocaleString('id-ID') : '-', formatRp(cost)];
+
+                    if (item.type === 'packaging') { kemasanRows.push(row); totalKemasan += cost; }
+                    else { bahanRows.push(row); totalBahan += cost; }
+                });
+
+                const COL = ['BAHAN', 'SATUAN', 'HARGA/SATUAN', 'QTY', 'BIAYA'];
+
+                function drawTable(rows, foot, headColor) {
+                    if (!rows.length) {
+                        doc.setFont('helvetica', 'italic');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(...GRAY);
+                        doc.text('(tidak ada data)', ML + 4, y + 4);
+                        y += 8; return;
+                    }
+                    doc.autoTable({
+                        startY: y,
+                        head: [COL], body: rows,
+                        foot: foot ? [foot] : [],
+                        showFoot: 'lastPage',
+                        theme: 'plain',
+                        headStyles: { fillColor: headColor, textColor: [255, 255, 255], fontSize: 7, fontStyle: 'bold', cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+                        bodyStyles: { fontSize: 7.5, textColor: INK, cellPadding: { top: 2, bottom: 2, left: 3, right: 3 } },
+                        footStyles: { fillColor: headColor, textColor: [255, 255, 255], fontSize: 7.5, fontStyle: 'bold', cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+                        alternateRowStyles: { fillColor: BG },
+                        columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right', fontStyle: 'bold' } },
+                        margin: { left: ML, right: MR },
+                        tableWidth: CW
+                    });
+                    y = doc.lastAutoTable.finalY + 5;
+                }
+
+                // Label A
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...GRAY);
+                doc.text('A. BAHAN BAKU', ML, y + 4); y += 7;
+                drawTable(bahanRows, ['', '', '', 'Total Bahan', formatRp(totalBahan)], [60, 110, 75]);
+
+                checkY(20);
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...GRAY);
+                doc.text('B. KEMASAN', ML, y + 4); y += 7;
+                drawTable(kemasanRows, ['', '', '', 'Total Kemasan', formatRp(totalKemasan)], [61, 74, 92]);
+
+                if (overheadRows.length > 0) {
+                    checkY(20);
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(...GRAY);
+                    doc.text('C. OVERHEAD', ML, y + 4); y += 7;
+                    drawTable(overheadRows, ['', '', '', 'Total Overhead', formatRp(totalOverhead)], [150, 110, 40]);
+                }
+
+                // Summary bar
+                checkY(14);
+                doc.setFillColor(...BG);
+                doc.rect(ML, y, CW, 12, 'F');
+                const margCol = margin >= 30 ? GREEN : margin > 0 ? GOLD : RED;
+                const cols = [
+                    { label: 'HPP Bahan', val: formatRp(totalBahan), x: ML + 4 },
+                    { label: 'HPP Kemasan', val: formatRp(totalKemasan), x: ML + 48 },
+                    { label: 'Total HPP', val: formatRp(totalHPP), x: ML + 92 },
+                ];
+                cols.forEach(c => {
+                    doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...GRAY);
+                    doc.text(c.label, c.x, y + 4);
+                    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK);
+                    doc.text(c.val, c.x, y + 10);
+                });
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...margCol);
+                doc.text('Laba: ' + formatRp(laba) + ' (' + margin.toFixed(1) + '%)', PW - MR - 4, y + 10, { align: 'right' });
+                y += 16;
+
+                if (ri < pickedRecipes.length - 1) { checkY(6); hline(true); }
+            });
+
+            // Footer
+            const total = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= total; i++) {
+                doc.setPage(i);
+                doc.setDrawColor(...LIGHT); doc.setLineWidth(0.2);
+                doc.line(ML, PH - 10, PW - MR, PH - 10);
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...GRAY);
+                doc.text('GurmieKasir - Laporan HPP', ML, PH - 5);
+                doc.text(i + ' / ' + total, PW - MR, PH - 5, { align: 'right' });
+            }
+
+            doc.save('HPP_' + new Date().toISOString().split('T')[0] + '.pdf');
+            showToast('PDF HPP berhasil diunduh!', 'success');
+        }
+
+        function fmtUnit(u) { return u || '-'; }
     </script>
 </body>
 
