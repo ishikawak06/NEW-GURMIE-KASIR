@@ -1,811 +1,488 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Self-Order QR — Restoran</title>
-
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    <!-- QR Code generator -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <!-- Lucide icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
-
-        :root {
-            --brand: #E8521A;
-            --brand-dark: #C4400F;
-            --brand-light: #FFF0EA;
-            --surface: #FAFAF8;
-            --card: #FFFFFF;
-            --border: #E8E8E4;
-            --text: #1A1A18;
-            --muted: #7A7A72;
-            --success: #16A34A;
-            --warning: #D97706;
-            --info: #2563EB;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--surface);
-            color: var(--text);
-            min-height: 100vh;
-        }
-
-        #app {
-            min-height: 100vh;
-        }
-
-        /* ── Scrollbar ── */
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #D1D1CB;
-            border-radius: 9999px;
-        }
-
-        /* ── Spinner ── */
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .spinner {
-            width: 28px;
-            height: 28px;
-            border: 3px solid #E8E8E4;
-            border-top-color: var(--brand);
-            border-radius: 50%;
-            animation: spin .7s linear infinite;
-        }
-
-        /* ── Slide-up drawer ── */
-        @keyframes slideUp {
-            from {
-                transform: translateY(100%);
-            }
-
-            to {
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideDown {
-            from {
-                transform: translateY(0);
-            }
-
-            to {
-                transform: translateY(100%);
-            }
-        }
-
-        .drawer-enter {
-            animation: slideUp .3s cubic-bezier(.4, 0, .2, 1) forwards;
-        }
-
-        .drawer-leave {
-            animation: slideDown .3s cubic-bezier(.4, 0, .2, 1) forwards;
-        }
-
-        /* ── Modal ── */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(.95);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .modal-enter {
-            animation: fadeIn .2s ease forwards;
-        }
-
-        /* ── Pulse badge ── */
-        @keyframes badgePulse {
-
-            0%,
-            100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.15);
-            }
-        }
-
-        .badge-pulse {
-            animation: badgePulse 1s ease infinite;
-        }
-
-        /* ── Category tabs ── */
-        .cat-tab {
-            white-space: nowrap;
-            padding: 7px 16px;
-            border-radius: 9999px;
-            font-size: 14px;
-            font-weight: 600;
-            border: 2px solid var(--border);
-            background: white;
-            cursor: pointer;
-            transition: all .15s;
-        }
-
-        .cat-tab.active {
-            background: var(--brand);
-            border-color: var(--brand);
-            color: white;
-        }
-
-        .cat-tab:hover:not(.active) {
-            border-color: var(--brand);
-            color: var(--brand);
-        }
-
-        /* ── Menu card ── */
-        .menu-card {
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1.5px solid var(--border);
-            cursor: pointer;
-            transition: transform .15s, box-shadow .15s;
-            position: relative;
-        }
-
-        .menu-card:hover:not(.unavailable) {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
-        }
-
-        .menu-card.unavailable {
-            opacity: .55;
-            cursor: not-allowed;
-            filter: grayscale(.6);
-        }
-
-        /* ── Toggle switch ── */
-        .toggle {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-        }
-
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle-slider {
-            position: absolute;
-            inset: 0;
-            background: #D1D1CB;
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: background .2s;
-        }
-
-        .toggle-slider::before {
-            content: '';
-            position: absolute;
-            width: 18px;
-            height: 18px;
-            left: 3px;
-            top: 3px;
-            background: white;
-            border-radius: 50%;
-            transition: transform .2s;
-        }
-
-        .toggle input:checked+.toggle-slider {
-            background: var(--success);
-        }
-
-        .toggle input:checked+.toggle-slider::before {
-            transform: translateX(20px);
-        }
-
-        /* ── Admin table ── */
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13.5px;
-        }
-
-        .admin-table th {
-            background: #F5F5F2;
-            padding: 10px 14px;
-            text-align: left;
-            font-weight: 700;
-            color: var(--muted);
-            letter-spacing: .03em;
-            text-transform: uppercase;
-            font-size: 11px;
-        }
-
-        .admin-table td {
-            padding: 11px 14px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-
-        .admin-table tr:hover td {
-            background: #FAFAF6;
-        }
-
-        /* ── Status badge ── */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            border-radius: 9999px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .status-pending {
-            background: #FEF3C7;
-            color: #92400E;
-        }
-
-        .status-confirmed {
-            background: #DBEAFE;
-            color: #1E40AF;
-        }
-
-        .status-preparing {
-            background: #E0E7FF;
-            color: #3730A3;
-        }
-
-        .status-ready {
-            background: #D1FAE5;
-            color: #065F46;
-        }
-
-        .status-completed {
-            background: #F0FDF4;
-            color: #166534;
-        }
-
-        .status-cancelled {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-
-        /* ── Progress steps ── */
-        .step-bar {
-            display: flex;
-            align-items: center;
-            position: relative;
-            padding: 12px 0;
-        }
-
-        .step-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            flex: 1;
-            position: relative;
-            z-index: 1;
-        }
-
-        .step-dot {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 3px solid var(--border);
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--muted);
-            transition: all .3s;
-        }
-
-        .step-dot.active {
-            border-color: var(--brand);
-            background: var(--brand);
-            color: white;
-        }
-
-        .step-dot.done {
-            border-color: var(--success);
-            background: var(--success);
-            color: white;
-        }
-
-        .step-connector {
-            position: absolute;
-            top: 50%;
-            left: calc(50% + 16px);
-            right: calc(-50% + 16px);
-            height: 3px;
-            background: var(--border);
-            transform: translateY(-50%);
-            z-index: 0;
-        }
-
-        .step-connector.done {
-            background: var(--success);
-        }
-
-        .step-label {
-            font-size: 11px;
-            margin-top: 5px;
-            font-weight: 600;
-            color: var(--muted);
-        }
-
-        .step-label.active {
-            color: var(--brand);
-        }
-
-        .step-label.done {
-            color: var(--success);
-        }
-
-        /* ── Kitchen card ── */
-        .kitchen-card {
-            background: white;
-            border-radius: 16px;
-            border-left: 5px solid var(--border);
-            padding: 16px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, .06);
-        }
-
-        .kitchen-card.pending {
-            border-left-color: #F59E0B;
-        }
-
-        .kitchen-card.confirmed {
-            border-left-color: #3B82F6;
-        }
-
-        .kitchen-card.preparing {
-            border-left-color: #10B981;
-        }
-
-        /* ── Admin nav ── */
-        .admin-nav-btn {
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            color: var(--muted);
-            transition: all .15s;
-        }
-
-        .admin-nav-btn.active {
-            background: var(--brand);
-            color: white;
-        }
-
-        .admin-nav-btn:hover:not(.active) {
-            background: var(--brand-light);
-            color: var(--brand);
-        }
-
-        /* ── Input / Select ── */
-        .inp {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 14px;
-            outline: none;
-            background: white;
-            transition: border-color .15s;
-        }
-
-        .inp:focus {
-            border-color: var(--brand);
-        }
-
-        select.inp {
-            cursor: pointer;
-        }
-
-        textarea.inp {
-            resize: vertical;
-        }
-
-        /* ── Btn ── */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            border: none;
-            transition: all .15s;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: var(--brand);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: var(--brand-dark);
-        }
-
-        .btn-outline {
-            background: transparent;
-            color: var(--brand);
-            border: 2px solid var(--brand);
-        }
-
-        .btn-outline:hover {
-            background: var(--brand-light);
-        }
-
-        .btn-danger {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-
-        .btn-danger:hover {
-            background: #FECACA;
-        }
-
-        .btn-ghost {
-            background: #F5F5F2;
-            color: var(--text);
-        }
-
-        .btn-ghost:hover {
-            background: #EBEBE8;
-        }
-
-        .btn-sm {
-            padding: 6px 12px;
-            font-size: 12px;
-            border-radius: 7px;
-        }
-
-        .btn-full {
-            width: 100%;
-        }
-
-        /* ── Alert ── */
-        .alert-error {
-            background: #FEF2F2;
-            border: 1.5px solid #FECACA;
-            color: #991B1B;
-            border-radius: 10px;
-            padding: 12px 16px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        /* ── QR canvas ── */
-        canvas.qr-canvas {
-            border-radius: 10px;
-        }
-
-        /* ── Floating cart btn ── */
-        #floatingCart {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%);
-            max-width: 440px;
-            width: calc(100% - 32px);
-            background: var(--text);
-            color: white;
-            border-radius: 14px;
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, .25);
-            transition: transform .15s, box-shadow .15s;
-            z-index: 100;
-        }
-
-        #floatingCart:hover {
-            transform: translateX(-50%) translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, .3);
-        }
-
-        /* ── Image placeholder ── */
-        .img-placeholder {
-            background: linear-gradient(135deg, #F0EFE9 0%, #E8E7E0 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ── Stat card ── */
-        .stat-card {
-            background: white;
-            border-radius: 16px;
-            border: 1.5px solid var(--border);
-            padding: 20px;
-            transition: transform .15s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-        }
-
-        /* ── Overlay ── */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, .5);
-            backdrop-filter: blur(2px);
-            z-index: 200;
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
-        }
-
-        .overlay-center {
-            align-items: center;
-        }
-
-        /* hide scrollbar on category row */
-        .cat-scroll {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .cat-scroll::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* fullpage loader */
-        #pageLoader {
-            position: fixed;
-            inset: 0;
-            background: var(--surface);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            z-index: 9999;
-        }
-
-        #pageLoader p {
-            color: var(--muted);
-            font-size: 14px;
-        }
-
-        /* order success */
-        .success-icon {
-            width: 72px;
-            height: 72px;
-            background: #D1FAE5;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto;
-        }
-
-        @media (min-width: 640px) {
-            .customer-wrap {
-                max-width: 480px;
-                margin: 0 auto;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Self-Order QR — Restoran</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <!-- QR Code generator -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+
+    :root {
+      --brand: #E8521A;
+      --brand-dark: #C4400F;
+      --brand-light: #FFF0EA;
+      --surface: #FAFAF8;
+      --card: #FFFFFF;
+      --border: #E8E8E4;
+      --text: #1A1A18;
+      --muted: #7A7A72;
+      --success: #16A34A;
+      --warning: #D97706;
+      --info: #2563EB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--surface);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    #app { min-height: 100vh; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D1CB; border-radius: 9999px; }
+
+    /* ── Spinner ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid #E8E8E4;
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    /* ── Slide-up drawer ── */
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes slideDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
+    .drawer-enter { animation: slideUp .3s cubic-bezier(.4,0,.2,1) forwards; }
+    .drawer-leave { animation: slideDown .3s cubic-bezier(.4,0,.2,1) forwards; }
+
+    /* ── Modal ── */
+    @keyframes fadeIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+    .modal-enter { animation: fadeIn .2s ease forwards; }
+
+    /* ── Pulse badge ── */
+    @keyframes badgePulse {
+      0%,100% { transform: scale(1); }
+      50% { transform: scale(1.15); }
+    }
+    .badge-pulse { animation: badgePulse 1s ease infinite; }
+
+    /* ── Category tabs ── */
+    .cat-tab {
+      white-space: nowrap;
+      padding: 7px 16px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      background: white;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .cat-tab.active {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: white;
+    }
+    .cat-tab:hover:not(.active) { border-color: var(--brand); color: var(--brand); }
+
+    /* ── Menu card ── */
+    .menu-card {
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s;
+      position: relative;
+    }
+    .menu-card:hover:not(.unavailable) {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    }
+    .menu-card.unavailable { opacity: .55; cursor: not-allowed; filter: grayscale(.6); }
+
+    /* ── Toggle switch ── */
+    .toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #D1D1CB; border-radius: 9999px;
+      cursor: pointer; transition: background .2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: white; border-radius: 50%;
+      transition: transform .2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--success); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* ── Admin table ── */
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .admin-table th {
+      background: #F5F5F2;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: .03em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+    .admin-table td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .admin-table tr:hover td { background: #FAFAF6; }
+
+    /* ── Status badge ── */
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 9999px;
+      font-size: 12px; font-weight: 700;
+    }
+    .status-pending    { background: #FEF3C7; color: #92400E; }
+    .status-confirmed  { background: #DBEAFE; color: #1E40AF; }
+    .status-preparing  { background: #E0E7FF; color: #3730A3; }
+    .status-ready      { background: #D1FAE5; color: #065F46; }
+    .status-completed  { background: #F0FDF4; color: #166534; }
+    .status-cancelled  { background: #FEE2E2; color: #991B1B; }
+
+    /* ── Progress steps ── */
+    .step-bar {
+      display: flex; align-items: center;
+      position: relative; padding: 12px 0;
+    }
+    .step-item {
+      display: flex; flex-direction: column; align-items: center;
+      flex: 1; position: relative; z-index: 1;
+    }
+    .step-dot {
+      width: 32px; height: 32px;
+      border-radius: 50%; border: 3px solid var(--border);
+      background: white; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: var(--muted);
+      transition: all .3s;
+    }
+    .step-dot.active { border-color: var(--brand); background: var(--brand); color: white; }
+    .step-dot.done   { border-color: var(--success); background: var(--success); color: white; }
+    .step-connector {
+      position: absolute; top: 50%; left: calc(50% + 16px);
+      right: calc(-50% + 16px); height: 3px;
+      background: var(--border); transform: translateY(-50%);
+      z-index: 0;
+    }
+    .step-connector.done { background: var(--success); }
+    .step-label { font-size: 11px; margin-top: 5px; font-weight: 600; color: var(--muted); }
+    .step-label.active { color: var(--brand); }
+    .step-label.done   { color: var(--success); }
+
+    /* ── Kitchen card ── */
+    .kitchen-card {
+      background: white; border-radius: 16px;
+      border-left: 5px solid var(--border);
+      padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .kitchen-card.pending   { border-left-color: #F59E0B; }
+    .kitchen-card.confirmed { border-left-color: #3B82F6; }
+    .kitchen-card.preparing { border-left-color: #10B981; }
+
+    /* ── Admin nav ── */
+    .admin-nav-btn {
+      padding: 8px 16px; border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; background: transparent;
+      color: var(--muted); transition: all .15s;
+    }
+    .admin-nav-btn.active { background: var(--brand); color: white; }
+    .admin-nav-btn:hover:not(.active) { background: var(--brand-light); color: var(--brand); }
+
+    /* ── Input / Select ── */
+    .inp {
+      width: 100%; padding: 10px 14px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-family: inherit; font-size: 14px;
+      outline: none; background: white;
+      transition: border-color .15s;
+    }
+    .inp:focus { border-color: var(--brand); }
+    select.inp { cursor: pointer; }
+    textarea.inp { resize: vertical; }
+
+    /* ── Btn ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 20px; border-radius: 10px;
+      font-family: inherit; font-size: 14px; font-weight: 700;
+      cursor: pointer; border: none; transition: all .15s; text-decoration: none;
+    }
+    .btn-primary { background: var(--brand); color: white; }
+    .btn-primary:hover { background: var(--brand-dark); }
+    .btn-outline {
+      background: transparent; color: var(--brand);
+      border: 2px solid var(--brand);
+    }
+    .btn-outline:hover { background: var(--brand-light); }
+    .btn-danger { background: #FEE2E2; color: #991B1B; }
+    .btn-danger:hover { background: #FECACA; }
+    .btn-ghost { background: #F5F5F2; color: var(--text); }
+    .btn-ghost:hover { background: #EBEBE8; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 7px; }
+    .btn-full { width: 100%; }
+
+    /* ── Alert ── */
+    .alert-error {
+      background: #FEF2F2; border: 1.5px solid #FECACA;
+      color: #991B1B; border-radius: 10px; padding: 12px 16px;
+      font-size: 14px; font-weight: 600;
+    }
+
+    /* ── QR canvas ── */
+    canvas.qr-canvas { border-radius: 10px; }
+
+    /* ── Floating cart btn ── */
+    #floatingCart {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      max-width: 440px; width: calc(100% - 32px);
+      background: var(--text); color: white;
+      border-radius: 14px; padding: 14px 20px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; box-shadow: 0 8px 32px rgba(0,0,0,.25);
+      transition: transform .15s, box-shadow .15s;
+      z-index: 100;
+    }
+    #floatingCart:hover { transform: translateX(-50%) translateY(-2px); box-shadow: 0 12px 40px rgba(0,0,0,.3); }
+
+    /* ── Image placeholder ── */
+    .img-placeholder {
+      background: linear-gradient(135deg, #F0EFE9 0%, #E8E7E0 100%);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Stat card ── */
+    .stat-card {
+      background: white; border-radius: 16px;
+      border: 1.5px solid var(--border);
+      padding: 20px; transition: transform .15s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+
+    /* ── Overlay ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); backdrop-filter: blur(2px);
+      z-index: 200;
+      display: flex; align-items: flex-end; justify-content: center;
+    }
+    .overlay-center { align-items: center; }
+
+    /* hide scrollbar on category row */
+    .cat-scroll { scrollbar-width: none; -ms-overflow-style: none; }
+    .cat-scroll::-webkit-scrollbar { display: none; }
+
+    /* fullpage loader */
+    #pageLoader {
+      position: fixed; inset: 0; background: var(--surface);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      z-index: 9999;
+    }
+    #pageLoader p { color: var(--muted); font-size: 14px; }
+
+    /* order success */
+    .success-icon {
+      width: 72px; height: 72px; background: #D1FAE5;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 640px) {
+      .customer-wrap { max-width: 480px; margin: 0 auto; }
+    }
+  </style>
 </head>
-
 <body>
-    <div id="pageLoader">
-        <div class="spinner"></div>
-        <p>Memuat aplikasi…</p>
-    </div>
+<div id="pageLoader">
+  <div class="spinner"></div>
+  <p>Memuat aplikasi…</p>
+</div>
 
-    <div id="app"></div>
+<div id="app"></div>
 
-    <script>
-        // ──────────────────────────────────────────────────────────────────────────────
-        // SUPABASE INIT
-        // ──────────────────────────────────────────────────────────────────────────────
-        const SUPABASE_URL = 'https://bqtnapmvhcfaylydncvs.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxdG5hcG12aGNmYXlseWRuY3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMjg3NDEsImV4cCI6MjA5NTgwNDc0MX0.qVi860o0gz3XwQLU8Hq7DCraG8jVlN_jyoOWNX7JZBo';
-        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<script>
+// ──────────────────────────────────────────────────────────────────────────────
+// SUPABASE INIT
+// ──────────────────────────────────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://bqtnapmvhcfaylydncvs.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJxdG5hcG12aGNmYXlseWRuY3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyMjg3NDEsImV4cCI6MjA5NTgwNDc0MX0.qVi860o0gz3XwQLU8Hq7DCraG8jVlN_jyoOWNX7JZBo';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // FORMATTERS
-        // ──────────────────────────────────────────────────────────────────────────────
-        const fmtRp = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
-        const fmtDt = ts => new Date(ts).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-        const fmtTime = ts => new Date(ts).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        const shortId = id => id.split('-')[0].toUpperCase();
+// ──────────────────────────────────────────────────────────────────────────────
+// FORMATTERS
+// ──────────────────────────────────────────────────────────────────────────────
+const fmtRp  = n => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+const fmtDt  = ts => new Date(ts).toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+const fmtTime= ts => new Date(ts).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+const shortId= id => id.split('-')[0].toUpperCase();
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // GLOBAL STATE
-        // ──────────────────────────────────────────────────────────────────────────────
-        const state = {
-            page: 'loading',
-            tableData: null,
-            restaurant: null,
-            menu: [],
-            cart: [],
-            categories: [],
-            orders: [],
-            activeCategory: 'all',
-            searchQuery: '',
-            cartOpen: false,
-            modalItem: null,
-            modalQty: 1,
-            modalNote: '',
-            currentOrder: null,
-            adminTab: 'dashboard',
-            realtimeChannel: null,
-            orderRealtimeChannel: null,
-            kitchenChannel: null,
-            orderFilter: 'all',
-            tableFormData: { table_number: '', capacity: '' },
-            menuFormData: { name: '', price: '', category_id: '', description: '', image_url: '', is_featured: false },
-            adminOrders: [],
-            adminMenuItems: [],
-            adminTables: [],
-            adminStats: { todayOrders: 0, todayRevenue: 0, activeOrders: 0 },
-            adminCategories: [],
-            kitchenOrders: [],
-        };
+// ──────────────────────────────────────────────────────────────────────────────
+// GLOBAL STATE
+// ──────────────────────────────────────────────────────────────────────────────
+const state = {
+  page: 'loading',
+  tableData: null,
+  restaurant: null,
+  menu: [],
+  cart: [],
+  categories: [],
+  orders: [],
+  activeCategory: 'all',
+  searchQuery: '',
+  cartOpen: false,
+  modalItem: null,
+  modalQty: 1,
+  modalNote: '',
+  currentOrder: null,
+  adminTab: 'dashboard',
+  realtimeChannel: null,
+  orderRealtimeChannel: null,
+  kitchenChannel: null,
+  orderFilter: 'all',
+  baseUrl: '',
+  tableFormData: { table_number: '', capacity: '' },
+  menuFormData: { name: '', price: '', category_id: '', description: '', image_url: '', is_featured: false },
+  adminOrders: [],
+  adminMenuItems: [],
+  adminTables: [],
+  adminStats: { todayOrders: 0, todayRevenue: 0, activeOrders: 0 },
+  adminCategories: [],
+  kitchenOrders: [],
+};
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // ROUTING
-        // ──────────────────────────────────────────────────────────────────────────────
-        function parseHash() {
-            const raw = window.location.hash.replace('#', '');
-            const [path, qs] = raw.split('?');
-            const params = {};
-            if (qs) qs.split('&').forEach(p => { const [k, v] = p.split('='); params[k] = v; });
-            return { path, params };
-        }
+// ──────────────────────────────────────────────────────────────────────────────
+// ROUTING
+// ──────────────────────────────────────────────────────────────────────────────
+function parseHash() {
+  const raw = window.location.hash.replace('#', '');
+  const [path, qs] = raw.split('?');
+  const params = {};
+  if (qs) qs.split('&').forEach(p => { const [k, v] = p.split('='); params[k] = v; });
+  return { path, params };
+}
 
-        async function router() {
-            const { path, params } = parseHash();
-            hideLoader();
-            if (path === 'kitchen') {
-                await loadKitchenPage();
-            } else if (path === 'admin') {
-                await loadAdminPage();
-            } else {
-                // default: customer
-                const tableId = params.table;
-                await loadCustomerPage(tableId);
-            }
-        }
+async function router() {
+  const { path, params } = parseHash();
+  hideLoader();
+  if (path === 'kitchen') {
+    await loadKitchenPage();
+  } else if (path === 'admin') {
+    await loadAdminPage();
+  } else {
+    // default: customer
+    const tableId = params.table;
+    await loadCustomerPage(tableId);
+  }
+}
 
-        function showLoader() { document.getElementById('pageLoader').style.display = 'flex'; }
-        function hideLoader() { document.getElementById('pageLoader').style.display = 'none'; }
+function showLoader() { document.getElementById('pageLoader').style.display = 'flex'; }
+function hideLoader() { document.getElementById('pageLoader').style.display = 'none'; }
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // RENDER HELPER
-        // ──────────────────────────────────────────────────────────────────────────────
-        function render(html) {
-            document.getElementById('app').innerHTML = html;
-            lucide.createIcons();
-        }
+// ──────────────────────────────────────────────────────────────────────────────
+// RENDER HELPER
+// ──────────────────────────────────────────────────────────────────────────────
+function render(html) {
+  document.getElementById('app').innerHTML = html;
+  lucide.createIcons();
+}
 
-        function errorBanner(msg) {
-            return `<div class="alert-error mb-4"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-2"></i>${msg}</div>`;
-        }
+function errorBanner(msg) {
+  return `<div class="alert-error mb-4"><i data-lucide="alert-circle" class="inline w-4 h-4 mr-2"></i>${msg}</div>`;
+}
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // ████████████████████  CUSTOMER PAGE  ████████████████████
-        // ──────────────────────────────────────────────────────────────────────────────
-        async function loadCustomerPage(tableId) {
-            render(`<div class="customer-wrap p-4 flex items-center justify-center min-h-screen"><div class="spinner"></div></div>`);
-            lucide.createIcons();
+// ──────────────────────────────────────────────────────────────────────────────
+// ████████████████████  CUSTOMER PAGE  ████████████████████
+// ──────────────────────────────────────────────────────────────────────────────
+async function loadCustomerPage(tableId) {
+  render(`<div class="customer-wrap p-4 flex items-center justify-center min-h-screen"><div class="spinner"></div></div>`);
+  lucide.createIcons();
 
-            if (!tableId) {
-                render(`<div class="customer-wrap p-6">${errorBanner('URL tidak valid. Scan ulang QR Code di meja Anda.')}</div>`);
-                return;
-            }
+  if (!tableId) {
+    render(`<div class="customer-wrap p-6">${errorBanner('URL tidak valid. Scan ulang QR Code di meja Anda.')}</div>`);
+    return;
+  }
 
-            try {
-                // Fetch table
-                const { data: tbl, error: tblErr } = await sb.from('tables').select('*').eq('id', tableId).single();
-                if (tblErr || !tbl) throw new Error('Meja tidak ditemukan.');
-                state.tableData = tbl;
+  try {
+    // Fetch table
+    const { data: tbl, error: tblErr } = await sb.from('tables').select('*').eq('id', tableId).single();
+    if (tblErr || !tbl) throw new Error('Meja tidak ditemukan.');
+    state.tableData = tbl;
 
-                // Fetch restaurant
-                const { data: resto, error: restoErr } = await sb.from('restaurants').select('*').eq('id', tbl.restaurant_id).single();
-                if (restoErr || !resto) throw new Error('Restoran tidak ditemukan.');
-                state.restaurant = resto;
+    // Fetch restaurant
+    const { data: resto, error: restoErr } = await sb.from('restaurants').select('*').eq('id', tbl.restaurant_id).single();
+    if (restoErr || !resto) throw new Error('Restoran tidak ditemukan.');
+    state.restaurant = resto;
 
-                // Fetch categories
-                const { data: cats } = await sb.from('categories').select('*').eq('restaurant_id', resto.id).order('sort_order');
-                state.categories = cats || [];
+    // Fetch categories
+    const { data: cats } = await sb.from('categories').select('*').eq('restaurant_id', resto.id).order('sort_order');
+    state.categories = cats || [];
 
-                // Fetch menu
-                const { data: items } = await sb.from('menu_items').select('*').eq('restaurant_id', resto.id).order('name');
-                state.menu = items || [];
+    // Fetch menu
+    const { data: items } = await sb.from('menu_items').select('*').eq('restaurant_id', resto.id).order('name');
+    state.menu = items || [];
 
-                state.page = 'customer';
-                state.activeCategory = 'all';
-                state.cart = [];
-                state.cartOpen = false;
-                state.currentOrder = null;
+    state.page = 'customer';
+    state.activeCategory = 'all';
+    state.cart = [];
+    state.cartOpen = false;
+    state.currentOrder = null;
 
-                renderCustomer();
-            } catch (e) {
-                render(`<div class="customer-wrap p-6">${errorBanner(e.message)}</div>`);
-            }
-        }
+    renderCustomer();
+  } catch(e) {
+    render(`<div class="customer-wrap p-6">${errorBanner(e.message)}</div>`);
+  }
+}
 
-        function getFilteredMenu() {
-            return state.menu.filter(item => {
-                const catOk = state.activeCategory === 'all' || item.category_id === state.activeCategory;
-                const searchOk = !state.searchQuery || item.name.toLowerCase().includes(state.searchQuery.toLowerCase());
-                return catOk && searchOk;
-            });
-        }
+function getFilteredMenu() {
+  return state.menu.filter(item => {
+    const catOk = state.activeCategory === 'all' || item.category_id === state.activeCategory;
+    const searchOk = !state.searchQuery || item.name.toLowerCase().includes(state.searchQuery.toLowerCase());
+    return catOk && searchOk;
+  });
+}
 
-        function cartTotal() { return state.cart.reduce((s, i) => s + i.unit_price * i.qty, 0); }
-        function cartCount() { return state.cart.reduce((s, i) => s + i.qty, 0); }
+function cartTotal()  { return state.cart.reduce((s, i) => s + i.unit_price * i.qty, 0); }
+function cartCount()  { return state.cart.reduce((s, i) => s + i.qty, 0); }
 
-        function renderCustomer() {
-            if (state.currentOrder) { renderOrderTracking(); return; }
+function renderCustomer() {
+  if (state.currentOrder) { renderOrderTracking(); return; }
 
-            const filtered = getFilteredMenu();
-            const resto = state.restaurant;
-            const tbl = state.tableData;
+  const filtered = getFilteredMenu();
+  const resto = state.restaurant;
+  const tbl   = state.tableData;
 
-            const menuGrid = filtered.length ? filtered.map(item => {
-                const avail = item.is_available;
-                const imgHtml = item.image_url
-                    ? `<img src="${item.image_url}" alt="${item.name}" class="w-full h-28 object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                    : '';
-                const placeholder = `<div class="img-placeholder w-full h-28 ${item.image_url ? 'hidden' : 'flex'}"><i data-lucide="utensils" class="w-8 h-8 text-gray-300"></i></div>`;
-                const badges = [
-                    !avail ? `<span class="absolute top-2 left-2 bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">Habis</span>` : '',
-                    item.is_featured && avail ? `<span class="absolute top-2 left-2 bg-amber-400 text-white text-xs px-2 py-0.5 rounded-full font-bold">⭐ Populer</span>` : '',
-                ].join('');
+  const menuGrid = filtered.length ? filtered.map(item => {
+    const avail   = item.is_available;
+    const imgHtml = item.image_url
+      ? `<img src="${item.image_url}" alt="${item.name}" class="w-full h-28 object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const placeholder = `<div class="img-placeholder w-full h-28 ${item.image_url ? 'hidden' : 'flex'}"><i data-lucide="utensils" class="w-8 h-8 text-gray-300"></i></div>`;
+    const badges = [
+      !avail              ? `<span class="absolute top-2 left-2 bg-gray-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">Habis</span>` : '',
+      item.is_featured && avail ? `<span class="absolute top-2 left-2 bg-amber-400 text-white text-xs px-2 py-0.5 rounded-full font-bold">⭐ Populer</span>` : '',
+    ].join('');
 
-                return `
+    return `
     <div class="menu-card ${!avail ? 'unavailable' : ''}" onclick="${avail ? `openItemModal('${item.id}')` : ''}">
       <div class="relative">
         ${imgHtml}${placeholder}
@@ -817,19 +494,19 @@
         <p class="text-sm font-800" style="color:var(--brand);font-weight:800">${fmtRp(item.price)}</p>
       </div>
     </div>`;
-            }).join('') : `<div class="col-span-2 text-center py-12 text-gray-400"><i data-lucide="search-x" class="w-10 h-10 mx-auto mb-2 opacity-40"></i><p class="text-sm">Tidak ada menu ditemukan</p></div>`;
+  }).join('') : `<div class="col-span-2 text-center py-12 text-gray-400"><i data-lucide="search-x" class="w-10 h-10 mx-auto mb-2 opacity-40"></i><p class="text-sm">Tidak ada menu ditemukan</p></div>`;
 
-            const catTabs = [
-                `<button class="cat-tab ${state.activeCategory === 'all' ? 'active' : ''}" onclick="setCat('all')">Semua</button>`,
-                ...state.categories.map(c =>
-                    `<button class="cat-tab ${state.activeCategory === c.id ? 'active' : ''}" onclick="setCat('${c.id}')">${c.name}</button>`)
-            ].join('');
+  const catTabs = [
+    `<button class="cat-tab ${state.activeCategory === 'all' ? 'active' : ''}" onclick="setCat('all')">Semua</button>`,
+    ...state.categories.map(c =>
+      `<button class="cat-tab ${state.activeCategory === c.id ? 'active' : ''}" onclick="setCat('${c.id}')">${c.name}</button>`)
+  ].join('');
 
-            const logoHtml = resto.logo_url
-                ? `<img src="${resto.logo_url}" class="w-9 h-9 rounded-lg object-cover" alt="logo">`
-                : `<div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:var(--brand)"><span class="text-white font-bold text-sm">${(resto.name || 'R')[0]}</span></div>`;
+  const logoHtml = resto.logo_url
+    ? `<img src="${resto.logo_url}" class="w-9 h-9 rounded-lg object-cover" alt="logo">`
+    : `<div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:var(--brand)"><span class="text-white font-bold text-sm">${(resto.name||'R')[0]}</span></div>`;
 
-            const html = `
+  const html = `
   <div class="customer-wrap" style="padding-bottom:90px">
     <!-- Header -->
     <div style="background:white;border-bottom:1.5px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:50">
@@ -839,8 +516,8 @@
           <h1 style="font-family:'Instrument Serif',serif;font-size:18px;line-height:1.1">${resto.name}</h1>
           <p class="text-xs" style="color:var(--muted)">Meja ${tbl.table_number}${tbl.capacity ? ` · ${tbl.capacity} kursi` : ''}</p>
         </div>
-        <div class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold" style="background:${resto.is_open ? '#D1FAE5' : '#FEE2E2'};color:${resto.is_open ? '#065F46' : '#991B1B'}">
-          <span class="w-1.5 h-1.5 rounded-full" style="background:${resto.is_open ? '#16A34A' : '#EF4444'}"></span>
+        <div class="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold" style="background:${resto.is_open?'#D1FAE5':'#FEE2E2'};color:${resto.is_open?'#065F46':'#991B1B'}">
+          <span class="w-1.5 h-1.5 rounded-full" style="background:${resto.is_open?'#16A34A':'#EF4444'}"></span>
           ${resto.is_open ? 'Buka' : 'Tutup'}
         </div>
       </div>
@@ -863,47 +540,47 @@
     </div>
   </div>`;
 
-            render(html);
+  render(html);
 
-            // Floating cart
-            if (state.cart.length > 0) {
-                const fc = document.createElement('div');
-                fc.id = 'floatingCart';
-                fc.onclick = () => { state.cartOpen = true; renderCartDrawer(); };
-                fc.innerHTML = `
+  // Floating cart
+  if (state.cart.length > 0) {
+    const fc = document.createElement('div');
+    fc.id = 'floatingCart';
+    fc.onclick = () => { state.cartOpen = true; renderCartDrawer(); };
+    fc.innerHTML = `
       <div style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 9px;font-weight:800;font-size:14px" class="badge-pulse">${cartCount()}</div>
       <span style="flex:1;font-weight:700;font-size:14px">Lihat Keranjang</span>
       <span style="font-weight:800;font-size:14px">${fmtRp(cartTotal())}</span>
     `;
-                document.body.appendChild(fc);
-            }
+    document.body.appendChild(fc);
+  }
 
-            if (state.cartOpen) renderCartDrawer();
-            if (state.modalItem) renderItemModal(state.modalItem);
+  if (state.cartOpen) renderCartDrawer();
+  if (state.modalItem) renderItemModal(state.modalItem);
 
-            lucide.createIcons();
-        }
+  lucide.createIcons();
+}
 
-        // ── Item Modal ──
-        function openItemModal(itemId) {
-            state.modalItem = state.menu.find(m => m.id === itemId);
-            state.modalQty = 1;
-            state.modalNote = '';
-            renderItemModal(state.modalItem);
-        }
+// ── Item Modal ──
+function openItemModal(itemId) {
+  state.modalItem = state.menu.find(m => m.id === itemId);
+  state.modalQty  = 1;
+  state.modalNote = '';
+  renderItemModal(state.modalItem);
+}
 
-        function renderItemModal(item) {
-            const existing = state.cart.find(c => c.id === item.id);
-            const overlay = document.createElement('div');
-            overlay.className = 'overlay overlay-center';
-            overlay.id = 'itemModal';
-            overlay.onclick = e => { if (e.target === overlay) closeItemModal(); };
+function renderItemModal(item) {
+  const existing = state.cart.find(c => c.id === item.id);
+  const overlay  = document.createElement('div');
+  overlay.className = 'overlay overlay-center';
+  overlay.id = 'itemModal';
+  overlay.onclick = e => { if (e.target === overlay) closeItemModal(); };
 
-            const imgHtml = item.image_url
-                ? `<img src="${item.image_url}" class="w-full h-44 object-cover rounded-xl mb-4" alt="${item.name}" onerror="this.style.display='none'">`
-                : `<div class="img-placeholder w-full h-32 rounded-xl mb-4"><i data-lucide="utensils" class="w-10 h-10 text-gray-300"></i></div>`;
+  const imgHtml = item.image_url
+    ? `<img src="${item.image_url}" class="w-full h-44 object-cover rounded-xl mb-4" alt="${item.name}" onerror="this.style.display='none'">`
+    : `<div class="img-placeholder w-full h-32 rounded-xl mb-4"><i data-lucide="utensils" class="w-10 h-10 text-gray-300"></i></div>`;
 
-            overlay.innerHTML = `
+  overlay.innerHTML = `
   <div class="modal-enter bg-white rounded-2xl p-5 mx-4" style="max-width:440px;width:100%;max-height:90vh;overflow-y:auto">
     ${imgHtml}
     <h2 style="font-family:'Instrument Serif',serif;font-size:22px;margin-bottom:4px">${item.name}</h2>
@@ -928,49 +605,49 @@
     </button>
   </div>`;
 
-            document.body.appendChild(overlay);
-            lucide.createIcons();
-        }
+  document.body.appendChild(overlay);
+  lucide.createIcons();
+}
 
-        function closeItemModal() {
-            state.modalItem = null;
-            document.getElementById('itemModal')?.remove();
-        }
+function closeItemModal() {
+  state.modalItem = null;
+  document.getElementById('itemModal')?.remove();
+}
 
-        function changeModalQty(d) {
-            const note = document.getElementById('modalNote');
-            state.modalNote = note ? note.value : state.modalNote;
-            state.modalQty = Math.max(1, state.modalQty + d);
-            // re-render modal only
-            document.getElementById('itemModal')?.remove();
-            renderItemModal(state.modalItem);
-        }
+function changeModalQty(d) {
+  const note = document.getElementById('modalNote');
+  state.modalNote = note ? note.value : state.modalNote;
+  state.modalQty = Math.max(1, state.modalQty + d);
+  // re-render modal only
+  document.getElementById('itemModal')?.remove();
+  renderItemModal(state.modalItem);
+}
 
-        function addToCart(itemId) {
-            const note = document.getElementById('modalNote');
-            state.modalNote = note ? note.value : state.modalNote;
-            const item = state.menu.find(m => m.id === itemId);
-            const idx = state.cart.findIndex(c => c.id === itemId);
-            if (idx >= 0) {
-                state.cart[idx].qty = state.modalQty;
-                state.cart[idx].notes = state.modalNote;
-            } else {
-                state.cart.push({ id: item.id, name: item.name, unit_price: item.price, qty: state.modalQty, notes: state.modalNote });
-            }
-            closeItemModal();
-            renderCustomer();
-        }
+function addToCart(itemId) {
+  const note = document.getElementById('modalNote');
+  state.modalNote = note ? note.value : state.modalNote;
+  const item = state.menu.find(m => m.id === itemId);
+  const idx  = state.cart.findIndex(c => c.id === itemId);
+  if (idx >= 0) {
+    state.cart[idx].qty   = state.modalQty;
+    state.cart[idx].notes = state.modalNote;
+  } else {
+    state.cart.push({ id: item.id, name: item.name, unit_price: item.price, qty: state.modalQty, notes: state.modalNote });
+  }
+  closeItemModal();
+  renderCustomer();
+}
 
-        // ── Cart Drawer ──
-        function renderCartDrawer() {
-            document.getElementById('cartDrawer')?.remove();
+// ── Cart Drawer ──
+function renderCartDrawer() {
+  document.getElementById('cartDrawer')?.remove();
 
-            const overlay = document.createElement('div');
-            overlay.className = 'overlay';
-            overlay.id = 'cartDrawer';
-            overlay.onclick = e => { if (e.target === overlay) closeCart(); };
+  const overlay = document.createElement('div');
+  overlay.className = 'overlay';
+  overlay.id = 'cartDrawer';
+  overlay.onclick = e => { if (e.target === overlay) closeCart(); };
 
-            const itemsHtml = state.cart.map((item, idx) => `
+  const itemsHtml = state.cart.map((item, idx) => `
   <div class="flex gap-3 py-3 border-b" style="border-color:var(--border)">
     <div class="flex-1">
       <p class="font-bold text-sm">${item.name}</p>
@@ -992,7 +669,7 @@
     </div>
   </div>`).join('');
 
-            overlay.innerHTML = `
+  overlay.innerHTML = `
   <div class="drawer-enter bg-white rounded-t-2xl" style="width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column">
     <div class="flex items-center justify-between p-4 border-b" style="border-color:var(--border)">
       <h3 style="font-family:'Instrument Serif',serif;font-size:20px">Keranjang</h3>
@@ -1016,102 +693,102 @@
     </div>` : ''}
   </div>`;
 
-            document.body.appendChild(overlay);
-            lucide.createIcons();
-        }
+  document.body.appendChild(overlay);
+  lucide.createIcons();
+}
 
-        function closeCart() {
-            state.cartOpen = false;
-            document.getElementById('cartDrawer')?.remove();
-        }
+function closeCart() {
+  state.cartOpen = false;
+  document.getElementById('cartDrawer')?.remove();
+}
 
-        function removeCartItem(idx) {
-            state.cart.splice(idx, 1);
-            if (state.cart.length === 0) { closeCart(); renderCustomer(); return; }
-            renderCartDrawer();
-            renderCustomer();
-        }
+function removeCartItem(idx) {
+  state.cart.splice(idx, 1);
+  if (state.cart.length === 0) { closeCart(); renderCustomer(); return; }
+  renderCartDrawer();
+  renderCustomer();
+}
 
-        function changeCartQty(idx, d) {
-            state.cart[idx].qty = Math.max(1, state.cart[idx].qty + d);
-            renderCartDrawer();
-        }
+function changeCartQty(idx, d) {
+  state.cart[idx].qty = Math.max(1, state.cart[idx].qty + d);
+  renderCartDrawer();
+}
 
-        function setCat(catId) {
-            state.activeCategory = catId;
-            renderCustomer();
-        }
+function setCat(catId) {
+  state.activeCategory = catId;
+  renderCustomer();
+}
 
-        // ── Place Order ──
-        async function placeOrder() {
-            if (!state.cart.length) return;
-            const btn = document.querySelector('#cartDrawer button.btn-primary');
-            if (btn) { btn.disabled = true; btn.textContent = 'Memproses…'; }
+// ── Place Order ──
+async function placeOrder() {
+  if (!state.cart.length) return;
+  const btn = document.querySelector('#cartDrawer button.btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Memproses…'; }
 
-            try {
-                const { data: order, error: oErr } = await sb.from('orders').insert({
-                    restaurant_id: state.restaurant.id,
-                    table_id: state.tableData.id,
-                    table_number: state.tableData.table_number,
-                    status: 'pending',
-                    total_amount: cartTotal(),
-                    payment_status: 'unpaid',
-                }).select().single();
-                if (oErr) throw oErr;
+  try {
+    const { data: order, error: oErr } = await sb.from('orders').insert({
+      restaurant_id: state.restaurant.id,
+      table_id: state.tableData.id,
+      table_number: state.tableData.table_number,
+      status: 'pending',
+      total_amount: cartTotal(),
+      payment_status: 'unpaid',
+    }).select().single();
+    if (oErr) throw oErr;
 
-                const orderItems = state.cart.map(item => ({
-                    order_id: order.id,
-                    menu_item_id: item.id,
-                    menu_item_name: item.name,
-                    quantity: item.qty,
-                    unit_price: item.unit_price,
-                    notes: item.notes || null,
-                }));
+    const orderItems = state.cart.map(item => ({
+      order_id: order.id,
+      menu_item_id: item.id,
+      menu_item_name: item.name,
+      quantity: item.qty,
+      unit_price: item.unit_price,
+      notes: item.notes || null,
+    }));
 
-                const { error: iErr } = await sb.from('order_items').insert(orderItems);
-                if (iErr) throw iErr;
+    const { error: iErr } = await sb.from('order_items').insert(orderItems);
+    if (iErr) throw iErr;
 
-                state.currentOrder = order;
-                state.cart = [];
-                closeCart();
-                subscribeOrderRealtime(order.id);
-                renderOrderTracking();
-            } catch (e) {
-                alert('Gagal memesan: ' + e.message);
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Pesan Sekarang'; lucide.createIcons(); }
-            }
-        }
+    state.currentOrder = order;
+    state.cart = [];
+    closeCart();
+    subscribeOrderRealtime(order.id);
+    renderOrderTracking();
+  } catch(e) {
+    alert('Gagal memesan: ' + e.message);
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4"></i> Pesan Sekarang'; lucide.createIcons(); }
+  }
+}
 
-        // ── Order Tracking ──
-        function subscribeOrderRealtime(orderId) {
-            if (state.orderRealtimeChannel) { sb.removeChannel(state.orderRealtimeChannel); }
-            state.orderRealtimeChannel = sb.channel('order-' + orderId)
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` },
-                    payload => { state.currentOrder = { ...state.currentOrder, ...payload.new }; renderOrderTracking(); })
-                .subscribe();
-        }
+// ── Order Tracking ──
+function subscribeOrderRealtime(orderId) {
+  if (state.orderRealtimeChannel) { sb.removeChannel(state.orderRealtimeChannel); }
+  state.orderRealtimeChannel = sb.channel('order-' + orderId)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` },
+      payload => { state.currentOrder = { ...state.currentOrder, ...payload.new }; renderOrderTracking(); })
+    .subscribe();
+}
 
-        const ORDER_STEPS = [
-            { key: 'pending', label: 'Menunggu', icon: 'clock' },
-            { key: 'confirmed', label: 'Dikonfirmasi', icon: 'check' },
-            { key: 'preparing', label: 'Diproses', icon: 'flame' },
-            { key: 'ready', label: 'Siap', icon: 'package-check' },
-            { key: 'completed', label: 'Selesai', icon: 'star' },
-        ];
+const ORDER_STEPS = [
+  { key: 'pending',    label: 'Menunggu',    icon: 'clock' },
+  { key: 'confirmed',  label: 'Dikonfirmasi',icon: 'check' },
+  { key: 'preparing',  label: 'Diproses',    icon: 'flame' },
+  { key: 'ready',      label: 'Siap',        icon: 'package-check' },
+  { key: 'completed',  label: 'Selesai',     icon: 'star' },
+];
 
-        function renderOrderTracking() {
-            const order = state.currentOrder;
-            const stepOrder = ['pending', 'confirmed', 'preparing', 'ready', 'completed'];
-            const curIdx = stepOrder.indexOf(order.status);
+function renderOrderTracking() {
+  const order = state.currentOrder;
+  const stepOrder = ['pending','confirmed','preparing','ready','completed'];
+  const curIdx    = stepOrder.indexOf(order.status);
 
-            const stepsHtml = ORDER_STEPS.map((step, i) => {
-                const isDone = i < curIdx;
-                const isActive = i === curIdx;
-                const dotClass = isDone ? 'done' : isActive ? 'active' : '';
-                const lblClass = isDone ? 'done' : isActive ? 'active' : '';
-                const connHtml = i < ORDER_STEPS.length - 1
-                    ? `<div class="step-connector ${isDone ? 'done' : ''}"></div>` : '';
-                return `
+  const stepsHtml = ORDER_STEPS.map((step, i) => {
+    const isDone   = i < curIdx;
+    const isActive = i === curIdx;
+    const dotClass = isDone ? 'done' : isActive ? 'active' : '';
+    const lblClass = isDone ? 'done' : isActive ? 'active' : '';
+    const connHtml = i < ORDER_STEPS.length - 1
+      ? `<div class="step-connector ${isDone ? 'done' : ''}"></div>` : '';
+    return `
     <div class="step-item">
       <div class="relative">
         <div class="step-dot ${dotClass}">
@@ -1121,11 +798,11 @@
       </div>
       <span class="step-label ${lblClass}">${step.label}</span>
     </div>`;
-            }).join('');
+  }).join('');
 
-            const isCancelled = order.status === 'cancelled';
+  const isCancelled = order.status === 'cancelled';
 
-            const html = `
+  const html = `
   <div class="customer-wrap p-4">
     <!-- Header -->
     <div style="text-align:center;padding:24px 0 16px">
@@ -1161,71 +838,71 @@
     </button>
   </div>`;
 
-            render(html);
-            lucide.createIcons();
-        }
+  render(html);
+  lucide.createIcons();
+}
 
-        function orderAgain() {
-            if (state.orderRealtimeChannel) { sb.removeChannel(state.orderRealtimeChannel); state.orderRealtimeChannel = null; }
-            state.currentOrder = null;
-            state.cart = [];
-            renderCustomer();
-        }
+function orderAgain() {
+  if (state.orderRealtimeChannel) { sb.removeChannel(state.orderRealtimeChannel); state.orderRealtimeChannel = null; }
+  state.currentOrder = null;
+  state.cart = [];
+  renderCustomer();
+}
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // ████████████████████  KITCHEN PAGE  ████████████████████
-        // ──────────────────────────────────────────────────────────────────────────────
-        async function loadKitchenPage() {
-            render(`<div class="p-6 flex items-center justify-center min-h-screen"><div class="spinner"></div></div>`);
-            lucide.createIcons();
+// ──────────────────────────────────────────────────────────────────────────────
+// ████████████████████  KITCHEN PAGE  ████████████████████
+// ──────────────────────────────────────────────────────────────────────────────
+async function loadKitchenPage() {
+  render(`<div class="p-6 flex items-center justify-center min-h-screen"><div class="spinner"></div></div>`);
+  lucide.createIcons();
 
-            try {
-                await fetchKitchenOrders();
-                renderKitchen();
-                subscribeKitchen();
-            } catch (e) {
-                render(`<div class="p-6">${errorBanner(e.message)}</div>`);
-            }
-        }
+  try {
+    await fetchKitchenOrders();
+    renderKitchen();
+    subscribeKitchen();
+  } catch(e) {
+    render(`<div class="p-6">${errorBanner(e.message)}</div>`);
+  }
+}
 
-        async function fetchKitchenOrders() {
-            const { data, error } = await sb.from('orders')
-                .select(`*, order_items(*)`)
-                .in('status', ['pending', 'confirmed', 'preparing'])
-                .order('created_at', { ascending: true });
-            if (error) throw error;
-            state.kitchenOrders = data || [];
-        }
+async function fetchKitchenOrders() {
+  const { data, error } = await sb.from('orders')
+    .select(`*, order_items(*)`)
+    .in('status', ['pending','confirmed','preparing'])
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  state.kitchenOrders = data || [];
+}
 
-        function subscribeKitchen() {
-            if (state.kitchenChannel) { sb.removeChannel(state.kitchenChannel); }
-            state.kitchenChannel = sb.channel('kitchen-orders')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async () => {
-                    await fetchKitchenOrders();
-                    renderKitchen();
-                })
-                .subscribe();
-        }
+function subscribeKitchen() {
+  if (state.kitchenChannel) { sb.removeChannel(state.kitchenChannel); }
+  state.kitchenChannel = sb.channel('kitchen-orders')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, async () => {
+      await fetchKitchenOrders();
+      renderKitchen();
+    })
+    .subscribe();
+}
 
-        function renderKitchen() {
-            const orders = state.kitchenOrders;
+function renderKitchen() {
+  const orders = state.kitchenOrders;
 
-            const cardsHtml = orders.length ? orders.map(order => {
-                const items = order.order_items || [];
-                const itemsHtml = items.map(i =>
-                    `<li class="text-sm flex justify-between gap-2">
+  const cardsHtml = orders.length ? orders.map(order => {
+    const items = order.order_items || [];
+    const itemsHtml = items.map(i =>
+      `<li class="text-sm flex justify-between gap-2">
         <span><strong>×${i.quantity}</strong> ${i.menu_item_name}</span>
         ${i.notes ? `<span class="text-xs italic" style="color:var(--muted)">${i.notes}</span>` : ''}
       </li>`
-                ).join('');
+    ).join('');
 
-                const nextBtn = {
-                    pending: { label: 'Konfirmasi', next: 'confirmed', cls: 'btn-primary' },
-                    confirmed: { label: 'Sedang Diproses', next: 'preparing', cls: 'btn-outline' },
-                    preparing: { label: 'Siap Diantar', next: 'ready', cls: '' },
-                }[order.status];
+    const nextBtn = {
+      pending:   { label: 'Konfirmasi', next: 'confirmed', cls: 'btn-primary' },
+      confirmed: { label: 'Sedang Diproses', next: 'preparing', cls: 'btn-outline' },
+      preparing: { label: 'Siap Diantar', next: 'ready', cls: '' },
+    }[order.status];
 
-                return `
+    return `
     <div class="kitchen-card ${order.status}">
       <div class="flex items-start justify-between mb-3">
         <div>
@@ -1243,86 +920,87 @@
           <i data-lucide="x" class="w-3 h-3"></i>Batal</button>
       </div>
     </div>`;
-            }).join('') : `
+  }).join('') : `
   <div class="text-center py-20">
     <i data-lucide="chef-hat" class="w-16 h-16 mx-auto mb-3 opacity-20"></i>
     <p class="text-gray-400 font-semibold">Belum ada pesanan masuk</p>
   </div>`;
 
-            render(`
+  render(`
   <div class="min-h-screen" style="background:#F5F5F2">
     <div style="background:var(--text);color:white;padding:16px 20px;position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:between;gap:3">
       <div style="flex:1">
         <h1 style="font-family:'Instrument Serif',serif;font-size:24px">Dapur</h1>
         <p class="text-xs opacity-60">Order Masuk — ${orders.length} aktif</p>
       </div>
-      <span class="text-xs opacity-60">${new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+      <span class="text-xs opacity-60">${new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
     </div>
     <div class="p-4 grid gap-4" style="max-width:900px;margin:0 auto;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">
       ${cardsHtml}
     </div>
   </div>`);
-            lucide.createIcons();
-        }
+  lucide.createIcons();
+}
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // ████████████████████  ADMIN PAGE  ████████████████████
-        // ──────────────────────────────────────────────────────────────────────────────
-        async function loadAdminPage() {
-            render(`<div class="p-6 flex items-center justify-center min-h-screen"><div class="spinner"></div></div>`);
-            lucide.createIcons();
+// ──────────────────────────────────────────────────────────────────────────────
+// ████████████████████  ADMIN PAGE  ████████████████████
+// ──────────────────────────────────────────────────────────────────────────────
+async function loadAdminPage() {
+  render(`<div class="p-6 flex items-center justify-center min-h-screen"><div class="spinner"></div></div>`);
+  lucide.createIcons();
 
-            try {
-                // Load first restaurant
-                const { data: restos } = await sb.from('restaurants').select('*').limit(1);
-                state.restaurant = restos?.[0] || null;
+  try {
+    // Load first restaurant
+    const { data: restos } = await sb.from('restaurants').select('*').limit(1);
+    state.restaurant = restos?.[0] || null;
 
-                await loadAdminData();
-                renderAdmin();
-            } catch (e) {
-                render(`<div class="p-6">${errorBanner(e.message)}</div>`);
-            }
-        }
+    await loadAdminData();
+    renderAdmin();
+  } catch(e) {
+    render(`<div class="p-6">${errorBanner(e.message)}</div>`);
+  }
+}
 
-        async function loadAdminData() {
-            const rid = state.restaurant?.id;
-            if (!rid) return;
+async function loadAdminData() {
+  const rid = state.restaurant?.id;
+  if (!rid) return;
 
-            const today = new Date(); today.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0,0,0,0);
 
-            const [catRes, itemRes, tblRes, ordRes] = await Promise.all([
-                sb.from('categories').select('*').eq('restaurant_id', rid).order('sort_order'),
-                sb.from('menu_items').select('*').eq('restaurant_id', rid).order('name'),
-                sb.from('tables').select('*').eq('restaurant_id', rid).order('table_number'),
-                sb.from('orders').select('*, order_items(id)').eq('restaurant_id', rid).order('created_at', { ascending: false }),
-            ]);
+  const [catRes, itemRes, tblRes, ordRes] = await Promise.all([
+    sb.from('categories').select('*').eq('restaurant_id', rid).order('sort_order'),
+    sb.from('menu_items').select('*').eq('restaurant_id', rid).order('name'),
+    sb.from('tables').select('*').eq('restaurant_id', rid).order('table_number'),
+    sb.from('orders').select('*, order_items(id)').eq('restaurant_id', rid).order('created_at', { ascending: false }),
+  ]);
 
-            state.adminCategories = catRes.data || [];
-            state.adminMenuItems = itemRes.data || [];
-            state.adminTables = tblRes.data || [];
-            state.adminOrders = ordRes.data || [];
+  state.adminCategories  = catRes.data  || [];
+  state.adminMenuItems   = itemRes.data  || [];
+  state.adminTables      = tblRes.data   || [];
+  state.adminOrders      = ordRes.data   || [];
 
-            // Stats
-            const todayOrders = state.adminOrders.filter(o => new Date(o.created_at) >= today);
-            state.adminStats = {
-                todayOrders: todayOrders.length,
-                todayRevenue: todayOrders.reduce((s, o) => s + Number(o.total_amount), 0),
-                activeOrders: state.adminOrders.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status)).length,
-            };
-        }
+  // Stats
+  const todayOrders = state.adminOrders.filter(o => new Date(o.created_at) >= today);
+  state.adminStats = {
+    todayOrders:  todayOrders.length,
+    todayRevenue: todayOrders.reduce((s, o) => s + Number(o.total_amount), 0),
+    activeOrders: state.adminOrders.filter(o => ['pending','confirmed','preparing'].includes(o.status)).length,
+  };
+}
 
-        function renderAdmin() {
-            const nav = ['dashboard', 'menu', 'tables', 'orders']
-                .map(t => `<button class="admin-nav-btn ${state.adminTab === t ? 'active' : ''}" onclick="setAdminTab('${t}')">${{ dashboard: 'Dashboard', menu: 'Kelola Menu', tables: 'Kelola Meja', orders: 'Semua Pesanan' }[t]
-                    }</button>`).join('');
+function renderAdmin() {
+  const nav = ['dashboard','menu','tables','orders']
+    .map(t => `<button class="admin-nav-btn ${state.adminTab===t?'active':''}" onclick="setAdminTab('${t}')">${
+      {dashboard:'Dashboard',menu:'Kelola Menu',tables:'Kelola Meja',orders:'Semua Pesanan'}[t]
+    }</button>`).join('');
 
-            let tabContent = '';
-            if (state.adminTab === 'dashboard') tabContent = renderAdminDashboard();
-            if (state.adminTab === 'menu') tabContent = renderAdminMenu();
-            if (state.adminTab === 'tables') tabContent = renderAdminTables();
-            if (state.adminTab === 'orders') tabContent = renderAdminOrders();
+  let tabContent = '';
+  if (state.adminTab === 'dashboard')  tabContent = renderAdminDashboard();
+  if (state.adminTab === 'menu')       tabContent = renderAdminMenu();
+  if (state.adminTab === 'tables')     tabContent = renderAdminTables();
+  if (state.adminTab === 'orders')     tabContent = renderAdminOrders();
 
-            const html = `
+  const html = `
   <div class="min-h-screen" style="background:#F5F5F2">
     <!-- Header -->
     <div style="background:var(--text);color:white;padding:16px 20px">
@@ -1355,33 +1033,33 @@
     </div>
   </div>`;
 
-            render(html);
-            lucide.createIcons();
+  render(html);
+  lucide.createIcons();
 
-            // Generate QR codes after render
-            if (state.adminTab === 'tables') {
-                setTimeout(() => {
-                    state.adminTables.forEach(tbl => generateQR(tbl));
-                    lucide.createIcons();
-                }, 100);
-            }
-        }
+  // Generate QR codes after render
+  if (state.adminTab === 'tables') {
+    setTimeout(() => {
+      state.adminTables.forEach(tbl => generateQR(tbl));
+      lucide.createIcons();
+    }, 100);
+  }
+}
 
-        function setAdminTab(tab) {
-            state.adminTab = tab;
-            renderAdmin();
-        }
+function setAdminTab(tab) {
+  state.adminTab = tab;
+  renderAdmin();
+}
 
-        // ── Dashboard Tab ──
-        function renderAdminDashboard() {
-            const s = state.adminStats;
-            const recentOrders = state.adminOrders.slice(0, 10);
+// ── Dashboard Tab ──
+function renderAdminDashboard() {
+  const s = state.adminStats;
+  const recentOrders = state.adminOrders.slice(0, 10);
 
-            const statsHtml = [
-                { label: 'Order Hari Ini', val: s.todayOrders, icon: 'receipt', color: '#3B82F6' },
-                { label: 'Revenue Hari Ini', val: fmtRp(s.todayRevenue), icon: 'banknote', color: '#16A34A' },
-                { label: 'Order Aktif', val: s.activeOrders, icon: 'loader-2', color: '#E8521A' },
-            ].map(st => `
+  const statsHtml = [
+    { label: 'Order Hari Ini', val: s.todayOrders, icon: 'receipt', color: '#3B82F6' },
+    { label: 'Revenue Hari Ini', val: fmtRp(s.todayRevenue), icon: 'banknote', color: '#16A34A' },
+    { label: 'Order Aktif', val: s.activeOrders, icon: 'loader-2', color: '#E8521A' },
+  ].map(st => `
   <div class="stat-card">
     <div class="flex items-start gap-3">
       <div style="background:${st.color}20;padding:10px;border-radius:12px">
@@ -1394,7 +1072,7 @@
     </div>
   </div>`).join('');
 
-            const ordersHtml = recentOrders.map(o => `
+  const ordersHtml = recentOrders.map(o => `
   <tr>
     <td><code class="text-xs">#${shortId(o.id)}</code></td>
     <td>Meja ${o.table_number}</td>
@@ -1404,7 +1082,7 @@
     <td>${o.order_items?.length || 0} item</td>
   </tr>`).join('');
 
-            return `
+  return `
   <div class="grid gap-4 mb-6" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${statsHtml}</div>
   <div style="background:white;border:1.5px solid var(--border);border-radius:16px;overflow:hidden">
     <div style="padding:16px 20px;border-bottom:1.5px solid var(--border)">
@@ -1417,29 +1095,29 @@
       </table>
     </div>
   </div>`;
-        }
+}
 
-        // ── Menu Tab ──
-        function renderAdminMenu() {
-            const form = state.menuFormData;
-            const catOptions = state.adminCategories.map(c =>
-                `<option value="${c.id}" ${form.category_id === c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+// ── Menu Tab ──
+function renderAdminMenu() {
+  const form = state.menuFormData;
+  const catOptions = state.adminCategories.map(c =>
+    `<option value="${c.id}" ${form.category_id===c.id?'selected':''}>${c.name}</option>`).join('');
 
-            const menuRows = state.adminMenuItems.map(item => {
-                const catName = state.adminCategories.find(c => c.id === item.category_id)?.name || '—';
-                return `
+  const menuRows = state.adminMenuItems.map(item => {
+    const catName = state.adminCategories.find(c => c.id === item.category_id)?.name || '—';
+    return `
     <tr>
       <td>
         ${item.image_url
-                        ? `<img src="${item.image_url}" class="w-10 h-10 rounded-lg object-cover">`
-                        : `<div class="img-placeholder w-10 h-10 rounded-lg"><i data-lucide="utensils" class="w-4 h-4 text-gray-300"></i></div>`}
+          ? `<img src="${item.image_url}" class="w-10 h-10 rounded-lg object-cover">`
+          : `<div class="img-placeholder w-10 h-10 rounded-lg"><i data-lucide="utensils" class="w-4 h-4 text-gray-300"></i></div>`}
       </td>
-      <td><p class="font-bold text-sm">${item.name}</p><p class="text-xs" style="color:var(--muted)">${item.description || ''}</p></td>
+      <td><p class="font-bold text-sm">${item.name}</p><p class="text-xs" style="color:var(--muted)">${item.description||''}</p></td>
       <td><span class="text-xs px-2 py-0.5 rounded-full" style="background:#F5F5F2">${catName}</span></td>
       <td class="font-bold">${fmtRp(item.price)}</td>
       <td>
         <label class="toggle">
-          <input type="checkbox" ${item.is_available ? 'checked' : ''} onchange="toggleMenuAvail('${item.id}',this.checked)">
+          <input type="checkbox" ${item.is_available?'checked':''} onchange="toggleMenuAvail('${item.id}',this.checked)">
           <span class="toggle-slider"></span>
         </label>
       </td>
@@ -1449,9 +1127,9 @@
         </button>
       </td>
     </tr>`;
-            }).join('');
+  }).join('');
 
-            return `
+  return `
   <div class="grid gap-6" style="grid-template-columns:1fr minmax(280px,360px)">
     <!-- Table -->
     <div style="background:white;border:1.5px solid var(--border);border-radius:16px;overflow:hidden">
@@ -1494,7 +1172,7 @@
           <input class="inp" placeholder="https://…" id="mfImg" value="${form.image_url}" oninput="state.menuFormData.image_url=this.value">
         </div>
         <div class="flex items-center gap-2">
-          <input type="checkbox" id="mfFeat" ${form.is_featured ? 'checked' : ''} onchange="state.menuFormData.is_featured=this.checked" class="w-4 h-4">
+          <input type="checkbox" id="mfFeat" ${form.is_featured?'checked':''} onchange="state.menuFormData.is_featured=this.checked" class="w-4 h-4">
           <label for="mfFeat" class="text-sm font-semibold">Tandai sebagai Populer</label>
         </div>
         <button class="btn btn-primary btn-full" onclick="addMenuItem()">
@@ -1503,82 +1181,140 @@
       </div>
     </div>
   </div>`;
-        }
+}
 
-        // ── Tables Tab ──
-        function renderAdminTables() {
-            const tf = state.tableFormData;
+// ── Tables Tab ──
+function renderAdminTables() {
+  const tf = state.tableFormData;
+  const hasUrl = state.baseUrl.trim() !== '';
 
-            const tableCards = state.adminTables.map(tbl => `
-  <div style="background:white;border:1.5px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px">
+  const tableCards = state.adminTables.map(tbl => {
+    const qrUrl = state.baseUrl.trim().replace(/\/$/, '') + '/' + '#customer?table=' + tbl.id;
+    return `
+  <div style="background:white;border:1.5px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px">
     <div style="text-align:center">
-      <p style="font-size:22px;font-weight:800;font-family:'Instrument Serif',serif">Meja ${tbl.table_number}</p>
+      <p style="font-size:20px;font-weight:800;font-family:'Instrument Serif',serif">Meja ${tbl.table_number}</p>
       ${tbl.capacity ? `<p class="text-xs" style="color:var(--muted)">${tbl.capacity} kursi</p>` : ''}
     </div>
-    <canvas id="qr-${tbl.id}" class="qr-canvas"></canvas>
-    <button class="btn btn-ghost btn-sm btn-full" onclick="downloadQR('${tbl.id}','${tbl.table_number}')">
-      <i data-lucide="download" class="w-3.5 h-3.5"></i>Download QR
-    </button>
-  </div>`).join('');
+    ${hasUrl
+      ? `<canvas id="qr-${tbl.id}" class="qr-canvas"></canvas>
+         <p style="font-size:9px;color:var(--muted);word-break:break-all;text-align:center;line-height:1.4">${qrUrl}</p>
+         <button class="btn btn-ghost btn-sm btn-full" onclick="downloadQR('${tbl.id}','${tbl.table_number}')">
+           <i data-lucide="download" class="w-3.5 h-3.5"></i>Download QR
+         </button>`
+      : `<div style="width:160px;height:160px;border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;padding:12px">
+           <p style="font-size:11px;color:var(--muted);text-align:center">Isi URL Aplikasi dulu</p>
+         </div>`
+    }
+  </div>`;
+  }).join('');
 
-            return `
-  <div class="grid gap-6" style="grid-template-columns:1fr minmax(260px,320px)">
+  return `
+  <div class="grid gap-6" style="grid-template-columns:1fr minmax(280px,340px)">
+
     <!-- Grid QR -->
     <div>
       <h2 class="font-bold mb-4">Meja & QR Code (${state.adminTables.length})</h2>
-      <div class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
-        ${tableCards || '<p class="text-sm col-span-full" style="color:var(--muted)">Belum ada meja</p>'}
+
+      ${!hasUrl ? `
+      <div style="background:#FEF3C7;border:1.5px solid #FDE68A;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">
+        <i data-lucide="alert-triangle" class="w-4 h-4 flex-shrink-0" style="color:#D97706;margin-top:2px"></i>
+        <div>
+          <p style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:3px">QR Code belum bisa dibuat</p>
+          <p style="font-size:12px;color:#92400E;line-height:1.6">
+            Isi <strong>URL Aplikasi</strong> di form kanan → klik <strong>Simpan &amp; Generate QR</strong>.<br>
+            Contoh URL: <code style="background:#FDE68A;padding:1px 5px;border-radius:3px;font-size:11px">https://namamu.netlify.app/</code>
+          </p>
+        </div>
+      </div>` : ''}
+
+      <div class="grid gap-4" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))">
+        ${tableCards || '<p class="text-sm" style="color:var(--muted)">Belum ada meja. Tambahkan di form kanan.</p>'}
       </div>
     </div>
 
-    <!-- Add table form -->
-    <div style="background:white;border:1.5px solid var(--border);border-radius:16px;padding:20px;height:fit-content">
-      <h2 class="font-bold mb-4">Tambah Meja Baru</h2>
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs font-bold mb-1 block" style="color:var(--muted)">NOMOR MEJA *</label>
-          <input class="inp" placeholder="1, 2, VIP-1…" id="tfNum" value="${tf.table_number}" oninput="state.tableFormData.table_number=this.value">
+    <!-- Sidebar -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- URL Card -->
+      <div style="background:white;border:${hasUrl ? '1.5px solid #BBF7D0' : '1.5px solid #FDE68A'};border-radius:16px;padding:20px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <i data-lucide="globe" class="w-4 h-4" style="color:var(--brand)"></i>
+          <h2 class="font-bold">URL Aplikasi</h2>
+          ${hasUrl ? '<span style="font-size:11px;background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:9999px;font-weight:700">✓ Tersimpan</span>' : ''}
         </div>
-        <div>
-          <label class="text-xs font-bold mb-1 block" style="color:var(--muted)">KAPASITAS</label>
-          <input class="inp" type="number" placeholder="4" id="tfCap" value="${tf.capacity}" oninput="state.tableFormData.capacity=this.value">
+        <p class="text-xs mb-3" style="color:var(--muted)">Alamat web tempat file <code style="background:#F5F5F2;padding:1px 4px;border-radius:3px">index.html</code> ini dihosting.</p>
+        <div class="space-y-3">
+          <input class="inp" id="baseUrlInput"
+            placeholder="https://namamu.netlify.app/"
+            value="${state.baseUrl}"
+            oninput="state.baseUrl=this.value">
+          <button class="btn btn-primary btn-full" onclick="applyBaseUrl()">
+            <i data-lucide="qr-code" class="w-4 h-4"></i>Simpan &amp; Generate QR
+          </button>
         </div>
-        <button class="btn btn-primary btn-full" onclick="addTable()">
-          <i data-lucide="plus" class="w-4 h-4"></i>Tambah Meja
-        </button>
+        ${!hasUrl ? `
+        <div style="margin-top:12px;padding:10px 12px;background:#F5F5F2;border-radius:8px">
+          <p style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">Cara deploy gratis:</p>
+          <p style="font-size:11px;color:var(--muted);line-height:1.7">
+            1. Daftar di <strong>netlify.com</strong><br>
+            2. Drag &amp; drop file <code style="background:white;padding:1px 4px;border-radius:3px">index.html</code><br>
+            3. Copy URL yang diberikan Netlify<br>
+            4. Paste di kolom di atas
+          </p>
+        </div>` : ''}
       </div>
+
+      <!-- Add table form -->
+      <div style="background:white;border:1.5px solid var(--border);border-radius:16px;padding:20px">
+        <h2 class="font-bold mb-4">Tambah Meja Baru</h2>
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold mb-1 block" style="color:var(--muted)">NOMOR MEJA *</label>
+            <input class="inp" placeholder="1, 2, VIP-1…" id="tfNum" value="${tf.table_number}" oninput="state.tableFormData.table_number=this.value">
+          </div>
+          <div>
+            <label class="text-xs font-bold mb-1 block" style="color:var(--muted)">KAPASITAS</label>
+            <input class="inp" type="number" placeholder="4" id="tfCap" value="${tf.capacity}" oninput="state.tableFormData.capacity=this.value">
+          </div>
+          <button class="btn btn-primary btn-full" onclick="addTable()">
+            <i data-lucide="plus" class="w-4 h-4"></i>Tambah Meja
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>`;
-        }
+}
 
-        // ── Orders Tab ──
-        function renderAdminOrders() {
-            const filtered = state.orderFilter === 'all'
-                ? state.adminOrders
-                : state.adminOrders.filter(o => o.status === state.orderFilter);
+// ── Orders Tab ──
+function renderAdminOrders() {
+  const filtered = state.orderFilter === 'all'
+    ? state.adminOrders
+    : state.adminOrders.filter(o => o.status === state.orderFilter);
 
-            const STATUS_LABELS = ['all', 'pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'];
+  const STATUS_LABELS = ['all','pending','confirmed','preparing','ready','completed','cancelled'];
 
-            const filterOpts = STATUS_LABELS.map(s =>
-                `<option value="${s}" ${state.orderFilter === s ? 'selected' : ''}>${s === 'all' ? 'Semua' : s}</option>`).join('');
+  const filterOpts = STATUS_LABELS.map(s =>
+    `<option value="${s}" ${state.orderFilter===s?'selected':''}>${s==='all'?'Semua':s}</option>`).join('');
 
-            const rowsHtml = filtered.map(o => `
+  const rowsHtml = filtered.map(o => `
   <tr>
     <td><code class="text-xs font-bold">#${shortId(o.id)}</code></td>
     <td>Meja ${o.table_number}</td>
     <td><span class="status-badge status-${o.status}">${o.status}</span></td>
     <td class="font-bold" style="color:var(--brand)">${fmtRp(o.total_amount)}</td>
-    <td><span class="status-badge ${o.payment_status === 'paid' ? 'status-completed' : 'status-pending'}">${o.payment_status}</span></td>
+    <td><span class="status-badge ${o.payment_status==='paid'?'status-completed':'status-pending'}">${o.payment_status}</span></td>
     <td class="text-xs" style="color:var(--muted)">${fmtDt(o.created_at)}</td>
     <td>
       <select class="inp" style="width:130px;font-size:12px;padding:4px 8px" onchange="updateOrderStatus('${o.id}',this.value)">
-        ${['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled']
-                    .map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${s}</option>`).join('')}
+        ${['pending','confirmed','preparing','ready','completed','cancelled']
+          .map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
   </tr>`).join('');
 
-            return `
+  return `
   <div style="background:white;border:1.5px solid var(--border);border-radius:16px;overflow:hidden">
     <div style="padding:16px 20px;border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
       <h2 class="font-bold flex-1">Semua Pesanan (${filtered.length})</h2>
@@ -1599,107 +1335,118 @@
       </table>
     </div>
   </div>`;
-        }
+}
 
-        // ── Admin Actions ──
-        async function refreshAdminData() {
-            await loadAdminData();
-            renderAdmin();
-        }
+// ── Admin Actions ──
+async function refreshAdminData() {
+  await loadAdminData();
+  renderAdmin();
+}
 
-        async function toggleMenuAvail(itemId, val) {
-            const { error } = await sb.from('menu_items').update({ is_available: val }).eq('id', itemId);
-            if (error) { alert('Gagal update: ' + error.message); return; }
-            const idx = state.adminMenuItems.findIndex(m => m.id === itemId);
-            if (idx >= 0) state.adminMenuItems[idx].is_available = val;
-        }
+async function toggleMenuAvail(itemId, val) {
+  const { error } = await sb.from('menu_items').update({ is_available: val }).eq('id', itemId);
+  if (error) { alert('Gagal update: ' + error.message); return; }
+  const idx = state.adminMenuItems.findIndex(m => m.id === itemId);
+  if (idx >= 0) state.adminMenuItems[idx].is_available = val;
+}
 
-        async function deleteMenuItem(itemId) {
-            if (!confirm('Hapus item ini?')) return;
-            const { error } = await sb.from('menu_items').delete().eq('id', itemId);
-            if (error) { alert('Gagal hapus: ' + error.message); return; }
-            state.adminMenuItems = state.adminMenuItems.filter(m => m.id !== itemId);
-            renderAdmin();
-        }
+async function deleteMenuItem(itemId) {
+  if (!confirm('Hapus item ini?')) return;
+  const { error } = await sb.from('menu_items').delete().eq('id', itemId);
+  if (error) { alert('Gagal hapus: ' + error.message); return; }
+  state.adminMenuItems = state.adminMenuItems.filter(m => m.id !== itemId);
+  renderAdmin();
+}
 
-        async function addMenuItem() {
-            const f = state.menuFormData;
-            if (!f.name || !f.price) { alert('Nama dan harga wajib diisi.'); return; }
-            const { error, data } = await sb.from('menu_items').insert({
-                restaurant_id: state.restaurant.id,
-                category_id: f.category_id || null,
-                name: f.name,
-                price: Number(f.price),
-                description: f.description || null,
-                image_url: f.image_url || null,
-                is_featured: f.is_featured,
-            }).select().single();
-            if (error) { alert('Gagal tambah: ' + error.message); return; }
-            state.adminMenuItems.push(data);
-            state.menuFormData = { name: '', price: '', category_id: '', description: '', image_url: '', is_featured: false };
-            renderAdmin();
-        }
+async function addMenuItem() {
+  const f = state.menuFormData;
+  if (!f.name || !f.price) { alert('Nama dan harga wajib diisi.'); return; }
+  const { error, data } = await sb.from('menu_items').insert({
+    restaurant_id: state.restaurant.id,
+    category_id: f.category_id || null,
+    name: f.name,
+    price: Number(f.price),
+    description: f.description || null,
+    image_url: f.image_url || null,
+    is_featured: f.is_featured,
+  }).select().single();
+  if (error) { alert('Gagal tambah: ' + error.message); return; }
+  state.adminMenuItems.push(data);
+  state.menuFormData = { name: '', price: '', category_id: '', description: '', image_url: '', is_featured: false };
+  renderAdmin();
+}
 
-        async function addTable() {
-            const f = state.tableFormData;
-            if (!f.table_number) { alert('Nomor meja wajib diisi.'); return; }
-            const { error, data } = await sb.from('tables').insert({
-                restaurant_id: state.restaurant.id,
-                table_number: f.table_number,
-                capacity: f.capacity ? Number(f.capacity) : null,
-            }).select().single();
-            if (error) { alert('Gagal tambah meja: ' + error.message); return; }
-            state.adminTables.push(data);
-            state.tableFormData = { table_number: '', capacity: '' };
-            renderAdmin();
-        }
+async function addTable() {
+  const f = state.tableFormData;
+  if (!f.table_number) { alert('Nomor meja wajib diisi.'); return; }
+  const { error, data } = await sb.from('tables').insert({
+    restaurant_id: state.restaurant.id,
+    table_number: f.table_number,
+    capacity: f.capacity ? Number(f.capacity) : null,
+  }).select().single();
+  if (error) { alert('Gagal tambah meja: ' + error.message); return; }
+  state.adminTables.push(data);
+  state.tableFormData = { table_number: '', capacity: '' };
+  renderAdmin();
+}
 
-        async function updateOrderStatus(orderId, newStatus) {
-            const { error } = await sb.from('orders').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', orderId);
-            if (error) { alert('Gagal update: ' + error.message); return; }
-            // Update in state
-            const idx = state.adminOrders.findIndex(o => o.id === orderId);
-            if (idx >= 0) state.adminOrders[idx].status = newStatus;
-            const kidx = state.kitchenOrders.findIndex(o => o.id === orderId);
-            if (kidx >= 0) state.kitchenOrders[kidx].status = newStatus;
-        }
+async function updateOrderStatus(orderId, newStatus) {
+  const { error } = await sb.from('orders').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', orderId);
+  if (error) { alert('Gagal update: ' + error.message); return; }
+  // Update in state
+  const idx = state.adminOrders.findIndex(o => o.id === orderId);
+  if (idx >= 0) state.adminOrders[idx].status = newStatus;
+  const kidx = state.kitchenOrders.findIndex(o => o.id === orderId);
+  if (kidx >= 0) state.kitchenOrders[kidx].status = newStatus;
+}
 
-        // ── QR Code ──
-        function generateQR(tbl) {
-            const canvas = document.getElementById('qr-' + tbl.id);
-            if (!canvas) return;
-            const url = window.location.origin + window.location.pathname + '#customer?table=' + tbl.id;
-            QRCode.toCanvas(canvas, url, { width: 160, margin: 1, color: { dark: '#1A1A18', light: '#FFFFFF' } }, err => {
-                if (err) console.error('QR error:', err);
-            });
-        }
+// ── QR Code ──
+function generateQR(tbl) {
+  const canvas = document.getElementById('qr-' + tbl.id);
+  if (!canvas) return;
+  const base = state.baseUrl.trim().replace(/\/$/, '');
+  if (!base) return;
+  const url = base + '/' + '#customer?table=' + tbl.id;
+  QRCode.toCanvas(canvas, url, { width: 160, margin: 1, color: { dark: '#1A1A18', light: '#FFFFFF' } }, err => {
+    if (err) console.error('QR error:', err);
+  });
+}
 
-        function downloadQR(tableId, tableNum) {
-            const canvas = document.getElementById('qr-' + tableId);
-            if (!canvas) return;
-            const link = document.createElement('a');
-            link.download = `meja-${tableNum}-qr.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
+function applyBaseUrl() {
+  let url = (document.getElementById('baseUrlInput')?.value || '').trim();
+  if (!url) { alert('Masukkan URL aplikasi terlebih dahulu.'); return; }
+  if (!url.startsWith('http')) { alert('URL harus diawali dengan https://'); return; }
+  // Normalize: remove trailing slash so we add it back cleanly
+  url = url.replace(/\/$/, '');
+  state.baseUrl = url;
+  renderAdmin();
+}
 
-        // ──────────────────────────────────────────────────────────────────────────────
-        // INIT
-        // ──────────────────────────────────────────────────────────────────────────────
-        window.addEventListener('hashchange', () => {
-            // Cleanup channels
-            if (state.kitchenChannel) { sb.removeChannel(state.kitchenChannel); state.kitchenChannel = null; }
-            if (state.orderRealtimeChannel) { sb.removeChannel(state.orderRealtimeChannel); state.orderRealtimeChannel = null; }
-            // Remove floating cart
-            document.getElementById('floatingCart')?.remove();
-            router();
-        });
+function downloadQR(tableId, tableNum) {
+  const canvas = document.getElementById('qr-' + tableId);
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = `meja-${tableNum}-qr.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!window.location.hash) window.location.hash = '#admin';
-            router();
-        });
-    </script>
+// ──────────────────────────────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────────────────────────────
+window.addEventListener('hashchange', () => {
+  // Cleanup channels
+  if (state.kitchenChannel)       { sb.removeChannel(state.kitchenChannel); state.kitchenChannel = null; }
+  if (state.orderRealtimeChannel) { sb.removeChannel(state.orderRealtimeChannel); state.orderRealtimeChannel = null; }
+  // Remove floating cart
+  document.getElementById('floatingCart')?.remove();
+  router();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.location.hash) window.location.hash = '#admin';
+  router();
+});
+</script>
 </body>
-
 </html>
