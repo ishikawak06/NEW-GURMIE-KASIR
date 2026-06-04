@@ -40,6 +40,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
     <style>
         :root {
@@ -340,6 +341,30 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
+        .btn-excel-history {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.btn-excel-history:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.45);
+}
+.btn-excel-history:active { transform: translateY(0); }
+.dark .btn-excel-history {
+    background: linear-gradient(135deg, #15803d, #166534);
+}
 
         .btn-pdf-history:hover {
             transform: translateY(-1px);
@@ -906,6 +931,11 @@
                 <div class="flex justify-between items-center px-4 py-3">
                     <h2 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">Riwayat Transaksi</h2>
                     <div class="flex items-center gap-2">
+                        <button onclick="downloadHistoryExcel()" id="btn-download-history-excel" class="btn-excel-history"
+    title="Download Excel sesuai filter aktif">
+    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+    <span class="hidden sm:inline">Download Excel</span>
+</button>
                         <button onclick="downloadHistoryPDF()" id="btn-download-history-pdf" class="btn-pdf-history"
                             title="Download PDF sesuai filter aktif">
                             <i data-lucide="file-down" class="w-4 h-4"></i>
@@ -3363,6 +3393,206 @@
                 showLoading(false);
             }
         }
+        // ==========================================
+// ★ DOWNLOAD EXCEL RIWAYAT TRANSAKSI ★
+// ==========================================
+async function downloadHistoryExcel() {
+    // Cek library SheetJS
+    if (typeof XLSX === 'undefined') {
+        return showToast('Library SheetJS belum dimuat. Cek koneksi internet.', 'error');
+    }
+
+    const customerFilter = document.getElementById('hist-customer-filter')?.value;
+    const typeFilter = state.historyTypeFilter || 'all';
+
+    // Gabungkan data transaksi + pengeluaran (sama persis dengan renderHistoryTable)
+    let combined = [
+        ...state.history.map(t => ({ type: 'trx', date: new Date(t.created_at), data: t })),
+        ...(customerFilter ? [] : state.historyExpenses.map(e => ({
+            type: 'exp',
+            date: new Date(e.expense_date + 'T12:00:00'),
+            data: e
+        })))
+    ];
+
+    if (typeFilter !== 'all') combined = combined.filter(item => item.type === typeFilter);
+    combined.sort((a, b) => b.date - a.date);
+
+    if (combined.length === 0) {
+        return showToast('Tidak ada data untuk di-download.', 'warning');
+    }
+
+    showLoading(true);
+    try {
+        // ── Baris Judul / Info ──
+        const periodLabel = (() => {
+            const s = document.getElementById('hist-start')?.value;
+            const e = document.getElementById('hist-end')?.value;
+            if (state.historyDuration === 'custom' && s && e) {
+                return `${new Date(s).toLocaleDateString('id-ID')} - ${new Date(e).toLocaleDateString('id-ID')}`;
+            }
+            return document.querySelector('.duration-pill.active')?.innerText || 'Semua Waktu';
+        })();
+
+        const custName = customerFilter
+            ? state.customers.find(c => c.id === customerFilter)?.name || 'Terfilter'
+            : 'Semua Pelanggan';
+
+        const tipeLabelMap = { all: 'Semua', trx: 'Pemasukan (Penjualan)', exp: 'Pengeluaran' };
+
+        // ── Hitung ringkasan ──
+        const totalPemasukan = combined.filter(i => i.type === 'trx')
+            .reduce((s, i) => s + getTrxNetPrice(i.data), 0);
+        const totalPengeluaran = combined.filter(i => i.type === 'exp')
+            .reduce((s, i) => s + parseFloat(i.data.amount || 0), 0);
+        const selisih = totalPemasukan - totalPengeluaran;
+
+        // ── Siapkan worksheet data ──
+        // Baris metadata (baris 1-6)
+        const metaRows = [
+            ['GurmieKasir — Laporan Riwayat Transaksi', '', '', '', '', '', '', ''],
+            ['Dicetak', new Date().toLocaleString('id-ID'), '', '', '', '', '', ''],
+            ['Periode', periodLabel, '', '', '', '', '', ''],
+            ['Pelanggan', custName, '', '', '', '', '', ''],
+            ['Tipe Data', tipeLabelMap[typeFilter] || 'Semua', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', ''],
+            // Baris ringkasan
+            ['RINGKASAN', '', '', '', '', '', '', ''],
+            ['Total Pemasukan', totalPemasukan, '', 'Total Pengeluaran', totalPengeluaran, '', 'Selisih / Net', selisih],
+            ['', '', '', '', '', '', '', ''],
+            // Header tabel data
+            [
+                'No',
+                'Tanggal',
+                'Waktu',
+                'ID Referensi',
+                'Tipe',
+                'Pelanggan / Keterangan',
+                'Kategori',
+                'Metode Pembayaran',
+                'Penyesuaian',
+                'Nominal Penyesuaian (Rp)',
+                'Jumlah Item',
+                'Detail Item',
+                'Total (Rp)',
+                'Keterangan Tambahan'
+            ]
+        ];
+
+        // ── Baris data ──
+        const dataRows = combined.map((item, idx) => {
+            if (item.type === 'trx') {
+                const trx = item.data;
+                const totalNet = getTrxNetPrice(trx);
+                const custNameTrx = trx.customers ? trx.customers.name : 'Pelanggan Umum';
+                const jumlahItem = (trx.transaction_items || []).reduce((s, i) => s + i.quantity, 0);
+
+                // Detail item: "Nama x Qty @ Harga"
+                const detailItem = (trx.transaction_items || []).map(i => {
+                    const nm = i.products ? i.products.name : 'Produk';
+                    const harga = i.custom_price || i.price;
+                    return `${nm} x${i.quantity} @ Rp${Number(harga).toLocaleString('id-ID')}`;
+                }).join(' | ');
+
+                const adjLabel = trx.adjustment_type === 'discount' ? 'Diskon'
+                    : trx.adjustment_type === 'fee' ? 'Fee Tambahan' : '-';
+                const adjAmt = trx.adjustment_type ? parseFloat(trx.adjustment_amount || 0) : 0;
+
+                return [
+                    idx + 1,
+                    item.date.toLocaleDateString('id-ID'),
+                    item.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+                    'TRX-' + trx.id.substring(0, 8).toUpperCase(),
+                    'Pemasukan',
+                    custNameTrx,
+                    'Penjualan',
+                    trx.payment_method || 'Tunai',
+                    adjLabel,
+                    adjAmt,
+                    jumlahItem,
+                    detailItem,
+                    totalNet,
+                    ''
+                ];
+            } else {
+                const exp = item.data;
+                const catMap = { opex: 'Beban Operasional', cogs: 'Bahan Baku / HPP', asset: 'Pembelian Aset' };
+                const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
+                const expAmt = parseFloat(exp.amount || 0);
+
+                // Detail item pengeluaran jika ada
+                let detailExp = '';
+                if (exp.items) {
+                    const expItems = typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items;
+                    detailExp = expItems.map(i => `${i.name} x${i.qty} @ Rp${Number(i.price).toLocaleString('id-ID')}`).join(' | ');
+                }
+
+                return [
+                    idx + 1,
+                    item.date.toLocaleDateString('id-ID'),
+                    '-',
+                    'EXP-' + exp.id.substring(0, 8).toUpperCase(),
+                    'Pengeluaran',
+                    exp.name,
+                    catMap[cat] || cat,
+                    exp.is_personal ? 'Uang Pribadi' : 'Kas',
+                    '-',
+                    0,
+                    '-',
+                    detailExp,
+                    -expAmt,   // nilai negatif agar mudah di-SUM di Excel
+                    exp.notes || ''
+                ];
+            }
+        });
+
+        // ── Baris total akhir ──
+        const totalRows = [
+            ['', '', '', '', '', '', '', '', '', '', '', '', '', ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PEMASUKAN', totalPemasukan, ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PENGELUARAN', totalPengeluaran, ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'SELISIH / NET', selisih, ''],
+        ];
+
+        // ── Susun semua baris ──
+        const allRows = [...metaRows, ...dataRows, ...totalRows];
+
+        // ── Buat worksheet ──
+        const ws = XLSX.utils.aoa_to_sheet(allRows);
+
+        // ── Lebar kolom otomatis (pendekatan manual) ──
+        ws['!cols'] = [
+            { wch: 5 },   // No
+            { wch: 14 },  // Tanggal
+            { wch: 8 },   // Waktu
+            { wch: 16 },  // ID
+            { wch: 13 },  // Tipe
+            { wch: 28 },  // Pelanggan
+            { wch: 22 },  // Kategori
+            { wch: 18 },  // Metode
+            { wch: 16 },  // Penyesuaian
+            { wch: 20 },  // Nominal Adj
+            { wch: 13 },  // Jumlah Item
+            { wch: 55 },  // Detail Item
+            { wch: 18 },  // Total
+            { wch: 20 },  // Keterangan
+        ];
+
+        // ── Buat workbook & simpan ──
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Riwayat Transaksi');
+
+        const fileName = `Riwayat_Transaksi_GurmieKasir_${new Date().toISOString().split('T')[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+        showToast('Excel berhasil diunduh! Buka dengan Microsoft Excel / Google Sheets.', 'success');
+    } catch (err) {
+        console.error(err);
+        showToast('Gagal membuat Excel: ' + err.message, 'error');
+    } finally {
+        showLoading(false);
+    }
+}
 
         // ==========================================
         // EDIT & DELETE TRANSAKSI
