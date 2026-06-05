@@ -3625,7 +3625,7 @@ async function downloadHistoryExcel() {
             ['Periode', periodLabel],
             ['Total Pelanggan Unik', customerArr.length, '', 'Total Transaksi', trxOnly.length],
             [],
-            // Header kolom — ini yang bisa di-filter Excel
+// Header kolom — bisa di-filter Excel
             [
                 'No',
                 'Nama Pelanggan',
@@ -3637,6 +3637,8 @@ async function downloadHistoryExcel() {
                 'Kontribusi (%)',
                 'Metode Pembayaran Favorit',
                 'Transaksi Terakhir',
+                'Bulan Terakhir Transaksi',
+                'Tahun Terakhir Transaksi',
                 'Kategori Pelanggan'
             ]
         ];
@@ -3651,6 +3653,10 @@ async function downloadHistoryExcel() {
             else if (c.jumlahTransaksi >= 5) kategori = 'Pelanggan Aktif (5-9x)';
             else if (c.jumlahTransaksi >= 2) kategori = 'Pelanggan Reguler (2-4x)';
 
+const lastDateObj = c.transaksiTerakhir;
+            const bulanTerakhir = lastDateObj ? lastDateObj.toLocaleString('id-ID', { month: 'long' }) : '-';
+            const tahunTerakhir = lastDateObj ? lastDateObj.getFullYear() : '-';
+
             return [
                 idx + 1,
                 c.nama,
@@ -3662,6 +3668,8 @@ async function downloadHistoryExcel() {
                 kontribusi,
                 c.metodeFavorit,
                 lastDate,
+                bulanTerakhir,
+                tahunTerakhir,
                 kategori
             ];
         });
@@ -3679,7 +3687,7 @@ async function downloadHistoryExcel() {
         ];
 
         const ws2 = XLSX.utils.aoa_to_sheet([...sheet2Meta, ...sheet2Data, ...sheet2Total]);
-        ws2['!cols'] = [
+ws2['!cols'] = [
             { wch: 5 },   // No
             { wch: 28 },  // Nama
             { wch: 18 },  // Telepon
@@ -3689,9 +3697,12 @@ async function downloadHistoryExcel() {
             { wch: 26 },  // Rata-rata
             { wch: 16 },  // Kontribusi
             { wch: 24 },  // Metode Favorit
-            { wch: 20 },  // Transaksi Terakhir
+            { wch: 20 },  // Tanggal Terakhir
+            { wch: 22 },  // Bulan Terakhir
+            { wch: 16 },  // Tahun Terakhir
             { wch: 26 },  // Kategori
         ];
+        ws2['!autofilter'] = { ref: `A6:M6` };
         // Tambahkan AutoFilter di baris header (baris ke-7, index 6)
         ws2['!autofilter'] = { ref: `A6:K6` };
         ws2['!freeze'] = { xSplit: 0, ySplit: 6 };
@@ -3753,7 +3764,7 @@ async function downloadHistoryExcel() {
             ['Periode', periodLabel],
             ['Total Produk Berbeda', productArr.length, '', 'Total Item Terjual', totalQtyAll],
             [],
-            // Header kolom
+// Header kolom
             [
                 'No',
                 'Nama Produk',
@@ -3767,7 +3778,11 @@ async function downloadHistoryExcel() {
                 'Kontribusi Omzet (%)',
                 'Rata-rata Harga Jual (Rp)',
                 'Pertama Terjual',
-                'Terakhir Terjual'
+                'Bulan Pertama',
+                'Tahun Pertama',
+                'Terakhir Terjual',
+                'Bulan Terakhir',
+                'Tahun Terakhir'
             ]
         ];
 
@@ -3775,6 +3790,9 @@ async function downloadHistoryExcel() {
             const kontribusiQty = totalQtyAll > 0 ? ((p.totalQty / totalQtyAll) * 100).toFixed(2) + '%' : '0%';
             const kontribusiOmzet = totalOmzetAll > 0 ? ((p.totalOmzet / totalOmzetAll) * 100).toFixed(2) + '%' : '0%';
             const rataHarga = p.totalQty > 0 ? Math.round(p.totalOmzet / p.totalQty) : 0;
+
+const tglPertama = p.tanggalPertama;
+            const tglTerakhir = p.tanggalTerakhir;
 
             return [
                 idx + 1,
@@ -3788,8 +3806,12 @@ async function downloadHistoryExcel() {
                 kontribusiQty,
                 kontribusiOmzet,
                 rataHarga,
-                p.tanggalPertama ? p.tanggalPertama.toLocaleDateString('id-ID') : '-',
-                p.tanggalTerakhir ? p.tanggalTerakhir.toLocaleDateString('id-ID') : '-'
+                tglPertama ? tglPertama.toLocaleDateString('id-ID') : '-',
+                tglPertama ? tglPertama.toLocaleString('id-ID', { month: 'long' }) : '-',
+                tglPertama ? tglPertama.getFullYear() : '-',
+                tglTerakhir ? tglTerakhir.toLocaleDateString('id-ID') : '-',
+                tglTerakhir ? tglTerakhir.toLocaleString('id-ID', { month: 'long' }) : '-',
+                tglTerakhir ? tglTerakhir.getFullYear() : '-'
             ];
         });
 
@@ -3799,7 +3821,7 @@ async function downloadHistoryExcel() {
         ];
 
         const ws3 = XLSX.utils.aoa_to_sheet([...sheet3Meta, ...sheet3Data, ...sheet3Total]);
-        ws3['!cols'] = [
+ws3['!cols'] = [
             { wch: 5 },   // No
             { wch: 30 },  // Nama Produk
             { wch: 18 },  // Total Qty
