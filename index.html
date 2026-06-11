@@ -3476,7 +3476,10 @@ async function downloadHistoryExcel() {
 
         // ═══════════════════════════════════════════
         // SHEET 1 — RIWAYAT TRANSAKSI
-        // Setiap item dalam 1 transaksi = 1 baris sendiri
+        // Perubahan:
+        //   - Kolom "Pelanggan" kosong untuk baris Pengeluaran
+        //   - "Total Transaksi (Rp)" dipecah jadi dua kolom:
+        //       "Pemasukan (Rp)" dan "Pengeluaran (Rp)" — angka selalu positif
         // ═══════════════════════════════════════════
 
         const metaRows = [
@@ -3490,12 +3493,13 @@ async function downloadHistoryExcel() {
             ['Total Pemasukan', totalPemasukan, '', 'Total Pengeluaran', totalPengeluaran, '', 'Selisih / Net', selisih],
             [],
             // Header kolom — tiap baris = 1 item produk
+            // Kolom ke-13 sekarang "Pemasukan (Rp)", kolom ke-14 "Pengeluaran (Rp)"
             [
                 'Tanggal',
                 'Waktu',
                 'ID Referensi',
                 'Tipe',
-                'Pelanggan',
+                'Pelanggan',               // kosong untuk pengeluaran
                 'Metode Pembayaran',
                 'Penyesuaian',
                 'Nominal Penyesuaian (Rp)',
@@ -3503,7 +3507,8 @@ async function downloadHistoryExcel() {
                 'Qty',
                 'Harga Satuan (Rp)',
                 'Subtotal Item (Rp)',
-                'Total Transaksi (Rp)',
+                'Pemasukan (Rp)',           // ganti dari "Total Transaksi (Rp)"
+                'Pengeluaran (Rp)',          // kolom baru
                 'Keterangan Item'
             ]
         ];
@@ -3515,6 +3520,7 @@ async function downloadHistoryExcel() {
             if (item.type === 'trx') {
                 const trx = item.data;
                 const totalNet = getTrxNetPrice(trx);
+                // Pelanggan diisi untuk pemasukan
                 const custNameTrx = trx.customers ? trx.customers.name : 'Pelanggan Umum';
                 const adjLabel = trx.adjustment_type === 'discount' ? 'Diskon'
                     : trx.adjustment_type === 'fee' ? 'Fee Tambahan' : '-';
@@ -3525,11 +3531,15 @@ async function downloadHistoryExcel() {
                 const items = trx.transaction_items || [];
 
                 if (items.length === 0) {
-                    // Tidak ada item, tetap buat 1 baris kosong
                     dataRows.push([
-                        tanggal, waktu, refId, 'Pemasukan', custNameTrx,
-                        trx.payment_method || 'Tunai', adjLabel, adjAmt,
-                        '-', 0, 0, 0, totalNet, ''
+                        tanggal, waktu, refId, 'Pemasukan',
+                        custNameTrx,                    // Pelanggan terisi
+                        trx.payment_method || 'Tunai',
+                        adjLabel, adjAmt,
+                        '-', 0, 0, 0,
+                        totalNet,                       // Pemasukan (Rp)
+                        '',                             // Pengeluaran (Rp) — kosong
+                        ''
                     ]);
                 } else {
                     items.forEach((ti, tiIndex) => {
@@ -3544,7 +3554,7 @@ async function downloadHistoryExcel() {
                             waktu,
                             refId,
                             'Pemasukan',
-                            custNameTrx,
+                            custNameTrx,                // Pelanggan terisi
                             trx.payment_method || 'Tunai',
                             adjLabel,
                             adjAmt,
@@ -3552,23 +3562,21 @@ async function downloadHistoryExcel() {
                             qty,
                             harga,
                             subtotalItem,
-                            // Total transaksi hanya di baris pertama item,
-                            // baris lanjutan dikosongkan agar tidak dobel
-                            tiIndex === 0 ? totalNet : '',
+                            tiIndex === 0 ? totalNet : '',  // Pemasukan (Rp) — hanya baris pertama
+                            '',                              // Pengeluaran (Rp) — kosong
                             catatanItem
                         ]);
                     });
                 }
 
             } else {
-                // Pengeluaran — tetap 1 baris
+                // Pengeluaran
                 const exp = item.data;
                 const catMap = { opex: 'Beban Operasional', cogs: 'Bahan Baku / HPP', asset: 'Pembelian Aset' };
                 const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
                 const expAmt = parseFloat(exp.amount || 0);
                 const tanggal = item.date.toLocaleDateString('id-ID');
 
-                // Jika pengeluaran punya rincian item, ekspansi juga
                 const expItems = exp.items
                     ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items)
                     : [];
@@ -3577,10 +3585,13 @@ async function downloadHistoryExcel() {
                     dataRows.push([
                         tanggal, '-',
                         'EXP-' + exp.id.substring(0, 8).toUpperCase(),
-                        'Pengeluaran', exp.name,
+                        'Pengeluaran',
+                        '',                             // Pelanggan — kosong untuk pengeluaran
                         exp.is_personal ? 'Uang Pribadi' : 'Kas',
                         catMap[cat] || cat, 0,
-                        exp.name, 1, expAmt, expAmt, -expAmt,
+                        exp.name, 1, expAmt, expAmt,
+                        '',                             // Pemasukan (Rp) — kosong
+                        expAmt,                         // Pengeluaran (Rp) — angka positif
                         exp.notes || ''
                     ]);
                 } else {
@@ -3589,14 +3600,16 @@ async function downloadHistoryExcel() {
                         dataRows.push([
                             tanggal, '-',
                             'EXP-' + exp.id.substring(0, 8).toUpperCase(),
-                            'Pengeluaran', exp.name,
+                            'Pengeluaran',
+                            '',                         // Pelanggan — kosong untuk pengeluaran
                             exp.is_personal ? 'Uang Pribadi' : 'Kas',
                             catMap[cat] || cat, 0,
                             ei.name || '-',
                             parseFloat(ei.qty || 1),
                             parseFloat(ei.price || 0),
                             subTotal,
-                            eiIndex === 0 ? -expAmt : '',
+                            '',                         // Pemasukan (Rp) — kosong
+                            eiIndex === 0 ? expAmt : '', // Pengeluaran (Rp) — hanya baris pertama, positif
                             exp.notes || ''
                         ]);
                     });
@@ -3604,12 +3617,12 @@ async function downloadHistoryExcel() {
             }
         });
 
-        // Baris total bawah
+        // Baris total bawah — sesuaikan posisi kolom (sekarang ada 15 kolom)
         const totalRowsSheet1 = [
             [],
-            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PEMASUKAN', totalPemasukan, ''],
-            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PENGELUARAN', totalPengeluaran, ''],
-            ['', '', '', '', '', '', '', '', '', '', '', 'SELISIH / NET', selisih, ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PEMASUKAN', totalPemasukan, '', ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PENGELUARAN', '', totalPengeluaran, ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'SELISIH / NET', selisih, '', ''],
         ];
 
         const ws1 = XLSX.utils.aoa_to_sheet([...metaRows, ...dataRows, ...totalRowsSheet1]);
@@ -3626,7 +3639,8 @@ async function downloadHistoryExcel() {
             { wch: 8 },  // Qty
             { wch: 20 }, // Harga Satuan
             { wch: 20 }, // Subtotal Item
-            { wch: 20 }, // Total Transaksi
+            { wch: 20 }, // Pemasukan (Rp)
+            { wch: 20 }, // Pengeluaran (Rp)
             { wch: 25 }, // Keterangan Item
         ];
         ws1['!freeze'] = { xSplit: 0, ySplit: 10 };
