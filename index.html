@@ -3494,52 +3494,65 @@ async function downloadHistoryExcel() {
             [],
             // Header kolom — tiap baris = 1 item produk
             // Kolom ke-13 sekarang "Pemasukan (Rp)", kolom ke-14 "Pengeluaran (Rp)"
-            [
+[
                 'Tanggal',
                 'Waktu',
                 'ID Referensi',
                 'Tipe',
-                'Pelanggan',               // kosong untuk pengeluaran
+                'Pelanggan',
                 'Metode Pembayaran',
-                'Penyesuaian',
-                'Nominal Penyesuaian (Rp)',
                 'Nama Item',
                 'Qty',
                 'Harga Satuan (Rp)',
                 'Subtotal Item (Rp)',
-                'Pemasukan (Rp)',           // ganti dari "Total Transaksi (Rp)"
-                'Pengeluaran (Rp)',          // kolom baru
+                'Penyesuaian',
+                'Nominal Penyesuaian (Rp)',
+                'Pemasukan (Rp)',
+                'Pengeluaran (Rp)',
+                'Saldo (Rp)',
                 'Keterangan Item'
             ]
         ];
 
-        // Baris data — ekspansi per item
+// Baris data — ekspansi per item
         const dataRows = [];
+        let saldoBerjalan = 0; // untuk kolom Saldo akumulatif
 
         combined.forEach((item) => {
             if (item.type === 'trx') {
                 const trx = item.data;
                 const totalNet = getTrxNetPrice(trx);
-                // Pelanggan diisi untuk pemasukan
                 const custNameTrx = trx.customers ? trx.customers.name : 'Pelanggan Umum';
                 const adjLabel = trx.adjustment_type === 'discount' ? 'Diskon'
-                    : trx.adjustment_type === 'fee' ? 'Fee Tambahan' : '-';
-                const adjAmt = trx.adjustment_type ? parseFloat(trx.adjustment_amount || 0) : 0;
+                    : trx.adjustment_type === 'fee' ? 'Fee Tambahan' : '';
+                const adjAmt = (trx.adjustment_type && parseFloat(trx.adjustment_amount) > 0)
+                    ? parseFloat(trx.adjustment_amount) : 0;
                 const tanggal = item.date.toLocaleDateString('id-ID');
                 const waktu = item.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const refId = 'TRX-' + trx.id.substring(0, 8).toUpperCase();
                 const items = trx.transaction_items || [];
 
+                // Saldo hanya dihitung 1x per transaksi (di baris pertama item)
+                saldoBerjalan += totalNet;
+
                 if (items.length === 0) {
                     dataRows.push([
-                        tanggal, waktu, refId, 'Pemasukan',
-                        custNameTrx,                    // Pelanggan terisi
-                        trx.payment_method || 'Tunai',
-                        adjLabel, adjAmt,
-                        '-', 0, 0, 0,
+                        tanggal,                        // Tanggal
+                        waktu,                          // Waktu
+                        refId,                          // ID Referensi
+                        'Pemasukan',                    // Tipe
+                        custNameTrx,                    // Pelanggan
+                        trx.payment_method || 'Tunai',  // Metode
+                        '-',                            // Nama Item
+                        '',                             // Qty
+                        '',                             // Harga Satuan
+                        '',                             // Subtotal Item
+                        adjLabel,                       // Penyesuaian
+                        adjAmt > 0 ? adjAmt : '',       // Nominal Penyesuaian
                         totalNet,                       // Pemasukan (Rp)
-                        '',                             // Pengeluaran (Rp) — kosong
-                        ''
+                        '',                             // Pengeluaran (Rp)
+                        saldoBerjalan,                  // Saldo (Rp)
+                        ''                              // Keterangan Item
                     ]);
                 } else {
                     items.forEach((ti, tiIndex) => {
@@ -3548,23 +3561,25 @@ async function downloadHistoryExcel() {
                         const qty = parseInt(ti.quantity || 0);
                         const subtotalItem = harga * qty;
                         const catatanItem = ti.notes || '';
+                        const isFirst = tiIndex === 0;
 
                         dataRows.push([
-                            tanggal,
-                            waktu,
-                            refId,
-                            'Pemasukan',
-                            custNameTrx,                // Pelanggan terisi
-                            trx.payment_method || 'Tunai',
-                            adjLabel,
-                            adjAmt,
-                            pName,
-                            qty,
-                            harga,
-                            subtotalItem,
-                            tiIndex === 0 ? totalNet : '',  // Pemasukan (Rp) — hanya baris pertama
-                            '',                              // Pengeluaran (Rp) — kosong
-                            catatanItem
+                            tanggal,                                    // Tanggal
+                            waktu,                                      // Waktu
+                            refId,                                      // ID Referensi
+                            'Pemasukan',                                // Tipe
+                            custNameTrx,                                // Pelanggan
+                            trx.payment_method || 'Tunai',              // Metode
+                            pName,                                      // Nama Item
+                            qty,                                        // Qty
+                            harga,                                      // Harga Satuan (Rp)
+                            subtotalItem,                               // Subtotal Item (Rp)
+                            isFirst ? adjLabel : '',                    // Penyesuaian
+                            isFirst && adjAmt > 0 ? adjAmt : '',        // Nominal Penyesuaian
+                            isFirst ? totalNet : '',                    // Pemasukan (Rp)
+                            '',                                         // Pengeluaran (Rp)
+                            isFirst ? saldoBerjalan : '',               // Saldo (Rp)
+                            catatanItem                                 // Keterangan Item
                         ]);
                     });
                 }
@@ -3577,40 +3592,52 @@ async function downloadHistoryExcel() {
                 const expAmt = parseFloat(exp.amount || 0);
                 const tanggal = item.date.toLocaleDateString('id-ID');
 
+                // Saldo berkurang 1x per pengeluaran
+                saldoBerjalan -= expAmt;
+
                 const expItems = exp.items
                     ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items)
                     : [];
 
                 if (expItems.length === 0) {
                     dataRows.push([
-                        tanggal, '-',
-                        'EXP-' + exp.id.substring(0, 8).toUpperCase(),
-                        'Pengeluaran',
-                        '',                             // Pelanggan — kosong untuk pengeluaran
-                        exp.is_personal ? 'Uang Pribadi' : 'Kas',
-                        catMap[cat] || cat, 0,
-                        exp.name, 1, expAmt, expAmt,
-                        '',                             // Pemasukan (Rp) — kosong
-                        expAmt,                         // Pengeluaran (Rp) — angka positif
-                        exp.notes || ''
+                        tanggal,                                    // Tanggal
+                        '-',                                        // Waktu
+                        'EXP-' + exp.id.substring(0, 8).toUpperCase(), // ID Referensi
+                        'Pengeluaran',                              // Tipe
+                        '',                                         // Pelanggan — kosong
+                        exp.is_personal ? 'Uang Pribadi' : 'Kas',  // Metode
+                        exp.name,                                   // Nama Item
+                        1,                                          // Qty
+                        expAmt,                                     // Harga Satuan
+                        expAmt,                                     // Subtotal Item
+                        catMap[cat] || cat,                         // Penyesuaian (dipakai sbg Kategori)
+                        '',                                         // Nominal Penyesuaian
+                        '',                                         // Pemasukan (Rp)
+                        expAmt,                                     // Pengeluaran (Rp)
+                        saldoBerjalan,                              // Saldo (Rp)
+                        exp.notes || ''                             // Keterangan Item
                     ]);
                 } else {
                     expItems.forEach((ei, eiIndex) => {
                         const subTotal = (parseFloat(ei.qty || 1)) * (parseFloat(ei.price || 0));
                         dataRows.push([
-                            tanggal, '-',
-                            'EXP-' + exp.id.substring(0, 8).toUpperCase(),
-                            'Pengeluaran',
-                            '',                         // Pelanggan — kosong untuk pengeluaran
-                            exp.is_personal ? 'Uang Pribadi' : 'Kas',
-                            catMap[cat] || cat, 0,
-                            ei.name || '-',
-                            parseFloat(ei.qty || 1),
-                            parseFloat(ei.price || 0),
-                            subTotal,
-                            '',                         // Pemasukan (Rp) — kosong
-                            eiIndex === 0 ? expAmt : '', // Pengeluaran (Rp) — hanya baris pertama, positif
-                            exp.notes || ''
+                            tanggal,                                            // Tanggal
+                            '-',                                                // Waktu
+                            'EXP-' + exp.id.substring(0, 8).toUpperCase(),     // ID Referensi
+                            'Pengeluaran',                                      // Tipe
+                            '',                                                 // Pelanggan — kosong
+                            exp.is_personal ? 'Uang Pribadi' : 'Kas',          // Metode
+                            ei.name || '-',                                     // Nama Item
+                            parseFloat(ei.qty || 1),                            // Qty
+                            parseFloat(ei.price || 0),                          // Harga Satuan
+                            subTotal,                                           // Subtotal Item
+                            eiIndex === 0 ? (catMap[cat] || cat) : '',          // Penyesuaian
+                            '',                                                 // Nominal Penyesuaian
+                            '',                                                 // Pemasukan (Rp)
+                            eiIndex === 0 ? expAmt : '',                        // Pengeluaran (Rp)
+                            eiIndex === 0 ? saldoBerjalan : '',                 // Saldo (Rp)
+                            exp.notes || ''                                     // Keterangan Item
                         ]);
                     });
                 }
@@ -3618,29 +3645,30 @@ async function downloadHistoryExcel() {
         });
 
         // Baris total bawah — sesuaikan posisi kolom (sekarang ada 15 kolom)
-        const totalRowsSheet1 = [
+const totalRowsSheet1 = [
             [],
-            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PEMASUKAN', totalPemasukan, '', ''],
-            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PENGELUARAN', '', totalPengeluaran, ''],
-            ['', '', '', '', '', '', '', '', '', '', '', 'SELISIH / NET', selisih, '', ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PEMASUKAN', totalPemasukan, '', '', ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PENGELUARAN', '', totalPengeluaran, '', ''],
+            ['', '', '', '', '', '', '', '', '', '', '', 'SELISIH / NET', selisih, '', saldoBerjalan, ''],
         ];
 
         const ws1 = XLSX.utils.aoa_to_sheet([...metaRows, ...dataRows, ...totalRowsSheet1]);
-        ws1['!cols'] = [
+ws1['!cols'] = [
             { wch: 14 }, // Tanggal
             { wch: 8 },  // Waktu
             { wch: 16 }, // ID Referensi
             { wch: 13 }, // Tipe
             { wch: 26 }, // Pelanggan
-            { wch: 18 }, // Metode
-            { wch: 16 }, // Penyesuaian
-            { wch: 22 }, // Nominal Penyesuaian
+            { wch: 18 }, // Metode Pembayaran
             { wch: 30 }, // Nama Item
-            { wch: 8 },  // Qty
-            { wch: 20 }, // Harga Satuan
-            { wch: 20 }, // Subtotal Item
+            { wch: 6 },  // Qty
+            { wch: 20 }, // Harga Satuan (Rp)
+            { wch: 20 }, // Subtotal Item (Rp)
+            { wch: 20 }, // Penyesuaian
+            { wch: 22 }, // Nominal Penyesuaian (Rp)
             { wch: 20 }, // Pemasukan (Rp)
             { wch: 20 }, // Pengeluaran (Rp)
+            { wch: 20 }, // Saldo (Rp)
             { wch: 25 }, // Keterangan Item
         ];
         ws1['!freeze'] = { xSplit: 0, ySplit: 10 };
