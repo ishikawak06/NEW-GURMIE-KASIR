@@ -3475,8 +3475,10 @@ async function downloadHistoryExcel() {
         const wb = XLSX.utils.book_new();
 
         // ═══════════════════════════════════════════
-        // SHEET 1 — RIWAYAT TRANSAKSI (sama seperti sebelumnya)
+        // SHEET 1 — RIWAYAT TRANSAKSI
+        // Setiap item dalam 1 transaksi = 1 baris sendiri
         // ═══════════════════════════════════════════
+
         const metaRows = [
             ['GurmieKasir — Laporan Riwayat Transaksi'],
             ['Dicetak', new Date().toLocaleString('id-ID')],
@@ -3487,66 +3489,122 @@ async function downloadHistoryExcel() {
             ['RINGKASAN'],
             ['Total Pemasukan', totalPemasukan, '', 'Total Pengeluaran', totalPengeluaran, '', 'Selisih / Net', selisih],
             [],
-            ['No', 'Tanggal', 'Waktu', 'ID Referensi', 'Tipe', 'Pelanggan / Keterangan',
-             'Kategori', 'Metode Pembayaran', 'Penyesuaian', 'Nominal Penyesuaian (Rp)',
-             'Jumlah Item', 'Detail Item', 'Total (Rp)', 'Keterangan']
+            // Header kolom — tiap baris = 1 item produk
+            [
+                'Tanggal',
+                'Waktu',
+                'ID Referensi',
+                'Tipe',
+                'Pelanggan',
+                'Metode Pembayaran',
+                'Penyesuaian',
+                'Nominal Penyesuaian (Rp)',
+                'Nama Item',
+                'Qty',
+                'Harga Satuan (Rp)',
+                'Subtotal Item (Rp)',
+                'Total Transaksi (Rp)',
+                'Keterangan Item'
+            ]
         ];
 
-        const dataRows = combined.map((item, idx) => {
+        // Baris data — ekspansi per item
+        const dataRows = [];
+
+        combined.forEach((item) => {
             if (item.type === 'trx') {
                 const trx = item.data;
                 const totalNet = getTrxNetPrice(trx);
                 const custNameTrx = trx.customers ? trx.customers.name : 'Pelanggan Umum';
-                const jumlahItem = (trx.transaction_items || []).reduce((s, i) => s + i.quantity, 0);
-                const detailItem = (trx.transaction_items || []).map(i => {
-                    const nm = i.products ? i.products.name : 'Produk';
-                    const harga = i.custom_price || i.price;
-                    return `${nm} x${i.quantity} @ Rp${Number(harga).toLocaleString('id-ID')}`;
-                }).join(' | ');
                 const adjLabel = trx.adjustment_type === 'discount' ? 'Diskon'
                     : trx.adjustment_type === 'fee' ? 'Fee Tambahan' : '-';
                 const adjAmt = trx.adjustment_type ? parseFloat(trx.adjustment_amount || 0) : 0;
-                return [
-                    idx + 1,
-                    item.date.toLocaleDateString('id-ID'),
-                    item.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
-                    'TRX-' + trx.id.substring(0, 8).toUpperCase(),
-                    'Pemasukan',
-                    custNameTrx,
-                    'Penjualan',
-                    trx.payment_method || 'Tunai',
-                    adjLabel,
-                    adjAmt,
-                    jumlahItem,
-                    detailItem,
-                    totalNet,
-                    ''
-                ];
+                const tanggal = item.date.toLocaleDateString('id-ID');
+                const waktu = item.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const refId = 'TRX-' + trx.id.substring(0, 8).toUpperCase();
+                const items = trx.transaction_items || [];
+
+                if (items.length === 0) {
+                    // Tidak ada item, tetap buat 1 baris kosong
+                    dataRows.push([
+                        tanggal, waktu, refId, 'Pemasukan', custNameTrx,
+                        trx.payment_method || 'Tunai', adjLabel, adjAmt,
+                        '-', 0, 0, 0, totalNet, ''
+                    ]);
+                } else {
+                    items.forEach((ti, tiIndex) => {
+                        const pName = ti.products ? ti.products.name : 'Produk Terhapus';
+                        const harga = parseFloat(ti.custom_price || ti.price || 0);
+                        const qty = parseInt(ti.quantity || 0);
+                        const subtotalItem = harga * qty;
+                        const catatanItem = ti.notes || '';
+
+                        dataRows.push([
+                            tanggal,
+                            waktu,
+                            refId,
+                            'Pemasukan',
+                            custNameTrx,
+                            trx.payment_method || 'Tunai',
+                            adjLabel,
+                            adjAmt,
+                            pName,
+                            qty,
+                            harga,
+                            subtotalItem,
+                            // Total transaksi hanya di baris pertama item,
+                            // baris lanjutan dikosongkan agar tidak dobel
+                            tiIndex === 0 ? totalNet : '',
+                            catatanItem
+                        ]);
+                    });
+                }
+
             } else {
+                // Pengeluaran — tetap 1 baris
                 const exp = item.data;
                 const catMap = { opex: 'Beban Operasional', cogs: 'Bahan Baku / HPP', asset: 'Pembelian Aset' };
                 const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
                 const expAmt = parseFloat(exp.amount || 0);
-                let detailExp = '';
-                if (exp.items) {
-                    const expItems = typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items;
-                    detailExp = expItems.map(i => `${i.name} x${i.qty} @ Rp${Number(i.price).toLocaleString('id-ID')}`).join(' | ');
+                const tanggal = item.date.toLocaleDateString('id-ID');
+
+                // Jika pengeluaran punya rincian item, ekspansi juga
+                const expItems = exp.items
+                    ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items)
+                    : [];
+
+                if (expItems.length === 0) {
+                    dataRows.push([
+                        tanggal, '-',
+                        'EXP-' + exp.id.substring(0, 8).toUpperCase(),
+                        'Pengeluaran', exp.name,
+                        exp.is_personal ? 'Uang Pribadi' : 'Kas',
+                        catMap[cat] || cat, 0,
+                        exp.name, 1, expAmt, expAmt, -expAmt,
+                        exp.notes || ''
+                    ]);
+                } else {
+                    expItems.forEach((ei, eiIndex) => {
+                        const subTotal = (parseFloat(ei.qty || 1)) * (parseFloat(ei.price || 0));
+                        dataRows.push([
+                            tanggal, '-',
+                            'EXP-' + exp.id.substring(0, 8).toUpperCase(),
+                            'Pengeluaran', exp.name,
+                            exp.is_personal ? 'Uang Pribadi' : 'Kas',
+                            catMap[cat] || cat, 0,
+                            ei.name || '-',
+                            parseFloat(ei.qty || 1),
+                            parseFloat(ei.price || 0),
+                            subTotal,
+                            eiIndex === 0 ? -expAmt : '',
+                            exp.notes || ''
+                        ]);
+                    });
                 }
-                return [
-                    idx + 1,
-                    item.date.toLocaleDateString('id-ID'),
-                    '-',
-                    'EXP-' + exp.id.substring(0, 8).toUpperCase(),
-                    'Pengeluaran',
-                    exp.name,
-                    catMap[cat] || cat,
-                    exp.is_personal ? 'Uang Pribadi' : 'Kas',
-                    '-',
-                    0, '-', detailExp, -expAmt, exp.notes || ''
-                ];
             }
         });
 
+        // Baris total bawah
         const totalRowsSheet1 = [
             [],
             ['', '', '', '', '', '', '', '', '', '', '', 'TOTAL PEMASUKAN', totalPemasukan, ''],
@@ -3556,22 +3614,30 @@ async function downloadHistoryExcel() {
 
         const ws1 = XLSX.utils.aoa_to_sheet([...metaRows, ...dataRows, ...totalRowsSheet1]);
         ws1['!cols'] = [
-            { wch: 5 }, { wch: 14 }, { wch: 8 }, { wch: 16 }, { wch: 13 },
-            { wch: 28 }, { wch: 22 }, { wch: 18 }, { wch: 16 }, { wch: 20 },
-            { wch: 13 }, { wch: 55 }, { wch: 18 }, { wch: 20 }
+            { wch: 14 }, // Tanggal
+            { wch: 8 },  // Waktu
+            { wch: 16 }, // ID Referensi
+            { wch: 13 }, // Tipe
+            { wch: 26 }, // Pelanggan
+            { wch: 18 }, // Metode
+            { wch: 16 }, // Penyesuaian
+            { wch: 22 }, // Nominal Penyesuaian
+            { wch: 30 }, // Nama Item
+            { wch: 8 },  // Qty
+            { wch: 20 }, // Harga Satuan
+            { wch: 20 }, // Subtotal Item
+            { wch: 20 }, // Total Transaksi
+            { wch: 25 }, // Keterangan Item
         ];
-        // Freeze row header di baris ke-11 (index 10)
         ws1['!freeze'] = { xSplit: 0, ySplit: 10 };
         XLSX.utils.book_append_sheet(wb, ws1, 'Riwayat Transaksi');
 
 
         // ═══════════════════════════════════════════
         // SHEET 2 — REKAP PELANGGAN
-        // (hanya dari transaksi penjualan, urut terbanyak)
         // ═══════════════════════════════════════════
         const trxOnly = combined.filter(i => i.type === 'trx');
 
-        // Hitung data per pelanggan
         const customerMap = {};
         trxOnly.forEach(item => {
             const trx = item.data;
@@ -3583,37 +3649,24 @@ async function downloadHistoryExcel() {
 
             if (!customerMap[cId]) {
                 customerMap[cId] = {
-                    nama: cName,
-                    telepon: cPhone,
-                    jumlahTransaksi: 0,
-                    totalItem: 0,
-                    totalBelanja: 0,
-                    rataPerTransaksi: 0,
-                    transaksiTerakhir: null,
-                    metode: {}
+                    nama: cName, telepon: cPhone,
+                    jumlahTransaksi: 0, totalItem: 0, totalBelanja: 0,
+                    rataPerTransaksi: 0, transaksiTerakhir: null, metode: {}
                 };
             }
             customerMap[cId].jumlahTransaksi++;
             customerMap[cId].totalItem += jumlahItem;
             customerMap[cId].totalBelanja += net;
-
-            // Metode pembayaran paling sering
             const met = trx.payment_method || 'Tunai';
             customerMap[cId].metode[met] = (customerMap[cId].metode[met] || 0) + 1;
-
-            // Transaksi terakhir
             if (!customerMap[cId].transaksiTerakhir || item.date > customerMap[cId].transaksiTerakhir) {
                 customerMap[cId].transaksiTerakhir = item.date;
             }
         });
 
-        // Urutkan dari total belanja terbesar
         const customerArr = Object.values(customerMap).sort((a, b) => b.totalBelanja - a.totalBelanja);
-
-        // Hitung rata-rata per transaksi
         customerArr.forEach(c => {
             c.rataPerTransaksi = c.jumlahTransaksi > 0 ? c.totalBelanja / c.jumlahTransaksi : 0;
-            // Ambil metode paling sering dipakai
             c.metodeFavorit = Object.entries(c.metode).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
         });
 
@@ -3625,86 +3678,43 @@ async function downloadHistoryExcel() {
             ['Periode', periodLabel],
             ['Total Pelanggan Unik', customerArr.length, '', 'Total Transaksi', trxOnly.length],
             [],
-// Header kolom — bisa di-filter Excel
-            [
-                'No',
-                'Nama Pelanggan',
-                'No. Telepon',
-                'Jumlah Transaksi',
-                'Total Item Dibeli',
-                'Total Belanja (Rp)',
-                'Rata-rata / Transaksi (Rp)',
-                'Kontribusi (%)',
-                'Metode Pembayaran Favorit',
-                'Transaksi Terakhir',
-                'Bulan Terakhir Transaksi',
-                'Tahun Terakhir Transaksi',
-                'Kategori Pelanggan'
-            ]
+            ['No', 'Nama Pelanggan', 'No. Telepon', 'Jumlah Transaksi', 'Total Item Dibeli',
+             'Total Belanja (Rp)', 'Rata-rata / Transaksi (Rp)', 'Kontribusi (%)',
+             'Metode Pembayaran Favorit', 'Transaksi Terakhir', 'Bulan Terakhir',
+             'Tahun Terakhir', 'Kategori Pelanggan']
         ];
 
         const sheet2Data = customerArr.map((c, idx) => {
             const kontribusi = totalBelanjaAll > 0 ? ((c.totalBelanja / totalBelanjaAll) * 100).toFixed(2) + '%' : '0%';
             const lastDate = c.transaksiTerakhir ? c.transaksiTerakhir.toLocaleDateString('id-ID') : '-';
-
-            // Kategori sederhana berdasarkan frekuensi
             let kategori = 'Baru (1x)';
             if (c.jumlahTransaksi >= 10) kategori = 'Pelanggan Setia (10x+)';
             else if (c.jumlahTransaksi >= 5) kategori = 'Pelanggan Aktif (5-9x)';
             else if (c.jumlahTransaksi >= 2) kategori = 'Pelanggan Reguler (2-4x)';
-
-const lastDateObj = c.transaksiTerakhir;
+            const lastDateObj = c.transaksiTerakhir;
             const bulanTerakhir = lastDateObj ? lastDateObj.toLocaleString('id-ID', { month: 'long' }) : '-';
             const tahunTerakhir = lastDateObj ? lastDateObj.getFullYear() : '-';
-
-            return [
-                idx + 1,
-                c.nama,
-                c.telepon,
-                c.jumlahTransaksi,
-                c.totalItem,
-                c.totalBelanja,
-                Math.round(c.rataPerTransaksi),
-                kontribusi,
-                c.metodeFavorit,
-                lastDate,
-                bulanTerakhir,
-                tahunTerakhir,
-                kategori
-            ];
+            return [idx + 1, c.nama, c.telepon, c.jumlahTransaksi, c.totalItem,
+                    c.totalBelanja, Math.round(c.rataPerTransaksi), kontribusi,
+                    c.metodeFavorit, lastDate, bulanTerakhir, tahunTerakhir, kategori];
         });
 
-        // Baris total bawah
         const sheet2Total = [
             [],
             ['', 'TOTAL', '',
              customerArr.reduce((s, c) => s + c.jumlahTransaksi, 0),
              customerArr.reduce((s, c) => s + c.totalItem, 0),
-             totalBelanjaAll,
-             Math.round(totalBelanjaAll / (trxOnly.length || 1)),
-             '100%', '', '', ''
-            ]
+             totalBelanjaAll, Math.round(totalBelanjaAll / (trxOnly.length || 1)),
+             '100%', '', '', '', '']
         ];
 
         const ws2 = XLSX.utils.aoa_to_sheet([...sheet2Meta, ...sheet2Data, ...sheet2Total]);
-ws2['!cols'] = [
-            { wch: 5 },   // No
-            { wch: 28 },  // Nama
-            { wch: 18 },  // Telepon
-            { wch: 20 },  // Jml Transaksi
-            { wch: 18 },  // Total Item
-            { wch: 22 },  // Total Belanja
-            { wch: 26 },  // Rata-rata
-            { wch: 16 },  // Kontribusi
-            { wch: 24 },  // Metode Favorit
-            { wch: 20 },  // Tanggal Terakhir
-            { wch: 22 },  // Bulan Terakhir
-            { wch: 16 },  // Tahun Terakhir
-            { wch: 26 },  // Kategori
+        ws2['!cols'] = [
+            { wch: 5 }, { wch: 28 }, { wch: 18 }, { wch: 20 }, { wch: 18 },
+            { wch: 22 }, { wch: 26 }, { wch: 16 }, { wch: 24 }, { wch: 20 },
+            { wch: 22 }, { wch: 16 }, { wch: 26 }
         ];
         ws2['!autofilter'] = { ref: `A6:M6` };
-        // Tambahkan AutoFilter di baris header (baris ke-7, index 6)
-        ws2['!autofilter'] = { ref: `A6:K6` };
         ws2['!freeze'] = { xSplit: 0, ySplit: 6 };
         XLSX.utils.book_append_sheet(wb, ws2, 'Rekap Pelanggan');
 
@@ -3725,17 +3735,10 @@ ws2['!cols'] = [
 
                 if (!productMap[pId]) {
                     productMap[pId] = {
-                        nama: pName,
-                        totalQty: 0,
-                        totalOmzet: 0,
-                        jumlahTransaksi: 0,  // berapa kali muncul di transaksi berbeda
-                        hargaMin: harga,
-                        hargaMax: harga,
-                        hargaJual: harga,    // harga terakhir dari master
-                        tanggalPertama: item.date,
-                        tanggalTerakhir: item.date,
+                        nama: pName, totalQty: 0, totalOmzet: 0, jumlahTransaksi: 0,
+                        hargaMin: harga, hargaMax: harga, hargaJual: harga,
+                        tanggalPertama: item.date, tanggalTerakhir: item.date,
                     };
-                    // Cek harga dari state.products (master)
                     const masterProd = state.products.find(p => p.id === pId);
                     if (masterProd) productMap[pId].hargaJual = masterProd.price;
                 }
@@ -3743,18 +3746,14 @@ ws2['!cols'] = [
                 productMap[pId].totalQty += qty;
                 productMap[pId].totalOmzet += subtotal;
                 productMap[pId].jumlahTransaksi++;
-
                 if (harga < productMap[pId].hargaMin) productMap[pId].hargaMin = harga;
                 if (harga > productMap[pId].hargaMax) productMap[pId].hargaMax = harga;
-
                 if (item.date < productMap[pId].tanggalPertama) productMap[pId].tanggalPertama = item.date;
                 if (item.date > productMap[pId].tanggalTerakhir) productMap[pId].tanggalTerakhir = item.date;
             });
         });
 
-        // Urutkan dari qty terbanyak terjual
         const productArr = Object.values(productMap).sort((a, b) => b.totalQty - a.totalQty);
-
         const totalQtyAll = productArr.reduce((s, p) => s + p.totalQty, 0);
         const totalOmzetAll = productArr.reduce((s, p) => s + p.totalOmzet, 0);
 
@@ -3764,48 +3763,23 @@ ws2['!cols'] = [
             ['Periode', periodLabel],
             ['Total Produk Berbeda', productArr.length, '', 'Total Item Terjual', totalQtyAll],
             [],
-// Header kolom
-            [
-                'No',
-                'Nama Produk',
-                'Total Qty Terjual',
-                'Total Omzet (Rp)',
-                'Harga Jual Saat Ini (Rp)',
-                'Harga Min Terjual (Rp)',
-                'Harga Max Terjual (Rp)',
-                'Muncul di Transaksi',
-                'Kontribusi Qty (%)',
-                'Kontribusi Omzet (%)',
-                'Rata-rata Harga Jual (Rp)',
-                'Pertama Terjual',
-                'Bulan Pertama',
-                'Tahun Pertama',
-                'Terakhir Terjual',
-                'Bulan Terakhir',
-                'Tahun Terakhir'
-            ]
+            ['No', 'Nama Produk', 'Total Qty Terjual', 'Total Omzet (Rp)',
+             'Harga Jual Saat Ini (Rp)', 'Harga Min Terjual (Rp)', 'Harga Max Terjual (Rp)',
+             'Muncul di Transaksi', 'Kontribusi Qty (%)', 'Kontribusi Omzet (%)',
+             'Rata-rata Harga Jual (Rp)', 'Pertama Terjual', 'Bulan Pertama',
+             'Tahun Pertama', 'Terakhir Terjual', 'Bulan Terakhir', 'Tahun Terakhir']
         ];
 
         const sheet3Data = productArr.map((p, idx) => {
             const kontribusiQty = totalQtyAll > 0 ? ((p.totalQty / totalQtyAll) * 100).toFixed(2) + '%' : '0%';
             const kontribusiOmzet = totalOmzetAll > 0 ? ((p.totalOmzet / totalOmzetAll) * 100).toFixed(2) + '%' : '0%';
             const rataHarga = p.totalQty > 0 ? Math.round(p.totalOmzet / p.totalQty) : 0;
-
-const tglPertama = p.tanggalPertama;
+            const tglPertama = p.tanggalPertama;
             const tglTerakhir = p.tanggalTerakhir;
-
             return [
-                idx + 1,
-                p.nama,
-                p.totalQty,
-                p.totalOmzet,
-                p.hargaJual,
-                p.hargaMin,
-                p.hargaMax,
-                p.jumlahTransaksi,
-                kontribusiQty,
-                kontribusiOmzet,
-                rataHarga,
+                idx + 1, p.nama, p.totalQty, p.totalOmzet, p.hargaJual,
+                p.hargaMin, p.hargaMax, p.jumlahTransaksi,
+                kontribusiQty, kontribusiOmzet, rataHarga,
                 tglPertama ? tglPertama.toLocaleDateString('id-ID') : '-',
                 tglPertama ? tglPertama.toLocaleString('id-ID', { month: 'long' }) : '-',
                 tglPertama ? tglPertama.getFullYear() : '-',
@@ -3821,23 +3795,12 @@ const tglPertama = p.tanggalPertama;
         ];
 
         const ws3 = XLSX.utils.aoa_to_sheet([...sheet3Meta, ...sheet3Data, ...sheet3Total]);
-ws3['!cols'] = [
-            { wch: 5 },   // No
-            { wch: 30 },  // Nama Produk
-            { wch: 18 },  // Total Qty
-            { wch: 22 },  // Total Omzet
-            { wch: 24 },  // Harga Saat Ini
-            { wch: 22 },  // Harga Min
-            { wch: 22 },  // Harga Max
-            { wch: 20 },  // Jml Transaksi
-            { wch: 20 },  // Kontribusi Qty
-            { wch: 22 },  // Kontribusi Omzet
-            { wch: 24 },  // Rata Harga
-            { wch: 18 },  // Pertama Terjual
-            { wch: 18 },  // Terakhir Terjual
+        ws3['!cols'] = [
+            { wch: 5 }, { wch: 30 }, { wch: 18 }, { wch: 22 }, { wch: 24 },
+            { wch: 22 }, { wch: 22 }, { wch: 20 }, { wch: 20 }, { wch: 22 },
+            { wch: 24 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 14 }
         ];
-        // AutoFilter dan freeze di baris header (baris ke-7, index 6)
-        ws3['!autofilter'] = { ref: `A6:M6` };
+        ws3['!autofilter'] = { ref: `A6:Q6` };
         ws3['!freeze'] = { xSplit: 0, ySplit: 6 };
         XLSX.utils.book_append_sheet(wb, ws3, 'Rekap Produk');
 
@@ -3845,7 +3808,6 @@ ws3['!cols'] = [
         // ── Simpan file ──
         const fileName = `Laporan_GurmieKasir_${new Date().toISOString().split('T')[0]}.xlsx`;
         XLSX.writeFile(wb, fileName);
-
         showToast('Excel (3 sheet) berhasil diunduh!', 'success');
 
     } catch (err) {
