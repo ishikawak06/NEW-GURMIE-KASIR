@@ -923,11 +923,18 @@
                     class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-800 rounded-xl flex flex-col shadow-sm max-h-[320px]">
                     <div
                         class="p-3 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
-                        <h3 class="font-bold text-sm text-gray-700 dark:text-gray-400">Catatan Pengeluaran</h3>
-<button onclick="openExpenseModal()"
-    class="text-xs font-medium bg-blue-100 dark:bg-gray-800 hover:bg-blue-200 px-3 py-1.5 rounded text-blue-600 dark:text-neon-cyan">Catat Keluar</button>
-<button onclick="openIncomeModal()"
-    class="text-xs font-medium bg-green-100 dark:bg-green-900/30 hover:bg-green-200 px-3 py-1.5 rounded text-green-600 dark:text-green-400">+ Pemasukan</button>                    </div>
+<h3 class="font-bold text-sm text-gray-700 dark:text-gray-400">Catatan Pengeluaran</h3>
+<div class="flex items-center gap-1.5 flex-wrap">
+    <button onclick="openExpenseModal()"
+        class="text-xs font-medium bg-blue-100 dark:bg-gray-800 hover:bg-blue-200 px-3 py-1.5 rounded text-blue-600 dark:text-neon-cyan">Catat Keluar</button>
+    <button onclick="openWaPasteModal()"
+        title="Paste teks dari WA → otomatis jadi catatan keluar"
+        class="text-xs font-medium bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 px-3 py-1.5 rounded text-purple-600 dark:text-purple-400 flex items-center gap-1">
+        <i data-lucide="clipboard-paste" class="w-3 h-3"></i> Dari WA
+    </button>
+    <button onclick="openIncomeModal()"
+        class="text-xs font-medium bg-green-100 dark:bg-green-900/30 hover:bg-green-200 px-3 py-1.5 rounded text-green-600 dark:text-green-400">+ Pemasukan</button>
+</div>
                     <div class="flex-1 overflow-y-auto">
                         <table class="w-full text-left text-sm">
                             <tbody id="expense-table-body" class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -4917,7 +4924,479 @@ function renderHistoryTableWithIncome() {
         }).join('');
     }
 }
+// ============================================================
+//  FITUR: PASTE DARI WA → CATATAN KELUAR
+//  State internal — tidak konflik dengan state utama
+// ============================================================
+const waState = {
+    items: []   // [{ name: string, amount: number }]
+};
+ 
+// ── Buka modal ──
+function openWaPasteModal() {
+    // Set tanggal default hari ini
+    const today = new Date();
+    const todayStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+        .toISOString().split('T')[0];
+    document.getElementById('wa-expense-date').value = todayStr;
+ 
+    // Reset state
+    waState.items = [];
+    document.getElementById('wa-paste-input').value = '';
+    wa_clearPreview();
+ 
+    // Tampilkan modal
+    const modal = document.getElementById('modal-wa-paste');
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.classList.remove('opacity-0'), 10);
+ 
+    lucide.createIcons();
+    document.getElementById('wa-paste-input').focus();
+}
+ 
+// ── Tutup modal ──
+function closeWaPasteModal() {
+    const modal = document.getElementById('modal-wa-paste');
+    modal.classList.add('opacity-0');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+}
+ 
+// ── Bersihkan preview ──
+function wa_clearPreview() {
+    document.getElementById('wa-parse-result').classList.add('hidden');
+    document.getElementById('wa-empty-state').classList.remove('hidden');
+    document.getElementById('wa-items-body').innerHTML = '';
+    document.getElementById('wa-total-display').innerText = 'Rp 0';
+    document.getElementById('btn-wa-save').disabled = true;
+    waState.items = [];
+}
+ 
+// ── Preview live saat user mengetik (hanya refresh jika sudah pernah parse) ──
+function wa_previewParse() {
+    if (!document.getElementById('wa-parse-result').classList.contains('hidden')) {
+        wa_autoParse();
+    }
+}
+ 
+// ── Parser utama: ekstrak nama & nominal dari teks WA ──
+function wa_parseWaText(rawText) {
+    /*
+      Strategi:
+      - Split per baris
+      - Tiap baris yang mengandung angka (nominal Rp) dianggap 1 item
+      - Nominal: cari pola "angka rb" → ×1000, atau angka > 999 langsung
+      - Nama: teks baris, dibersihkan dari info harga
+      - Baris yang tidak ada angka → dilewati (atau digabung ke baris sebelumnya)
+    */
+    const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const results = [];
+ 
+    // Regex untuk menemukan nominal
+    // Prioritas: "angka rb" / "angka.000" / "Rp angka" / angka > 999 berdiri sendiri
+    const rRb    = /(\d[\d.,]*)\s*rb/gi;        // 12 rb, 15,5 rb
+    const rRp    = /Rp\.?\s*(\d[\d.,]*)/gi;      // Rp 12.000 / Rp12.000
+    const rRaw   = /(\d{4,})/g;                  // 12000, 15000
+ 
+    function extractAmounts(text) {
+        const amounts = [];
+ 
+        // Coba pola "rb" dulu (paling umum di WA warteg/warung)
+        let m;
+        const textLow = text.toLowerCase();
+        rRb.lastIndex = 0;
+        while ((m = rRb.exec(textLow)) !== null) {
+            const val = parseFloat(m[1].replace(/\./g, '').replace(',', '.')) * 1000;
+            if (!isNaN(val) && val > 0) amounts.push(Math.round(val));
+        }
+ 
+        // Coba pola Rp
+        if (amounts.length === 0) {
+            rRp.lastIndex = 0;
+            while ((m = rRp.exec(text)) !== null) {
+                const val = parseFloat(m[1].replace(/\./g, '').replace(',', '.'));
+                if (!isNaN(val) && val > 0) amounts.push(Math.round(val));
+            }
+        }
+ 
+        // Fallback: angka >= 4 digit
+        if (amounts.length === 0) {
+            rRaw.lastIndex = 0;
+            while ((m = rRaw.exec(text)) !== null) {
+                const val = parseFloat(m[1]);
+                if (!isNaN(val) && val >= 1000) amounts.push(Math.round(val));
+            }
+        }
+ 
+        return amounts;
+    }
+ 
+    function cleanName(text) {
+        // Hapus nomor di awal baris: "1.", "1)", "1:"
+        let name = text.replace(/^\d+[\.\)\:]\s*/i, '');
+        // Hapus prefix "mba ", "pak ", "bu ", "bi " (informal WA)
+        // Tidak dihapus agar info pembeli tetap ada
+        // Hapus "via qris", "via transfer", "via bca" (info pembayaran)
+        name = name.replace(/\bvia\s+\w+/gi, '').trim();
+        // Hapus nominal & satuan dari nama
+        name = name.replace(/(\d[\d.,]*)\s*rb/gi, '').replace(/Rp\.?\s*\d[\d.,]*/gi, '').replace(/\d{4,}/g, '');
+        // Hapus tanda baca berlebihan di akhir
+        name = name.replace(/[,.\s\+\&]+$/, '').replace(/\s{2,}/g, ' ').trim();
+        // Batasi panjang
+        if (name.length > 80) name = name.substring(0, 80) + '…';
+        return name || 'Pengeluaran';
+    }
+ 
+    for (const line of lines) {
+        // Skip baris yang seperti tanggal / header hari
+        if (/^(hari|senin|selasa|rabu|kamis|jumat|sabtu|minggu|jan|feb|mar|apr|mei|jun|jul|agu|sep|okt|nov|des)/i.test(line)) continue;
+        // Skip baris yang hanya berisi waktu "1.39 PM"
+        if (/^\d{1,2}[:.]\d{2}\s*(am|pm)?$/i.test(line)) continue;
+        // Skip nama grup / pengirim (biasanya hanya 1-3 kata tanpa angka)
+        if (!/\d/.test(line) && line.split(' ').length <= 3) continue;
+ 
+        const amounts = extractAmounts(line);
+ 
+        if (amounts.length === 0) {
+            // Baris tanpa nominal — lewati (bisa ditambah manual)
+            continue;
+        }
+ 
+        // Baris dengan SATU nominal → 1 item
+        if (amounts.length === 1) {
+            results.push({
+                name: cleanName(line),
+                amount: amounts[0]
+            });
+        } else {
+            // Baris dengan BEBERAPA nominal (misal "21 rb + 15 porsi ... 15 rb")
+            // → buat satu item dengan total semua nominal, nama = seluruh baris
+            const total = amounts.reduce((s, v) => s + v, 0);
+            results.push({
+                name: cleanName(line),
+                amount: total
+            });
+        }
+    }
+ 
+    return results;
+}
+ 
+// ── Jalankan parse & tampilkan preview ──
+function wa_autoParse() {
+    const raw = document.getElementById('wa-paste-input').value.trim();
+    if (!raw) {
+        wa_clearPreview();
+        return;
+    }
+ 
+    waState.items = wa_parseWaText(raw);
+ 
+    if (waState.items.length === 0) {
+        document.getElementById('wa-parse-result').classList.add('hidden');
+        document.getElementById('wa-empty-state').classList.remove('hidden');
+        document.getElementById('wa-empty-state').innerHTML = `
+            <span class="text-3xl mb-2">🤔</span>
+            <p class="text-xs text-center text-yellow-600 dark:text-yellow-400 font-medium">
+                Tidak ada nominal yang terdeteksi.<br>
+                Coba tambah baris manual lewat "+ Tambah Baris".
+            </p>`;
+        document.getElementById('btn-wa-save').disabled = true;
+        wa_renderItems();
+        document.getElementById('wa-parse-result').classList.remove('hidden');
+        return;
+    }
+ 
+    wa_renderItems();
+    document.getElementById('wa-parse-result').classList.remove('hidden');
+    document.getElementById('wa-empty-state').classList.add('hidden');
+    document.getElementById('btn-wa-save').disabled = false;
+}
+ 
+// ── Render tabel item ──
+function wa_renderItems() {
+    const tbody = document.getElementById('wa-items-body');
+    let total = 0;
+ 
+    tbody.innerHTML = waState.items.map((item, i) => {
+        total += item.amount || 0;
+        return `<tr class="group">
+            <td class="p-2 pl-3">
+                <input type="text"
+                    value="${wa_escAttr(item.name)}"
+                    oninput="waState.items[${i}].name = this.value"
+                    class="w-full bg-transparent border-b border-gray-200 dark:border-gray-700 py-1 text-xs focus:outline-none focus:border-purple-500 text-gray-900 dark:text-white">
+            </td>
+            <td class="p-2">
+                <input type="number"
+                    value="${item.amount}"
+                    min="0"
+                    oninput="waState.items[${i}].amount = parseFloat(this.value)||0; wa_updateTotal()"
+                    class="w-full bg-transparent border-b border-gray-200 dark:border-gray-700 py-1 text-xs text-right focus:outline-none focus:border-purple-500 text-gray-900 dark:text-white">
+            </td>
+            <td class="p-2 text-center">
+                <button onclick="wa_removeRow(${i})"
+                    class="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i data-lucide="minus-circle" class="w-3.5 h-3.5"></i>
+                </button>
+            </td>
+        </tr>`;
+    }).join('') || `<tr><td colspan="3" class="p-3 text-center text-xs text-gray-400 italic">Belum ada item — klik "+ Tambah Baris"</td></tr>`;
+ 
+    document.getElementById('wa-total-display').innerText = formatRp(total);
+    lucide.createIcons();
+ 
+    // Aktifkan tombol save jika ada item
+    document.getElementById('btn-wa-save').disabled = waState.items.length === 0;
+}
+ 
+function wa_updateTotal() {
+    const total = waState.items.reduce((s, i) => s + (i.amount || 0), 0);
+    document.getElementById('wa-total-display').innerText = formatRp(total);
+}
+ 
+function wa_removeRow(index) {
+    waState.items.splice(index, 1);
+    wa_renderItems();
+    document.getElementById('btn-wa-save').disabled = waState.items.length === 0;
+}
+ 
+function wa_addRow() {
+    waState.items.push({ name: '', amount: 0 });
+    wa_renderItems();
+    document.getElementById('wa-parse-result').classList.remove('hidden');
+    document.getElementById('wa-empty-state').classList.add('hidden');
+    // Fokus ke input terakhir
+    setTimeout(() => {
+        const rows = document.querySelectorAll('#wa-items-body tr');
+        const last = rows[rows.length - 1];
+        if (last) last.querySelector('input')?.focus();
+    }, 50);
+}
+ 
+// Escape untuk attribute HTML
+function wa_escAttr(str) {
+    return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+ 
+// ── Simpan ke Supabase (tabel expenses, format sama dengan saveExpense()) ──
+async function wa_saveToExpense() {
+    const validItems = waState.items.filter(i => i.name.trim() && i.amount > 0);
+    if (validItems.length === 0) return showToast('Tidak ada item valid untuk disimpan.', 'warning');
+ 
+    const dateStr = document.getElementById('wa-expense-date').value;
+    if (!dateStr) return showToast('Pilih tanggal terlebih dahulu.', 'warning');
+ 
+    const catRadio = document.querySelector('input[name="wa-exp-cat"]:checked');
+    const category = catRadio ? catRadio.value : 'opex';
+    const isPersonal = document.getElementById('wa-is-personal').checked;
+    const total = validItems.reduce((s, i) => s + i.amount, 0);
+    const affectsProfit = (category === 'cogs');
+ 
+    // Format item agar sesuai struktur tabel expenses (qty=1 per baris)
+    const expItems = validItems.map(i => ({ name: i.name.trim(), qty: 1, price: i.amount }));
+    const combinedName = validItems.map(i => i.name.trim()).join(', ');
+ 
+    const payload = {
+        name: combinedName,
+        amount: total,
+        expense_date: dateStr,
+        is_personal: isPersonal,
+        affects_profit: affectsProfit,
+        category: category,
+        notes: 'Dari WA',
+        items: expItems
+    };
+ 
+    const btn = document.getElementById('btn-wa-save');
+    btn.disabled = true;
+    btn.innerHTML = `<div class="loader w-4 h-4 border-2"></div> Menyimpan...`;
+ 
+    try {
+        const { error } = await supabaseClient.from('expenses').insert([payload]);
+        if (error) throw error;
+ 
+        // Update COA jika perlu (sama dengan saveExpense())
+        try {
+            let debitCode = '6001';
+            if (category === 'cogs') debitCode = '1101';
+            else if (category === 'asset') debitCode = '1201';
+            const creditCode = isPersonal ? '3001' : '1001';
+ 
+            const { data: coaData } = await supabaseClient
+                .from('chart_of_accounts')
+                .select('code, balance')
+                .in('code', [debitCode, creditCode]);
+ 
+            if (coaData && coaData.length > 0) {
+                for (const acc of coaData) {
+                    const cur = parseFloat(acc.balance) || 0;
+                    const newBal = acc.code === creditCode && creditCode !== '3001'
+                        ? cur - total
+                        : cur + total;
+                    await supabaseClient
+                        .from('chart_of_accounts')
+                        .update({ balance: newBal })
+                        .eq('code', acc.code);
+                }
+            }
+        } catch (_) { /* COA opsional */ }
+ 
+        showToast(`✅ ${validItems.length} item pengeluaran (${formatRp(total)}) berhasil disimpan!`, 'success');
+        closeWaPasteModal();
+ 
+        // Refresh laporan / riwayat jika sedang terbuka
+        if (document.getElementById('view-laporan')?.classList.contains('flex')) {
+            loadReports();
+            fetchCOA();
+        }
+        if (document.getElementById('view-riwayat')?.classList.contains('flex')) {
+            loadHistory();
+        }
+ 
+    } catch (e) {
+        showToast('Gagal menyimpan: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> Simpan ke Catatan Keluar`;
+        lucide.createIcons();
+    }
+}
+ 
+// Daftarkan ikon lucide setelah modal pertama kali ditampilkan
+document.addEventListener('DOMContentLoaded', () => {
+    // Pastikan modal sudah ada di DOM
+    const modal = document.getElementById('modal-wa-paste');
+    if (modal) lucide.createIcons();
+});
 </script>
+<!-- Modal Paste dari WA -->
+<div id="modal-wa-paste"
+    class="fixed inset-0 bg-gray-900/60 dark:bg-black/85 backdrop-blur-sm z-[80] flex items-end md:items-center justify-center hidden opacity-0 transition-opacity">
+    <div class="bg-white dark:bg-panel border border-gray-200 dark:border-gray-700 rounded-t-2xl md:rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]">
+ 
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 sticky top-0">
+            <h3 class="font-bold text-purple-700 dark:text-purple-300 flex items-center text-sm gap-2">
+                <span class="text-base">📋</span> Paste dari WA → Catatan Keluar
+            </h3>
+            <button onclick="closeWaPasteModal()" class="text-gray-400 hover:text-gray-700 dark:hover:text-white">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+ 
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+ 
+            <!-- Step 1: Paste -->
+            <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+                    <span class="bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black">1</span>
+                    Copy teks dari WA, lalu paste di sini
+                </label>
+                <textarea id="wa-paste-input" rows="6"
+                    placeholder="Contoh:&#10;1.mba Yanti dan ustadz Suhermanto &amp; supir mie ayam 3 original, mie ayam Chili oil 1, jeruk hangat 2+jeruk es 21 rb + 15 porsi mie ayam bakso+mie ayam Chilli oil bakso dibawa pulang&#10;2.mie ayam original 1 porsi 12 rb+bakso urat 15 rb ( tetangga sebelah)&#10;3.pemuda malam mie ayam original 12 rb.&#10;4.mie ayam Chilli oil 1, bakso daging sapi 12 rb, 26 rb via Qris.&#10;5.bakso urat 15 rb, bi imas&#10;6.bakso daging sapi, Mahesa 12 rb."
+                    class="w-full bg-gray-50 dark:bg-gray-900 border-2 border-purple-200 dark:border-purple-800 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500 text-gray-900 dark:text-white resize-none font-mono leading-relaxed"
+                    oninput="wa_previewParse()"></textarea>
+                <div class="flex gap-2">
+                    <button onclick="wa_autoParse()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg text-sm flex items-center justify-center gap-2 shadow">
+                        <i data-lucide="wand-2" class="w-4 h-4"></i> Parse Otomatis
+                    </button>
+                    <button onclick="document.getElementById('wa-paste-input').value=''; wa_clearPreview()"
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200">
+                        Hapus
+                    </button>
+                </div>
+            </div>
+ 
+            <!-- Tanggal -->
+            <div>
+                <label class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">
+                    <span class="bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black">2</span>
+                    Tanggal Pengeluaran
+                </label>
+                <input type="date" id="wa-expense-date"
+                    class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-2 text-sm focus:outline-none focus:border-purple-500 text-gray-900 dark:text-white">
+            </div>
+ 
+            <!-- Step 2: Preview hasil parse -->
+            <div id="wa-parse-result" class="hidden space-y-3">
+                <label class="flex items-center gap-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+                    <span class="bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-black">3</span>
+                    Hasil Deteksi — Edit jika perlu, lalu klik Simpan
+                </label>
+ 
+                <!-- Info tip -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-300">
+                    <strong>💡 Cara kerja:</strong> Sistem membaca angka Rupiah dari setiap baris WA. Kamu bisa edit nama &amp; nominal sebelum disimpan.
+                </div>
+ 
+                <!-- Tabel item terdeteksi -->
+                <div class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                    <div class="bg-gray-50 dark:bg-gray-900 px-3 py-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                        <span class="text-xs font-bold text-gray-600 dark:text-gray-400">Item Terdeteksi</span>
+                        <button onclick="wa_addRow()" class="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-1 rounded font-medium">+ Tambah Baris</button>
+                    </div>
+                    <table class="w-full text-xs">
+                        <thead class="bg-white dark:bg-panel text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800">
+                            <tr>
+                                <th class="p-2 pl-3 text-left">Nama / Keterangan</th>
+                                <th class="p-2 w-24 text-right">Nominal (Rp)</th>
+                                <th class="p-2 w-8"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="wa-items-body" class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-panel"></tbody>
+                    </table>
+                    <div class="bg-gray-50 dark:bg-gray-900 p-3 flex justify-between items-center border-t border-gray-200 dark:border-gray-700">
+                        <span class="text-xs font-bold text-gray-500 dark:text-gray-400">Total Terdeteksi:</span>
+                        <span id="wa-total-display" class="text-base font-black text-purple-600 dark:text-purple-400">Rp 0</span>
+                    </div>
+                </div>
+ 
+                <!-- Kategori -->
+                <div class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-700/30 rounded-lg p-3 space-y-2">
+                    <p class="text-xs font-bold text-gray-700 dark:text-gray-300">Kategori:</p>
+                    <div class="flex flex-wrap gap-3">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs">
+                            <input type="radio" name="wa-exp-cat" value="opex" checked class="w-3 h-3 text-purple-600">
+                            <span class="font-medium">Beban Operasional <span class="text-gray-400 font-normal">(default)</span></span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs">
+                            <input type="radio" name="wa-exp-cat" value="cogs" class="w-3 h-3 text-purple-600">
+                            <span class="font-medium">Bahan Baku / HPP</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs">
+                            <input type="radio" name="wa-exp-cat" value="asset" class="w-3 h-3 text-purple-600">
+                            <span class="font-medium">Pembelian Aset</span>
+                        </label>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs mt-1">
+                        <input type="checkbox" id="wa-is-personal" class="w-3 h-3 text-purple-600 rounded">
+                        <span class="font-medium text-gray-700 dark:text-gray-300">Bayar uang pribadi (tidak memotong kas)</span>
+                    </label>
+                </div>
+            </div>
+ 
+            <!-- Empty state -->
+            <div id="wa-empty-state" class="flex flex-col items-center justify-center py-6 text-gray-400 dark:text-gray-500">
+                <span class="text-4xl mb-2">📱</span>
+                <p class="text-xs text-center">Paste teks dari grup WA di atas,<br>lalu klik <strong>Parse Otomatis</strong></p>
+            </div>
+ 
+        </div>
+ 
+        <!-- Footer -->
+        <div class="p-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2 sticky bottom-0">
+            <button onclick="closeWaPasteModal()"
+                class="px-4 py-2 rounded text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-800">Batal</button>
+            <button onclick="wa_saveToExpense()" id="btn-wa-save"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2 rounded-lg text-sm shadow flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>
+                <i data-lucide="save" class="w-4 h-4"></i> Simpan ke Catatan Keluar
+            </button>
+        </div>
+    </div>
+</div>
 </body>
+
 
 </html>
