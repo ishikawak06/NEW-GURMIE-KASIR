@@ -3794,14 +3794,15 @@ async function downloadHistoryExcel() {
             const pad = n => n.toString().padStart(2, '0');
             document.getElementById('edit-trx-date').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-            state.editingTrx.items = trx.transaction_items.map(i => ({
-                id: i.id, // ID item di DB (jika ada)
-                product_id: i.product_id,
-                name: i.products ? i.products.name : 'Unknown',
-                price: i.custom_price || i.price,
-                qty: i.quantity,
-                isNew: false
-            }));
+state.editingTrx.items = trx.transaction_items.map(i => ({
+    id: i.id,
+    product_id: i.product_id,
+    name: i.products ? i.products.name : 'Unknown',
+    price: i.custom_price || i.price,
+    qty: i.quantity,
+    notes: i.notes || null,  // ← tambahkan ini
+    isNew: false
+}));
 
             // Populate Add Select
             const sel = document.getElementById('edit-trx-add-select');
@@ -3883,13 +3884,14 @@ async function downloadHistoryExcel() {
                 await supabaseClient.from('transaction_items').delete().eq('transaction_id', tId);
 
                 // Insert new items
-                const newItemsPayload = state.editingTrx.items.map(i => ({
-                    transaction_id: tId,
-                    product_id: i.product_id,
-                    quantity: i.qty,
-                    price: i.price,
-                    custom_price: i.price // set as custom if edited
-                }));
+const newItemsPayload = state.editingTrx.items.map(i => ({
+    transaction_id: tId,
+    product_id: i.product_id,
+    quantity: i.qty,
+    price: i.price,
+    custom_price: i.price,
+    notes: i.notes || null  // ← tambahkan ini
+}));
                 const { error: errItems } = await supabaseClient.from('transaction_items').insert(newItemsPayload);
                 if (errItems) throw errItems;
 
