@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>GurmieKasir · Hitung Kas</title>
+  <meta name="theme-color" content="#1e293b">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            surface: '#0f172a',
+            panel:   '#1e293b',
+            card:    '#263348',
+            accent:  '#38bdf8',
+            gold:    '#fbbf24',
+            mint:    '#34d399',
+            rose:    '#f43f5e',
+          },
+          fontFamily: {
+            display: ['"DM Sans"', 'sans-serif'],
+            mono:    ['"JetBrains Mono"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: #0f172a; color: #e2e8f0; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+    .glass {
+      background: rgba(38, 51, 72, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .coin-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      border-radius: 1rem;
+      padding: 14px 8px 12px;
+      transition: transform 0.15s, box-shadow 0.15s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      overflow: hidden;
+    }
+    .coin-btn:active { transform: scale(0.93); }
+    .coin-btn:hover  { transform: translateY(-2px); }
+
+    .coin-btn .shine {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* Pecahan khusus warna */
+    .denom-500   { background: linear-gradient(145deg, #334155, #1e293b); border: 1px solid #475569; }
+    .denom-1000  { background: linear-gradient(145deg, #7c3aed, #4c1d95); border: 1px solid #8b5cf6; }
+    .denom-2000  { background: linear-gradient(145deg, #0d9488, #064e3b); border: 1px solid #2dd4bf; }
+    .denom-5000  { background: linear-gradient(145deg, #d97706, #78350f); border: 1px solid #fbbf24; }
+    .denom-10000 { background: linear-gradient(145deg, #0e7490, #0c4a6e); border: 1px solid #38bdf8; }
+    .denom-20000 { background: linear-gradient(145deg, #166534, #052e16); border: 1px solid #34d399; }
+    .denom-50000 { background: linear-gradient(145deg, #9d174d, #500724); border: 1px solid #f9a8d4; }
+    .denom-100000{ background: linear-gradient(145deg, #dc2626, #7f1d1d); border: 1px solid #fca5a5; }
+
+    .denom-500   .denom-label { color: #94a3b8; }
+    .denom-1000  .denom-label { color: #c4b5fd; }
+    .denom-2000  .denom-label { color: #5eead4; }
+    .denom-5000  .denom-label { color: #fde68a; }
+    .denom-10000 .denom-label { color: #7dd3fc; }
+    .denom-20000 .denom-label { color: #6ee7b7; }
+    .denom-50000 .denom-label { color: #fecdd3; }
+    .denom-100000 .denom-label { color: #fca5a5; }
+
+    .qty-badge {
+      position: absolute;
+      top: 7px;
+      right: 7px;
+      background: rgba(255,255,255,0.18);
+      color: #fff;
+      font-weight: 700;
+      font-size: 11px;
+      min-width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 0 5px;
+      font-family: 'JetBrains Mono', monospace;
+      backdrop-filter: blur(4px);
+    }
+
+    .subtotal-pill {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.65);
+      background: rgba(0,0,0,0.25);
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .stat-card {
+      background: rgba(38, 51, 72, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      border-radius: 1rem;
+      padding: 16px 20px;
+    }
+
+    .diff-up   { color: #34d399; }
+    .diff-down { color: #f43f5e; }
+    .diff-same { color: #94a3b8; }
+
+    .loader {
+      border: 3px solid rgba(56,189,248,0.2);
+      border-left-color: #38bdf8;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast-enter  { transform: translateY(0); opacity: 1; }
+    .toast-exit   { transform: translateY(80px); opacity: 0; }
+
+    #total-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-feature-settings: "tnum";
+      transition: color 0.3s;
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(148,163,184,0.08);
+      font-size: 13px;
+    }
+    .breakdown-row:last-child { border-bottom: none; }
+
+    @media (max-width: 480px) {
+      .coin-btn { padding: 12px 6px 10px; }
+    }
+
+    .pulse-ring {
+      animation: pulse-ring 0.4s ease;
+    }
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(56,189,248,0.5); }
+      100% { box-shadow: 0 0 0 14px rgba(56,189,248,0); }
+    }
+
+    .history-row { transition: background 0.2s; }
+    .history-row:hover { background: rgba(56,189,248,0.05); }
+  </style>
+</head>
+
+<body class="min-h-screen bg-surface overflow-x-hidden">
+
+  <!-- Background decoration -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-accent/5 blur-3xl"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-mint/5 blur-3xl"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gold/3 blur-3xl"></div>
+  </div>
+
+  <!-- Global Loader -->
+  <div id="global-loader" class="fixed inset-0 bg-surface/90 backdrop-blur z-[100] hidden flex items-center justify-center">
+    <div class="flex flex-col items-center gap-4">
+      <div class="loader w-12 h-12 border-4"></div>
+      <p class="text-accent font-mono animate-pulse text-sm tracking-widest">MEMPROSES...</p>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 toast-exit">
+    <div class="glass rounded-2xl px-5 py-3 flex items-center gap-3 shadow-2xl min-w-[220px]">
+      <i id="toast-icon" data-lucide="check-circle" class="w-5 h-5 text-mint shrink-0"></i>
+      <span id="toast-msg" class="text-sm font-medium text-slate-200">Berhasil</span>
+    </div>
+  </div>
+
+  <div class="max-w-lg mx-auto px-4 pb-10 pt-6 relative z-10">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center shadow-lg shadow-accent/20">
+          <i data-lucide="wallet" class="w-5 h-5 text-white"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg text-white leading-tight">Hitung Uang Kas</h1>
+          <p id="date-label" class="text-xs text-slate-400">—</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="showHistory()" title="Riwayat" class="w-9 h-9 rounded-xl bg-panel/80 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-accent hover:border-accent transition-colors">
+          <i data-lucide="history" class="w-4 h-4"></i>
+        </button>
+        <button onclick="confirmReset()" title="Reset Hari Ini" class="w-9 h-9 rounded-xl bg-panel/80 border border-slate-700 flex items-center justify-center text-slate-400 hover:text-rose hover:border-rose/50 transition-colors">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Total Display -->
+    <div class="glass rounded-2xl p-6 mb-5 text-center relative overflow-hidden">
+      <div class="absolute inset-0 bg-gradient-to-br from-accent/8 to-transparent pointer-events-none"></div>
+      <p class="text-xs font-semibold tracking-widest text-slate-400 uppercase mb-2">Total Kas Hari Ini</p>
+      <div id="total-display" class="text-4xl font-bold text-white mb-1">Rp 0</div>
+      <p id="total-items-label" class="text-xs text-slate-500 font-mono">0 lembar / keping</p>
+
+      <!-- Diff dari kemarin -->
+      <div id="diff-container" class="mt-4 pt-4 border-t border-slate-700/50 hidden">
+        <p class="text-xs text-slate-500 mb-1">vs. kemarin</p>
+        <div id="diff-display" class="text-base font-bold font-mono"></div>
+        <p id="diff-label" class="text-xs text-slate-400 mt-0.5"></p>
+      </div>
+    </div>
+
+    <!-- Quick Stats: kemarin -->
+    <div id="yesterday-card" class="hidden glass rounded-2xl p-4 mb-5 flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+        <i data-lucide="calendar-minus" class="w-4 h-4 text-gold"></i>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs text-slate-400">Kas kemarin</p>
+        <p id="yesterday-total" class="font-bold text-gold font-mono text-sm">Rp 0</p>
+      </div>
+      <div class="text-right shrink-0">
+        <p class="text-xs text-slate-500" id="yesterday-date-label">—</p>
+      </div>
+    </div>
+
+    <!-- Pecahan Grid -->
+    <div class="mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-semibold text-slate-300 flex items-center gap-2">
+          <i data-lucide="layers" class="w-4 h-4 text-accent"></i>
+          Ketuk untuk tambah / tahan untuk kurangi
+        </h2>
+        <button onclick="toggleBreakdown()" id="btn-breakdown" class="text-xs text-accent hover:text-sky-300 flex items-center gap-1 font-medium transition-colors">
+          <i data-lucide="list" class="w-3.5 h-3.5"></i> Rincian
+        </button>
+      </div>
+
+      <div id="denom-grid" class="grid grid-cols-4 gap-2.5"></div>
+    </div>
+
+    <!-- Breakdown panel (collapsible) -->
+    <div id="breakdown-panel" class="hidden glass rounded-2xl p-4 mb-5">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold text-slate-300">Rincian Pecahan</h3>
+        <button onclick="toggleBreakdown()" class="text-slate-500 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <div id="breakdown-list"></div>
+      <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-700/50">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Grand Total</span>
+        <span id="breakdown-total" class="font-bold text-accent font-mono text-base">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Manual qty input -->
+    <div class="glass rounded-2xl p-4 mb-5">
+      <h3 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+        <i data-lucide="edit-3" class="w-4 h-4 text-gold"></i>
+        Input Manual Jumlah Lembar / Keping
+      </h3>
+      <div id="manual-grid" class="space-y-2"></div>
+    </div>
+
+    <!-- Simpan button -->
+    <button onclick="saveToday()" id="btn-save"
+      class="w-full py-4 rounded-2xl bg-gradient-to-r from-accent to-blue-500 text-white font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-accent/20 hover:shadow-accent/40 active:scale-95 transition-all duration-150 mb-4">
+      <i data-lucide="save" class="w-5 h-5"></i>
+      Simpan Hitungan Hari Ini
+    </button>
+
+    <p class="text-center text-xs text-slate-600">Data tersimpan per hari. Reset otomatis tengah malam.</p>
+  </div>
+
+  <!-- Modal Riwayat -->
+  <div id="modal-history"
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-end md:items-center justify-center transition-opacity">
+    <div class="glass rounded-t-3xl md:rounded-3xl w-full max-w-lg mx-0 md:mx-4 flex flex-col max-h-[85vh] shadow-2xl">
+      <div class="flex items-center justify-between p-5 border-b border-slate-700/50 shrink-0">
+        <h2 class="font-bold text-white flex items-center gap-2">
+          <i data-lucide="history" class="w-5 h-5 text-accent"></i>
+          Riwayat 30 Hari Terakhir
+        </h2>
+        <button onclick="closeHistory()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-2"></div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Reset -->
+  <div id="modal-reset"
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="glass rounded-3xl w-full max-w-sm p-6 shadow-2xl">
+      <div class="w-12 h-12 rounded-2xl bg-rose/10 border border-rose/20 flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="alert-triangle" class="w-6 h-6 text-rose"></i>
+      </div>
+      <h3 class="font-bold text-white text-center text-lg mb-2">Reset Hitungan?</h3>
+      <p class="text-sm text-slate-400 text-center mb-6">Semua hitungan hari ini akan dikosongkan. Data yang sudah tersimpan di Supabase tidak akan terhapus.</p>
+      <div class="flex gap-3">
+        <button onclick="closeReset()" class="flex-1 py-3 rounded-xl bg-slate-700 text-slate-200 font-medium text-sm hover:bg-slate-600 transition-colors">Batal</button>
+        <button onclick="doReset()" class="flex-1 py-3 rounded-xl bg-rose text-white font-bold text-sm hover:bg-red-500 transition-colors">Ya, Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detail Hari -->
+  <div id="modal-day-detail"
+    class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] hidden flex items-end md:items-center justify-center transition-opacity">
+    <div class="glass rounded-t-3xl md:rounded-3xl w-full max-w-sm mx-0 md:mx-4 flex flex-col max-h-[80vh] shadow-2xl">
+      <div class="flex items-center justify-between p-5 border-b border-slate-700/50 shrink-0">
+        <h3 id="day-detail-title" class="font-bold text-white text-sm">Detail Kas</h3>
+        <button onclick="closeDayDetail()" class="text-slate-400 hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div id="day-detail-content" class="flex-1 overflow-y-auto p-4"></div>
+    </div>
+  </div>
+
+<script>
+// ════════════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════════════
+const SUPABASE_URL = 'https://jariewywijsmjxxbgpvi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmlld3l3aWpzbWp4eGJncHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzEzMjUsImV4cCI6MjA5MzEwNzMyNX0.yaO9StT8hScwdHgmwkh9STXCXCO7VvnMvBG6eHThljM';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ════════════════════════════════════════════════
+// DENOMINASI — lengkap IDR
+// ════════════════════════════════════════════════
+const DENOMS = [
+  { value: 500,    label: '500',    sublabel: 'koin',   icon: '🪙', cls: 'denom-500'    },
+  { value: 1000,   label: '1.000',  sublabel: 'kertas', icon: '💵', cls: 'denom-1000'   },
+  { value: 2000,   label: '2.000',  sublabel: 'kertas', icon: '💵', cls: 'denom-2000'   },
+  { value: 5000,   label: '5.000',  sublabel: 'kertas', icon: '💵', cls: 'denom-5000'   },
+  { value: 10000,  label: '10.000', sublabel: 'kertas', icon: '💴', cls: 'denom-10000'  },
+  { value: 20000,  label: '20.000', sublabel: 'kertas', icon: '💴', cls: 'denom-20000'  },
+  { value: 50000,  label: '50.000', sublabel: 'kertas', icon: '💶', cls: 'denom-50000'  },
+  { value: 100000, label: '100rb',  sublabel: 'kertas', icon: '💷', cls: 'denom-100000' },
+];
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let counts   = {}; // { 500: 3, 1000: 0, ... }
+let today    = getTodayStr();
+let yesterdayData = null;
+
+DENOMS.forEach(d => counts[d.value] = 0);
+
+function getTodayStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+}
+
+function getTotal() {
+  return DENOMS.reduce((s, d) => s + d.value * counts[d.value], 0);
+}
+
+function getTotalItems() {
+  return DENOMS.reduce((s, d) => s + counts[d.value], 0);
+}
+
+function formatRp(n) {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n || 0);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+// ════════════════════════════════════════════════
+// RENDER GRID
+// ════════════════════════════════════════════════
+function renderGrid() {
+  const grid = document.getElementById('denom-grid');
+  grid.innerHTML = DENOMS.map(d => {
+    const qty = counts[d.value] || 0;
+    const sub = formatRp(d.value * qty);
+    return `
+      <div class="coin-btn ${d.cls}"
+        ontouchstart=""
+        onclick="tapAdd(${d.value}, this)"
+        oncontextmenu="tapSub(${d.value}, this, event)"
+        data-value="${d.value}">
+        <div class="shine"></div>
+        ${qty > 0 ? `<div class="qty-badge">${qty}</div>` : ''}
+        <span style="font-size:22px; line-height:1; margin-bottom:2px">${d.icon}</span>
+        <span class="denom-label font-bold" style="font-size:12px; letter-spacing:-0.3px">Rp${d.label}</span>
+        <span class="subtotal-pill mt-1">${qty > 0 ? sub.replace('Rp\u00a0','Rp ') : d.sublabel}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderManualGrid() {
+  const cont = document.getElementById('manual-grid');
+  cont.innerHTML = DENOMS.map(d => `
+    <div class="flex items-center gap-3 py-2 border-b border-slate-700/40 last:border-0">
+      <span class="text-sm font-medium text-slate-300 w-24 shrink-0">Rp ${d.label}</span>
+      <div class="flex items-center gap-2 flex-1">
+        <button onclick="tapSub(${d.value}, null, null)" class="w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-rose/20 hover:text-rose transition-colors flex items-center justify-center shrink-0">
+          <i data-lucide="minus" class="w-3.5 h-3.5"></i>
+        </button>
+        <input
+          type="number"
+          min="0"
+          value="${counts[d.value] || 0}"
+          id="manual-input-${d.value}"
+          oninput="setCount(${d.value}, this.value)"
+          class="flex-1 bg-slate-800 border border-slate-700 rounded-lg text-center font-mono text-sm text-white focus:outline-none focus:border-accent py-2 transition-colors"
+        >
+        <button onclick="tapAdd(${d.value}, null)" class="w-8 h-8 rounded-lg bg-slate-700 text-slate-300 hover:bg-mint/20 hover:text-mint transition-colors flex items-center justify-center shrink-0">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+      <span class="text-xs font-mono text-slate-400 w-24 text-right shrink-0" id="manual-sub-${d.value}">${formatRp(d.value * (counts[d.value]||0))}</span>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
+
+function renderBreakdown() {
+  const list = document.getElementById('breakdown-list');
+  const hasAny = DENOMS.some(d => counts[d.value] > 0);
+  if (!hasAny) {
+    list.innerHTML = `<p class="text-sm text-slate-500 text-center py-3">Belum ada denominasi yang diisi.</p>`;
+    document.getElementById('breakdown-total').innerText = 'Rp 0';
+    return;
+  }
+  list.innerHTML = DENOMS.filter(d => counts[d.value] > 0).map(d => `
+    <div class="breakdown-row">
+      <div class="flex items-center gap-2">
+        <span class="text-base">${d.icon}</span>
+        <span class="text-slate-300">Rp ${d.label}</span>
+        <span class="text-slate-500 font-mono text-xs">× ${counts[d.value]}</span>
+      </div>
+      <span class="font-bold font-mono text-white text-sm">${formatRp(d.value * counts[d.value])}</span>
+    </div>
+  `).join('');
+  document.getElementById('breakdown-total').innerText = formatRp(getTotal());
+}
+
+function updateTotals() {
+  const total = getTotal();
+  const items = getTotalItems();
+  const el = document.getElementById('total-display');
+  el.innerText = formatRp(total);
+
+  // Colour feedback
+  if (total === 0) el.style.color = '#94a3b8';
+  else if (yesterdayData && total > yesterdayData.total) el.style.color = '#34d399';
+  else if (yesterdayData && total < yesterdayData.total) el.style.color = '#f87171';
+  else el.style.color = '#ffffff';
+
+  document.getElementById('total-items-label').innerText =
+    `${items.toLocaleString('id-ID')} lembar / keping`;
+
+  // Diff
+  if (yesterdayData) {
+    const diffEl   = document.getElementById('diff-display');
+    const labelEl  = document.getElementById('diff-label');
+    const diffCont = document.getElementById('diff-container');
+    const diff     = total - yesterdayData.total;
+    diffCont.classList.remove('hidden');
+    if (diff > 0) {
+      diffEl.className = 'text-base font-bold font-mono diff-up';
+      diffEl.innerText = `▲ ${formatRp(diff)}`;
+      labelEl.innerText = 'Lebih banyak dari kemarin 📈';
+    } else if (diff < 0) {
+      diffEl.className = 'text-base font-bold font-mono diff-down';
+      diffEl.innerText = `▼ ${formatRp(Math.abs(diff))}`;
+      labelEl.innerText = 'Lebih sedikit dari kemarin 📉';
+    } else {
+      diffEl.className = 'text-base font-bold font-mono diff-same';
+      diffEl.innerText = `= ${formatRp(0)}`;
+      labelEl.innerText = 'Sama persis dengan kemarin 〰️';
+    }
+  }
+
+  // Breakdown if open
+  if (!document.getElementById('breakdown-panel').classList.contains('hidden')) {
+    renderBreakdown();
+  }
+}
+
+// ════════════════════════════════════════════════
+// INTERACTIONS
+// ════════════════════════════════════════════════
+function tapAdd(val, el) {
+  counts[val] = (counts[val] || 0) + 1;
+  if (el) el.classList.add('pulse-ring');
+  setTimeout(() => el && el.classList.remove('pulse-ring'), 400);
+  refresh();
+  autosaveLocal();
+}
+
+function tapSub(val, el, event) {
+  if (event) event.preventDefault();
+  if ((counts[val] || 0) > 0) counts[val]--;
+  refresh();
+  autosaveLocal();
+}
+
+function setCount(val, raw) {
+  const n = parseInt(raw) || 0;
+  counts[val] = Math.max(0, n);
+  refresh(true);   // skip manual re-render to avoid focus loss
+  autosaveLocal();
+}
+
+function refresh(skipManual = false) {
+  renderGrid();
+  if (!skipManual) {
+    // Update only value + subtotal in manual grid without full re-render
+    DENOMS.forEach(d => {
+      const inp = document.getElementById(`manual-input-${d.value}`);
+      const sub = document.getElementById(`manual-sub-${d.value}`);
+      if (inp && document.activeElement !== inp) inp.value = counts[d.value] || 0;
+      if (sub) sub.innerText = formatRp(d.value * (counts[d.value]||0));
+    });
+  }
+  updateTotals();
+  lucide.createIcons();
+}
+
+// ════════════════════════════════════════════════
+// LOCAL AUTOSAVE
+// ════════════════════════════════════════════════
+const LS_KEY = `gurmie_cash_${today}`;
+
+function autosaveLocal() {
+  localStorage.setItem(LS_KEY, JSON.stringify(counts));
+}
+
+function loadLocal() {
+  const raw = localStorage.getItem(LS_KEY);
+  if (raw) {
+    try {
+      const saved = JSON.parse(raw);
+      DENOMS.forEach(d => counts[d.value] = saved[d.value] || 0);
+    } catch(_) {}
+  }
+}
+
+// ════════════════════════════════════════════════
+// SUPABASE HELPERS
+// ════════════════════════════════════════════════
+async function ensureTable() {
+  // Try select; if error we assume table doesn't exist
+  // Table: cash_counts (date text PK, total int, counts jsonb, saved_at timestamptz)
+}
+
+async function loadYesterday() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('cash_counts')
+      .select('*')
+      .eq('date', yStr)
+      .single();
+    if (!error && data) {
+      yesterdayData = { total: data.total || 0, counts: data.counts || {}, date: yStr };
+      const card = document.getElementById('yesterday-card');
+      card.classList.remove('hidden');
+      document.getElementById('yesterday-total').innerText = formatRp(yesterdayData.total);
+      document.getElementById('yesterday-date-label').innerText = formatDate(yStr);
+    }
+  } catch(e) {
+    console.warn('Gagal memuat data kemarin:', e);
+  }
+}
+
+async function loadTodayFromSupabase() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('cash_counts')
+      .select('*')
+      .eq('date', today)
+      .single();
+    if (!error && data && data.counts) {
+      // Supabase has today data — merge (use whichever is larger per denom for safety)
+      const remote = typeof data.counts === 'string' ? JSON.parse(data.counts) : data.counts;
+      const local  = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+      // If remote saved_at is newer, prefer remote
+      DENOMS.forEach(d => {
+        counts[d.value] = remote[d.value] || local[d.value] || 0;
+      });
+    }
+  } catch(e) {
+    console.warn('Gagal memuat hari ini dari Supabase:', e);
+  }
+}
+
+async function saveToday() {
+  const total = getTotal();
+  const btn   = document.getElementById('btn-save');
+  btn.disabled = true;
+  btn.innerHTML = `<div class="loader w-5 h-5 border-2 border-white/30 border-l-white"></div> Menyimpan...`;
+
+  try {
+    const payload = {
+      date:     today,
+      total:    total,
+      counts:   counts,
+      saved_at: new Date().toISOString()
+    };
+
+    // Upsert — insert or update by date
+    const { error } = await supabaseClient
+      .from('cash_counts')
+      .upsert([payload], { onConflict: 'date' });
+
+    if (error) throw error;
+    autosaveLocal();
+    showToast('Hitungan kas berhasil disimpan!', 'success');
+  } catch(e) {
+    // Jika tabel belum ada, tampilkan instruksi
+    if (e.message && (e.message.includes('relation') || e.message.includes('does not exist'))) {
+      showToast('Tabel belum ada. Lihat console untuk SQL setup.', 'warning');
+      console.warn(`
+── SETUP SUPABASE ──
+Buat tabel ini di SQL Editor Supabase kamu:
+
+CREATE TABLE IF NOT EXISTS cash_counts (
+  date      TEXT PRIMARY KEY,
+  total     BIGINT DEFAULT 0,
+  counts    JSONB DEFAULT '{}',
+  saved_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE cash_counts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "allow_all" ON cash_counts FOR ALL USING (true) WITH CHECK (true);
+      `);
+    } else {
+      showToast('Gagal menyimpan: ' + e.message, 'error');
+    }
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<i data-lucide="save" class="w-5 h-5"></i> Simpan Hitungan Hari Ini`;
+    lucide.createIcons();
+  }
+}
+
+// ════════════════════════════════════════════════
+// HISTORY MODAL
+// ════════════════════════════════════════════════
+async function showHistory() {
+  const modal = document.getElementById('modal-history');
+  modal.classList.remove('hidden');
+  setTimeout(() => modal.style.opacity = '1', 10);
+
+  const list = document.getElementById('history-list');
+  list.innerHTML = `<div class="flex justify-center py-8"><div class="loader"></div></div>`;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('cash_counts')
+      .select('date, total, counts, saved_at')
+      .order('date', { ascending: false })
+      .limit(30);
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      list.innerHTML = `<p class="text-center text-slate-500 text-sm py-8">Belum ada data tersimpan.</p>`;
+      return;
+    }
+
+    // Calculate diffs
+    list.innerHTML = data.map((row, idx) => {
+      const prev = data[idx + 1];
+      const diff = prev ? row.total - prev.total : null;
+      let diffHtml = '';
+      if (diff !== null) {
+        if (diff > 0) diffHtml = `<span class="diff-up font-mono text-xs">▲ ${formatRp(diff)}</span>`;
+        else if (diff < 0) diffHtml = `<span class="diff-down font-mono text-xs">▼ ${formatRp(Math.abs(diff))}</span>`;
+        else diffHtml = `<span class="diff-same font-mono text-xs">= 0</span>`;
+      }
+
+      const isToday = row.date === today;
+      return `
+        <div class="history-row flex items-center gap-3 p-3 rounded-xl cursor-pointer"
+          onclick="showDayDetail('${row.date}', ${row.total}, '${encodeURIComponent(JSON.stringify(row.counts))}')">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isToday ? 'bg-accent/20 border border-accent/30' : 'bg-slate-700/60'}">
+            <i data-lucide="${isToday ? 'today' : 'calendar'}" class="w-4 h-4 ${isToday ? 'text-accent' : 'text-slate-400'}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold text-white truncate">${formatDate(row.date)}</p>
+            <p class="text-xs text-slate-400 font-mono">${formatRp(row.total)}</p>
+          </div>
+          <div class="text-right shrink-0">
+            ${diffHtml}
+            ${isToday ? '<span class="text-[10px] bg-accent/20 text-accent px-2 py-0.5 rounded-full font-bold ml-1">HARI INI</span>' : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+    lucide.createIcons();
+  } catch(e) {
+    list.innerHTML = `<p class="text-center text-slate-500 text-sm py-8">Gagal memuat riwayat: ${e.message}</p>`;
+  }
+}
+
+function closeHistory() {
+  const modal = document.getElementById('modal-history');
+  modal.classList.add('hidden');
+}
+
+function showDayDetail(date, total, countsEncoded) {
+  const counts_ = JSON.parse(decodeURIComponent(countsEncoded));
+  document.getElementById('day-detail-title').innerText = formatDate(date);
+
+  const rows = DENOMS.filter(d => (counts_[d.value] || 0) > 0).map(d => `
+    <div class="breakdown-row">
+      <div class="flex items-center gap-2">
+        <span class="text-base">${d.icon}</span>
+        <span class="text-slate-300 text-sm">Rp ${d.label}</span>
+        <span class="text-slate-500 font-mono text-xs">× ${counts_[d.value]}</span>
+      </div>
+      <span class="font-bold font-mono text-white text-sm">${formatRp(d.value * counts_[d.value])}</span>
+    </div>
+  `).join('') || '<p class="text-slate-500 text-sm text-center py-4">Tidak ada rincian.</p>';
+
+  document.getElementById('day-detail-content').innerHTML = `
+    <div class="text-center mb-4 pb-4 border-b border-slate-700/50">
+      <p class="text-xs text-slate-400 mb-1">Total Kas</p>
+      <p class="text-2xl font-bold text-white font-mono">${formatRp(total)}</p>
+    </div>
+    <div>${rows}</div>
+    <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-700/50">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Grand Total</span>
+      <span class="font-bold text-accent font-mono">${formatRp(total)}</span>
+    </div>
+  `;
+
+  const modal = document.getElementById('modal-day-detail');
+  modal.classList.remove('hidden');
+  lucide.createIcons();
+}
+
+function closeDayDetail() {
+  document.getElementById('modal-day-detail').classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════
+// RESET
+// ════════════════════════════════════════════════
+function confirmReset() {
+  const modal = document.getElementById('modal-reset');
+  modal.classList.remove('hidden');
+}
+function closeReset() {
+  document.getElementById('modal-reset').classList.add('hidden');
+}
+function doReset() {
+  DENOMS.forEach(d => counts[d.value] = 0);
+  autosaveLocal();
+  refresh();
+  renderManualGrid();
+  closeReset();
+  showToast('Hitungan direset.', 'info');
+}
+
+// ════════════════════════════════════════════════
+// BREAKDOWN TOGGLE
+// ════════════════════════════════════════════════
+function toggleBreakdown() {
+  const panel = document.getElementById('breakdown-panel');
+  const isHidden = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !isHidden);
+  if (isHidden) renderBreakdown();
+}
+
+// ════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const toast   = document.getElementById('toast');
+  const msgEl   = document.getElementById('toast-msg');
+  const iconEl  = document.getElementById('toast-icon');
+  const map     = {
+    success: { icon: 'check-circle',    color: 'text-mint' },
+    error:   { icon: 'x-circle',        color: 'text-rose' },
+    warning: { icon: 'alert-triangle',  color: 'text-gold' },
+    info:    { icon: 'info',            color: 'text-accent' },
+  };
+  const t = map[type] || map.info;
+  msgEl.innerText = msg;
+  iconEl.setAttribute('data-lucide', t.icon);
+  iconEl.className = `w-5 h-5 ${t.color} shrink-0`;
+  lucide.createIcons();
+  toast.classList.remove('toast-exit');
+  toast.classList.add('toast-enter');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('toast-enter');
+    toast.classList.add('toast-exit');
+  }, 3000);
+}
+
+// ════════════════════════════════════════════════
+// LOADER
+// ════════════════════════════════════════════════
+function showLoading(show) {
+  const el = document.getElementById('global-loader');
+  if (el) show ? el.classList.remove('hidden') : el.classList.add('hidden');
+}
+
+// ════════════════════════════════════════════════
+// DATE LABEL
+// ════════════════════════════════════════════════
+function updateDateLabel() {
+  const now = new Date();
+  document.getElementById('date-label').innerText = now.toLocaleDateString('id-ID', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+// ════════════════════════════════════════════════
+// AUTO RESET: if stored date ≠ today, clear local
+// ════════════════════════════════════════════════
+function autoResetCheck() {
+  const lastDate = localStorage.getItem('gurmie_cash_last_date');
+  if (lastDate && lastDate !== today) {
+    // Different day — don't carry over previous day's counts
+    DENOMS.forEach(d => counts[d.value] = 0);
+    console.info(`[CashCounter] Auto-reset: ${lastDate} → ${today}`);
+  }
+  localStorage.setItem('gurmie_cash_last_date', today);
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async () => {
+  updateDateLabel();
+  autoResetCheck();
+  loadLocal();
+
+  renderGrid();
+  renderManualGrid();
+  updateTotals();
+  lucide.createIcons();
+
+  // Load supabase data in background
+  showLoading(true);
+  try {
+    await Promise.all([loadYesterday(), loadTodayFromSupabase()]);
+  } catch(e) { console.warn(e); }
+  showLoading(false);
+
+  refresh();
+  renderManualGrid();
+  updateTotals();
+});
+
+// Midnight auto-reset
+function scheduleReset() {
+  const now   = new Date();
+  const next  = new Date();
+  next.setHours(24,0,0,0);
+  const ms = next - now;
+  setTimeout(() => {
+    today = getTodayStr();
+    autoResetCheck();
+    DENOMS.forEach(d => counts[d.value] = 0);
+    refresh();
+    renderManualGrid();
+    updateDateLabel();
+    showToast('Hari baru! Hitungan kas direset.', 'info');
+    scheduleReset();
+  }, ms);
+}
+scheduleReset();
+</script>
+</body>
+</html>
