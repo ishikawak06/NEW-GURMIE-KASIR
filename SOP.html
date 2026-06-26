@@ -1,0 +1,2195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>SOP Mie Ayam Pak Budi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css" />
+
+  <style>
+    /* ============================================================
+       CSS CUSTOM PROPERTIES — tema warung mie ayam
+    ============================================================ */
+    :root {
+      --primary:        #D4521A;
+      --primary-light:  #FDF0E8;
+      --primary-mid:    #F5A672;
+      --success:        #2D7A3A;
+      --success-light:  #E8F5EA;
+      --danger:         #C0392B;
+      --danger-light:   #FDECEA;
+      --warning:        #E67E22;
+      --warning-light:  #FEF4E6;
+      --info:           #2980B9;
+      --info-light:     #EAF4FB;
+
+      --surface:        #FFFFFF;
+      --surface-1:      #F8F4F0;
+      --surface-2:      #F0EAE3;
+      --surface-3:      #E8DDD4;
+      --text-primary:   #1A1A1A;
+      --text-secondary: #6B6B6B;
+      --text-muted:     #A0A0A0;
+      --border:         rgba(0,0,0,0.08);
+      --border-strong:  rgba(0,0,0,0.15);
+
+      --radius-sm:  8px;
+      --radius-md:  12px;
+      --radius-lg:  20px;
+      --radius-xl:  28px;
+
+      --shadow-sm:  0 1px 4px rgba(0,0,0,0.07);
+      --shadow-md:  0 4px 16px rgba(0,0,0,0.10);
+      --shadow-lg:  0 8px 32px rgba(0,0,0,0.13);
+
+      --transition: 200ms ease;
+      --font-body:    'Nunito', sans-serif;
+      --font-heading: 'Poppins', sans-serif;
+
+      /* Module accent colors */
+      --mod-1: #2D7A3A;  /* Buka kios */
+      --mod-2: #D4521A;  /* Kaldu & bumbu */
+      --mod-3: #B8860B;  /* Mise en place */
+      --mod-4: #C0392B;  /* Memasak */
+      --mod-5: #1A7F8E;  /* Pelayanan */
+      --mod-6: #2980B9;  /* Kebersihan */
+      --mod-7: #27AE60;  /* Kasir */
+      --mod-8: #7D3C98;  /* SDM */
+      --mod-9: #555555;  /* Tutup kios */
+
+      --nav-height: 64px;
+    }
+
+    /* Dark mode overrides */
+    [data-theme="dark"] {
+      --primary:        #F07040;
+      --primary-light:  #2A1A10;
+      --surface:        #1A1A1A;
+      --surface-1:      #242424;
+      --surface-2:      #2E2E2E;
+      --surface-3:      #383838;
+      --text-primary:   #F0F0F0;
+      --text-secondary: #AAAAAA;
+      --text-muted:     #666666;
+      --border:         rgba(255,255,255,0.08);
+      --border-strong:  rgba(255,255,255,0.15);
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-body);
+      font-size: 15px;
+      color: var(--text-primary);
+      background: var(--surface-1);
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+
+    /* ============================================================
+       APP SHELL
+    ============================================================ */
+    #app {
+      display: flex;
+      height: 100dvh;
+      overflow: hidden;
+    }
+
+    /* Sidebar — visible on ≥768px */
+    #sidebar {
+      display: none;
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      flex-direction: column;
+      padding: 24px 0 16px;
+      overflow-y: auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .sidebar-logo .kios-name {
+      font-family: var(--font-heading);
+      font-size: 15px;
+      color: var(--primary);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+    .sidebar-logo .version {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-nav { flex: 1; }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      border-left: 3px solid transparent;
+      transition: background var(--transition), color var(--transition);
+      text-decoration: none;
+      min-height: 44px;
+    }
+    .sidebar-nav-item:hover { background: var(--surface-1); color: var(--primary); }
+    .sidebar-nav-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-left-color: var(--primary);
+      font-weight: 700;
+    }
+    .sidebar-nav-item i { font-size: 20px; width: 22px; text-align: center; }
+
+    /* Main content */
+    #main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    /* Screen container */
+    #screen-container {
+      flex: 1;
+      overflow-y: auto;
+      padding-bottom: calc(var(--nav-height) + 8px);
+    }
+
+    /* Bottom nav — mobile only */
+    #bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-height);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    }
+
+    .bottom-nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      transition: color var(--transition);
+      min-height: 44px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bottom-nav-item i { font-size: 22px; }
+    .bottom-nav-item.active { color: var(--primary); }
+    .bottom-nav-item.active i { color: var(--primary); }
+
+    /* ============================================================
+       SCREENS
+    ============================================================ */
+    .screen { display: none; padding: 0 0 16px; }
+    .screen.active { display: block; }
+
+    /* ============================================================
+       HEADER COMMON
+    ============================================================ */
+    .page-header {
+      background: var(--surface);
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .page-header h1 {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .page-header .sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    /* ============================================================
+       SCREEN: BERANDA (Dashboard)
+    ============================================================ */
+    .dashboard-hero {
+      background: linear-gradient(135deg, var(--primary) 0%, #B8410F 100%);
+      color: white;
+      padding: 20px 16px;
+    }
+    .hero-kios-name {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .hero-meta {
+      font-size: 12px;
+      opacity: 0.85;
+      margin-bottom: 18px;
+    }
+    .hero-progress-label {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      opacity: 0.95;
+    }
+    .progress-bar-wrap {
+      height: 8px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: #FFFFFF;
+      border-radius: 99px;
+      transition: width 500ms ease;
+    }
+    .progress-count {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 5px;
+    }
+
+    .section-title {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      padding: 16px 16px 8px;
+    }
+
+    /* Module grid */
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      padding: 0 16px;
+    }
+
+    .module-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 12px;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 44px;
+    }
+    .module-card:active { transform: scale(0.97); }
+    .module-card:hover { box-shadow: var(--shadow-md); }
+
+    .module-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .module-icon-wrap {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .module-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+    }
+    .module-badge.done {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .module-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+    .module-mini-progress {
+      height: 4px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .module-mini-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 400ms ease;
+    }
+
+    /* Emergency K3 banner */
+    .k3-banner {
+      margin: 12px 16px 0;
+      background: var(--danger-light);
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+    }
+    .k3-banner-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--danger);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .k3-btn-row {
+      display: flex;
+      gap: 6px;
+    }
+    .k3-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 8px 4px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      border: none;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 700;
+      min-height: 52px;
+      transition: opacity var(--transition), transform var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .k3-btn:active { transform: scale(0.96); opacity: 0.85; }
+    .k3-btn i { font-size: 20px; }
+    .k3-btn.api { background: var(--danger); color: white; }
+    .k3-btn.luka { background: var(--warning); color: white; }
+    .k3-btn.racun { background: #D4AC0D; color: white; }
+
+    /* ============================================================
+       SCREEN: TUGAS (Checklist Modul)
+    ============================================================ */
+    .module-list-header {
+      background: var(--surface);
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .module-list-item {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: background var(--transition);
+      min-height: 64px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .module-list-item:hover { background: var(--surface-1); }
+
+    .module-list-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .module-list-info { flex: 1; min-width: 0; }
+    .module-list-name { font-size: 15px; font-weight: 700; }
+    .module-list-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .module-list-bar {
+      height: 4px;
+      background: var(--surface-2);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .module-list-fill { height: 100%; border-radius: 99px; transition: width 400ms ease; }
+    .module-list-arrow { color: var(--text-muted); font-size: 18px; }
+
+    /* Checklist detail layar */
+    .checklist-header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .btn-back {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: none;
+      color: var(--text-primary);
+      font-size: 20px;
+      transition: background var(--transition);
+    }
+    .btn-back:hover { background: var(--surface-1); }
+
+    .checklist-mod-title {
+      flex: 1;
+      font-family: var(--font-heading);
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .checklist-progress-pill {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      background: var(--surface-2);
+      color: var(--text-secondary);
+    }
+
+    .checklist-group-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      padding: 14px 16px 6px;
+      background: var(--surface-1);
+    }
+
+    .checklist-item {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background var(--transition);
+      min-height: 52px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .checklist-item:hover { background: var(--surface-1); }
+    .checklist-item.done { background: var(--success-light); }
+    .checklist-item.done .item-title { text-decoration: line-through; color: var(--text-muted); }
+
+    .check-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .checklist-item.done .check-circle {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+    .check-circle i { font-size: 14px; display: none; }
+    .checklist-item.done .check-circle i { display: block; }
+
+    .item-body { flex: 1; min-width: 0; }
+    .item-title { font-size: 14px; font-weight: 600; line-height: 1.4; }
+    .item-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.5; }
+    .item-meta { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; align-items: center; }
+
+    .critical-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .timer-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+      background: var(--warning-light);
+      color: var(--warning);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .timer-pill.running {
+      background: var(--info-light);
+      color: var(--info);
+    }
+    .timer-pill.finished {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .timer-pill i { font-size: 12px; }
+
+    /* Done-by info */
+    .item-done-by {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* Reset shift button */
+    .reset-shift-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: calc(100% - 32px);
+      margin: 16px 16px 0;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--danger);
+      background: none;
+      color: var(--danger);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition);
+      min-height: 44px;
+    }
+    .reset-shift-btn:hover { background: var(--danger-light); }
+
+    /* ============================================================
+       SCREEN: CARI
+    ============================================================ */
+    .search-wrap {
+      padding: 12px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .search-input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0 14px;
+      height: 44px;
+    }
+    .search-input-row i { color: var(--text-muted); font-size: 18px; }
+    .search-input-row input {
+      flex: 1;
+      border: none;
+      background: none;
+      font-family: var(--font-body);
+      font-size: 14px;
+      color: var(--text-primary);
+      outline: none;
+    }
+    .search-input-row input::placeholder { color: var(--text-muted); }
+
+    .search-results { padding: 8px 0; }
+    .search-result-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .search-result-item:hover { background: var(--surface-1); }
+
+    .result-module-tag {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      color: white;
+      margin-bottom: 4px;
+      display: inline-block;
+    }
+    .result-title { font-size: 14px; font-weight: 600; }
+    .result-group { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 24px;
+      color: var(--text-muted);
+    }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; color: var(--surface-3); }
+    .empty-state p { font-size: 14px; line-height: 1.6; }
+
+    /* ============================================================
+       SCREEN: PROFIL
+    ============================================================ */
+    .profile-section {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .profile-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      padding: 12px 16px 6px;
+      background: var(--surface-1);
+      border-bottom: 1px solid var(--border);
+    }
+    .profile-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      min-height: 52px;
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .profile-row-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .profile-row-value {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .profile-row select, .profile-row input[type="text"] {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      background: var(--surface-1);
+      color: var(--text-primary);
+      outline: none;
+      min-height: 36px;
+      max-width: 180px;
+    }
+
+    /* Toggle */
+    .toggle-wrap {
+      position: relative;
+      width: 44px;
+      height: 26px;
+      cursor: pointer;
+    }
+    .toggle-wrap input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--surface-3);
+      border-radius: 13px;
+      transition: background var(--transition);
+    }
+    .toggle-wrap input:checked + .toggle-track { background: var(--primary); }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition);
+    }
+    .toggle-wrap input:checked ~ .toggle-thumb { transform: translateX(18px); }
+
+    /* Staff name input */
+    #staff-name-input {
+      width: 100%;
+      max-width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 14px;
+      background: var(--surface-1);
+      color: var(--text-primary);
+      outline: none;
+      min-height: 44px;
+    }
+    .btn-save {
+      margin: 4px 16px 16px;
+      padding: 12px;
+      width: calc(100% - 32px);
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+      transition: opacity var(--transition);
+    }
+    .btn-save:hover { opacity: 0.88; }
+    .btn-save:active { opacity: 0.75; }
+
+    /* ============================================================
+       DARURAT FULLSCREEN OVERLAY
+    ============================================================ */
+    #emergency-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: var(--danger);
+      color: white;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 24px 16px 40px;
+    }
+    #emergency-overlay.active { display: flex; }
+    .emergency-close {
+      align-self: flex-end;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 24px;
+      border: none;
+      color: white;
+      margin-bottom: 16px;
+    }
+    .emergency-title {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .emergency-subtitle {
+      font-size: 14px;
+      opacity: 0.85;
+      margin-bottom: 24px;
+    }
+    .emergency-steps { list-style: none; }
+    .emergency-step {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .emergency-step-num {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .emergency-step-text {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.5;
+      padding-top: 5px;
+    }
+
+    /* ============================================================
+       TOAST NOTIFICATION
+    ============================================================ */
+    #toast-container {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      width: calc(100% - 32px);
+      max-width: 380px;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      animation: toastIn 200ms ease;
+      pointer-events: all;
+    }
+    .toast.success { background: var(--success); color: white; }
+    .toast.error   { background: var(--danger);  color: white; }
+    .toast.info    { background: var(--info);    color: white; }
+    .toast i { font-size: 18px; }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       SKELETON LOADER
+    ============================================================ */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer {
+      from { background-position: 200% 0; }
+      to   { background-position: -200% 0; }
+    }
+    .skel-card {
+      height: 90px;
+      border-radius: var(--radius-md);
+      margin: 8px;
+    }
+
+    /* ============================================================
+       MODAL CONFIRM
+    ============================================================ */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 5000;
+      align-items: flex-end;
+    }
+    #modal-overlay.active { display: flex; }
+    .modal-sheet {
+      background: var(--surface);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: 24px 20px;
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      animation: slideUp 200ms ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0); }
+    }
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .modal-body { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 44px;
+      transition: opacity var(--transition);
+      border: 1px solid var(--border);
+      background: var(--surface-1);
+      color: var(--text-primary);
+    }
+    .modal-btn.primary-btn {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+    .modal-btn:hover { opacity: 0.85; }
+
+    /* ============================================================
+       SHIFT INDICATOR (halaman profil)
+    ============================================================ */
+    .shift-chips {
+      display: flex;
+      gap: 6px;
+    }
+    .shift-chip {
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--surface-1);
+      color: var(--text-secondary);
+      transition: background var(--transition), color var(--transition);
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+    }
+    .shift-chip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* ============================================================
+       RESPONSIVE — tablet/desktop ≥768px
+    ============================================================ */
+    @media (min-width: 768px) {
+      #sidebar { display: flex; }
+      #bottom-nav { display: none; }
+      #screen-container { padding-bottom: 16px; }
+
+      .module-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (min-width: 1024px) {
+      #sidebar { width: 240px; }
+    }
+
+    /* Loading screen */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--surface);
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      transition: opacity 300ms ease;
+    }
+    #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+    .loading-logo {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--surface-2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-sub { font-size: 13px; color: var(--text-muted); }
+  </style>
+</head>
+
+<body>
+  <!-- ============================
+       LOADING SCREEN
+  ============================= -->
+  <div id="loading-screen">
+    <div class="loading-logo">🍜 Mie Ayam Pak Budi</div>
+    <div class="loading-spinner"></div>
+    <div class="loading-sub">Memuat SOP…</div>
+  </div>
+
+  <!-- ============================
+       TOAST CONTAINER
+  ============================= -->
+  <div id="toast-container"></div>
+
+  <!-- ============================
+       EMERGENCY OVERLAY
+  ============================= -->
+  <div id="emergency-overlay">
+    <button class="emergency-close" onclick="closeEmergency()"><i class="ti ti-x"></i></button>
+    <div id="emergency-title" class="emergency-title"></div>
+    <div id="emergency-subtitle" class="emergency-subtitle"></div>
+    <ul class="emergency-steps" id="emergency-steps"></ul>
+  </div>
+
+  <!-- ============================
+       MODAL KONFIRMASI
+  ============================= -->
+  <div id="modal-overlay">
+    <div class="modal-sheet">
+      <div class="modal-title" id="modal-title">Konfirmasi</div>
+      <div class="modal-body" id="modal-body">Yakin?</div>
+      <div class="modal-actions">
+        <button class="modal-btn" onclick="closeModal()">Batal</button>
+        <button class="modal-btn primary-btn" id="modal-confirm-btn">Ya, Lanjutkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================
+       APP SHELL
+  ============================= -->
+  <div id="app">
+    <!-- SIDEBAR (tablet/desktop) -->
+    <nav id="sidebar">
+      <div class="sidebar-logo">
+        <div class="kios-name">🍜 Mie Ayam Pak Budi</div>
+        <div class="version">SOP v1.0</div>
+      </div>
+      <div class="sidebar-nav">
+        <div class="sidebar-nav-item active" data-tab="beranda">
+          <i class="ti ti-home"></i> Beranda
+        </div>
+        <div class="sidebar-nav-item" data-tab="tugas">
+          <i class="ti ti-checklist"></i> Tugas
+        </div>
+        <div class="sidebar-nav-item" data-tab="cari">
+          <i class="ti ti-search"></i> Cari SOP
+        </div>
+        <div class="sidebar-nav-item" data-tab="profil">
+          <i class="ti ti-user-circle"></i> Profil
+        </div>
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div id="main-content">
+      <div id="screen-container">
+
+        <!-- ==========================================
+             SCREEN: BERANDA
+        =========================================== -->
+        <div id="screen-beranda" class="screen active">
+          <!-- Hero -->
+          <div class="dashboard-hero">
+            <div class="hero-kios-name">Mie Ayam Pak Budi</div>
+            <div class="hero-meta" id="hero-meta">Shift Pagi · Memuat tanggal…</div>
+            <div class="hero-progress-label" id="hero-progress-label">0 dari 0 tugas selesai</div>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="hero-progress-bar" style="width:0%"></div>
+            </div>
+            <div class="progress-count" id="hero-progress-count">0%</div>
+          </div>
+
+          <!-- Modul Grid -->
+          <div class="section-title">Modul SOP</div>
+          <div class="module-grid" id="module-grid">
+            <!-- Skeleton sementara data load -->
+            <div class="skeleton skel-card"></div>
+            <div class="skeleton skel-card"></div>
+            <div class="skeleton skel-card"></div>
+            <div class="skeleton skel-card"></div>
+          </div>
+
+          <!-- K3 Banner -->
+          <div class="k3-banner">
+            <div class="k3-banner-title"><i class="ti ti-alert-triangle"></i> Prosedur Darurat K3</div>
+            <div class="k3-btn-row">
+              <button class="k3-btn api" onclick="openEmergency('api')">
+                <i class="ti ti-flame"></i> Kebakaran
+              </button>
+              <button class="k3-btn luka" onclick="openEmergency('luka')">
+                <i class="ti ti-bandage"></i> Luka/Cedera
+              </button>
+              <button class="k3-btn racun" onclick="openEmergency('racun')">
+                <i class="ti ti-shield-exclamation"></i> Keracunan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             SCREEN: TUGAS
+        =========================================== -->
+        <div id="screen-tugas" class="screen">
+          <!-- Module List View -->
+          <div id="view-module-list">
+            <div class="page-header">
+              <h1>Tugas Shift</h1>
+              <div class="sub" id="tugas-shift-info">Shift Pagi</div>
+            </div>
+            <div id="module-list-container"></div>
+            <button class="reset-shift-btn" onclick="confirmResetShift()">
+              <i class="ti ti-refresh"></i> Reset Semua Checklist Hari Ini
+            </button>
+          </div>
+
+          <!-- Checklist Detail View -->
+          <div id="view-checklist-detail" style="display:none;">
+            <div class="checklist-header">
+              <button class="btn-back" onclick="backToModuleList()"><i class="ti ti-chevron-left"></i></button>
+              <div class="checklist-mod-title" id="checklist-mod-title">Modul</div>
+              <div class="checklist-progress-pill" id="checklist-progress-pill">0/0</div>
+            </div>
+            <div id="checklist-items-container"></div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             SCREEN: CARI
+        =========================================== -->
+        <div id="screen-cari" class="screen">
+          <div class="search-wrap">
+            <div class="page-header" style="padding:0 0 12px; border:none; position:static;">
+              <h1>Cari SOP</h1>
+            </div>
+            <div class="search-input-row">
+              <i class="ti ti-search"></i>
+              <input type="text" id="search-input" placeholder="Cari langkah, prosedur…" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="search-results" id="search-results">
+            <div class="empty-state">
+              <i class="ti ti-search"></i>
+              <p>Ketik kata kunci untuk<br>mencari prosedur SOP</p>
+            </div>
+          </div>
+
+          <!-- K3 panel di bawah hasil -->
+          <div class="k3-banner" style="margin: 16px 16px 0;">
+            <div class="k3-banner-title"><i class="ti ti-alert-triangle"></i> Prosedur Darurat K3</div>
+            <div class="k3-btn-row">
+              <button class="k3-btn api" onclick="openEmergency('api')">
+                <i class="ti ti-flame"></i> Kebakaran
+              </button>
+              <button class="k3-btn luka" onclick="openEmergency('luka')">
+                <i class="ti ti-bandage"></i> Luka/Cedera
+              </button>
+              <button class="k3-btn racun" onclick="openEmergency('racun')">
+                <i class="ti ti-shield-exclamation"></i> Keracunan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==========================================
+             SCREEN: PROFIL
+        =========================================== -->
+        <div id="screen-profil" class="screen">
+          <div class="page-header">
+            <h1>Profil & Pengaturan</h1>
+          </div>
+
+          <!-- Identitas staf -->
+          <div class="profile-section">
+            <div class="profile-section-title">Identitas Staf</div>
+            <div class="profile-row" style="flex-direction:column; align-items:flex-start; gap:8px;">
+              <div class="profile-row-label">Nama Kamu</div>
+              <input type="text" id="staff-name-input" placeholder="Masukkan nama kamu…" />
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-label">Peran</div>
+              <select id="role-select">
+                <option value="koki">Koki</option>
+                <option value="kasir">Kasir</option>
+                <option value="pelayan">Pelayan</option>
+                <option value="manajer">Manajer</option>
+              </select>
+            </div>
+            <button class="btn-save" onclick="saveProfile()">
+              <i class="ti ti-device-floppy"></i> Simpan Profil
+            </button>
+          </div>
+
+          <!-- Shift -->
+          <div class="profile-section">
+            <div class="profile-section-title">Shift Aktif</div>
+            <div class="profile-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
+              <div class="profile-row-label">Pilih Shift Manual</div>
+              <div class="shift-chips">
+                <div class="shift-chip" data-shift="pagi" onclick="setShift('pagi')">🌅 Pagi</div>
+                <div class="shift-chip" data-shift="siang" onclick="setShift('siang')">☀️ Siang</div>
+                <div class="shift-chip" data-shift="malam" onclick="setShift('malam')">🌙 Malam</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tampilan -->
+          <div class="profile-section">
+            <div class="profile-section-title">Tampilan</div>
+            <div class="profile-row">
+              <div class="profile-row-label">Mode Gelap</div>
+              <label class="toggle-wrap">
+                <input type="checkbox" id="dark-mode-toggle" onchange="toggleDarkMode(this.checked)" />
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="profile-section">
+            <div class="profile-section-title">Info Aplikasi</div>
+            <div class="profile-row">
+              <div class="profile-row-label">Nama Kios</div>
+              <div class="profile-row-value">Mie Ayam Pak Budi</div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-label">Versi App</div>
+              <div class="profile-row-value">v1.0.0</div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-row-label">Device ID</div>
+              <div class="profile-row-value" id="device-id-display" style="font-size:10px; word-break:break-all; max-width:180px;">—</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- BOTTOM NAV (mobile) -->
+      <nav id="bottom-nav">
+        <div class="bottom-nav-item active" data-tab="beranda">
+          <i class="ti ti-home"></i>
+          <span>Beranda</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="tugas">
+          <i class="ti ti-checklist"></i>
+          <span>Tugas</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="cari">
+          <i class="ti ti-search"></i>
+          <span>Cari</span>
+        </div>
+        <div class="bottom-nav-item" data-tab="profil">
+          <i class="ti ti-user-circle"></i>
+          <span>Profil</span>
+        </div>
+      </nav>
+    </div>
+  </div>
+
+  <!-- ============================
+       SUPABASE CDN
+  ============================= -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
+  <script>
+  // ============================================================
+  //  KONFIGURASI SUPABASE
+  // ============================================================
+  const SUPABASE_URL = 'https://jariewywijsmjxxbgpvi.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imphcmlld3l3aWpzbWp4eGJncHZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1MzEzMjUsImV4cCI6MjA5MzEwNzMyNX0.yaO9StT8hScwdHgmwkh9STXCXCO7VvnMvBG6eHThljM';
+
+  const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ============================================================
+  //  STATE APLIKASI
+  // ============================================================
+  let appState = {
+    deviceId: null,
+    staffName: '',
+    role: 'koki',
+    activeShift: 'pagi',
+    modules: [],        // [{id, name, icon, color_hex, order_index}]
+    steps: [],          // [{id, module_id, group_name, title, description, duration_minutes, order_index, is_critical}]
+    progress: {},       // { step_id: {is_done, done_by, done_at} }
+    activeTab: 'beranda',
+    activeModuleId: null,
+    timers: {},         // { step_id: { interval, remaining, totalSecs } }
+  };
+
+  // ============================================================
+  //  UTILITY: TOAST
+  // ============================================================
+  function showToast(message, type = 'info') {
+    const icons = { success: 'ti-circle-check', error: 'ti-circle-x', info: 'ti-info-circle' };
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<i class="ti ${icons[type] || icons.info}"></i> ${message}`;
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 300ms ease';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  // ============================================================
+  //  UTILITY: TANGGAL & SHIFT
+  // ============================================================
+  function getTodayISO() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function getAutoShift() {
+    const h = new Date().getHours();
+    if (h >= 6 && h < 14)  return 'pagi';
+    if (h >= 14 && h < 21) return 'siang';
+    return 'malam';
+  }
+
+  function shiftLabel(shift) {
+    return { pagi: 'Shift Pagi 🌅', siang: 'Shift Siang ☀️', malam: 'Shift Malam 🌙' }[shift] || shift;
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function formatDuration(mins) {
+    if (!mins) return '';
+    if (mins < 60) return `${mins} mnt`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m ? `${h}j ${m}mnt` : `${h} jam`;
+  }
+
+  // ============================================================
+  //  DEVICE ID & SESSION
+  // ============================================================
+  function generateUUID() {
+    return crypto.randomUUID
+      ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+  }
+
+  async function initDeviceSession() {
+    let deviceId = sessionStorage.getItem('sop_device_id');
+    if (!deviceId) {
+      deviceId = generateUUID();
+      sessionStorage.setItem('sop_device_id', deviceId);
+    }
+    appState.deviceId = deviceId;
+    document.getElementById('device-id-display').textContent = deviceId.slice(0, 16) + '…';
+
+    try {
+      // Cek sesi yang ada
+      const { data: existing } = await db
+        .from('user_sessions')
+        .select('*')
+        .eq('device_id', deviceId)
+        .maybeSingle();
+
+      if (existing) {
+        appState.staffName = existing.staff_name || '';
+        appState.role      = existing.role || 'koki';
+        appState.activeShift = existing.active_shift || getAutoShift();
+      } else {
+        appState.activeShift = getAutoShift();
+        await db.from('user_sessions').insert({
+          device_id: deviceId,
+          staff_name: '',
+          role: 'koki',
+          active_shift: appState.activeShift,
+          last_seen: new Date().toISOString(),
+        });
+      }
+
+      // Update last_seen
+      await db.from('user_sessions')
+        .update({ last_seen: new Date().toISOString(), active_shift: appState.activeShift })
+        .eq('device_id', deviceId);
+
+    } catch (err) {
+      console.warn('Session init error:', err);
+      appState.activeShift = getAutoShift();
+    }
+
+    // Sync UI profil
+    document.getElementById('staff-name-input').value = appState.staffName;
+    document.getElementById('role-select').value = appState.role;
+    updateShiftChips();
+  }
+
+  // ============================================================
+  //  LOAD DATA DARI SUPABASE
+  // ============================================================
+  async function loadModules() {
+    const { data, error } = await db
+      .from('modules')
+      .select('*')
+      .order('order_index');
+    if (error) throw error;
+    appState.modules = data || [];
+  }
+
+  async function loadSteps() {
+    const { data, error } = await db
+      .from('sop_steps')
+      .select('*')
+      .order('order_index');
+    if (error) throw error;
+    appState.steps = data || [];
+  }
+
+  async function loadProgress() {
+    const today = getTodayISO();
+    const { data, error } = await db
+      .from('checklist_progress')
+      .select('*')
+      .eq('shift_date', today)
+      .eq('shift_type', appState.activeShift);
+    if (error) throw error;
+
+    appState.progress = {};
+    (data || []).forEach(p => {
+      appState.progress[p.step_id] = {
+        id: p.id,
+        is_done: p.is_done,
+        done_by: p.done_by,
+        done_at: p.done_at,
+      };
+    });
+  }
+
+  // ============================================================
+  //  REALTIME SUBSCRIPTION
+  // ============================================================
+  function subscribeRealtime() {
+    db.channel('checklist_progress_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'checklist_progress',
+      }, payload => {
+        const rec = payload.new || payload.old;
+        if (!rec) return;
+        // Hanya update jika shift & tanggal cocok
+        if (rec.shift_date === getTodayISO() && rec.shift_type === appState.activeShift) {
+          if (payload.eventType === 'DELETE') {
+            delete appState.progress[rec.step_id];
+          } else {
+            appState.progress[rec.step_id] = {
+              id: rec.id,
+              is_done: rec.is_done,
+              done_by: rec.done_by,
+              done_at: rec.done_at,
+            };
+          }
+          refreshProgressUI();
+        }
+      })
+      .subscribe();
+  }
+
+  // ============================================================
+  //  RENDER: BERANDA
+  // ============================================================
+  function renderDashboard() {
+    // Hero info
+    const today = getTodayISO();
+    document.getElementById('hero-meta').textContent =
+      `${shiftLabel(appState.activeShift)} · ${formatDate(today)}`;
+
+    // Module grid
+    const grid = document.getElementById('module-grid');
+    if (appState.modules.length === 0) {
+      grid.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px;grid-column:1/-1">Modul belum tersedia. Jalankan SQL setup terlebih dahulu.</p>';
+      updateHeroProgress();
+      return;
+    }
+
+    grid.innerHTML = appState.modules.map(mod => {
+      const modSteps   = appState.steps.filter(s => s.module_id === mod.id);
+      const doneSteps  = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+      const total      = modSteps.length;
+      const pct        = total ? Math.round((doneSteps / total) * 100) : 0;
+      const allDone    = total > 0 && doneSteps === total;
+      const color      = mod.color_hex || '#888';
+
+      return `
+        <div class="module-card" onclick="openModuleChecklist('${mod.id}')">
+          <div class="module-card-top">
+            <div class="module-icon-wrap" style="background:${color}20; color:${color}">
+              <i class="ti ${mod.icon || 'ti-list'}"></i>
+            </div>
+            <span class="module-badge ${allDone ? 'done' : ''}">${doneSteps}/${total}</span>
+          </div>
+          <div class="module-card-name">${mod.name}</div>
+          <div class="module-mini-progress">
+            <div class="module-mini-fill" style="width:${pct}%; background:${color}"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    updateHeroProgress();
+  }
+
+  function updateHeroProgress() {
+    const totalAll = appState.steps.length;
+    const doneAll  = appState.steps.filter(s => appState.progress[s.id]?.is_done).length;
+    const pct      = totalAll ? Math.round((doneAll / totalAll) * 100) : 0;
+
+    document.getElementById('hero-progress-label').textContent =
+      `${doneAll} dari ${totalAll} tugas selesai hari ini`;
+    document.getElementById('hero-progress-bar').style.width = pct + '%';
+    document.getElementById('hero-progress-count').textContent = pct + '%';
+  }
+
+  // ============================================================
+  //  RENDER: MODULE LIST (Tugas)
+  // ============================================================
+  function renderModuleList() {
+    document.getElementById('tugas-shift-info').textContent = shiftLabel(appState.activeShift);
+    const container = document.getElementById('module-list-container');
+
+    if (appState.modules.length === 0) {
+      container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Modul belum tersedia.</p>';
+      return;
+    }
+
+    container.innerHTML = appState.modules.map(mod => {
+      const modSteps  = appState.steps.filter(s => s.module_id === mod.id);
+      const done      = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+      const total     = modSteps.length;
+      const pct       = total ? Math.round((done / total) * 100) : 0;
+      const color     = mod.color_hex || '#888';
+
+      return `
+        <div class="module-list-item" onclick="openModuleChecklist('${mod.id}')">
+          <div class="module-list-icon" style="background:${color}20; color:${color}">
+            <i class="ti ${mod.icon || 'ti-list'}"></i>
+          </div>
+          <div class="module-list-info">
+            <div class="module-list-name">${mod.name}</div>
+            <div class="module-list-sub">${done}/${total} langkah · ${pct}%</div>
+            <div class="module-list-bar">
+              <div class="module-list-fill" style="width:${pct}%; background:${color}"></div>
+            </div>
+          </div>
+          <i class="ti ti-chevron-right module-list-arrow"></i>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ============================================================
+  //  OPEN MODULE CHECKLIST
+  // ============================================================
+  function openModuleChecklist(moduleId) {
+    appState.activeModuleId = moduleId;
+    const mod = appState.modules.find(m => m.id === moduleId);
+    if (!mod) return;
+
+    document.getElementById('view-module-list').style.display = 'none';
+    document.getElementById('view-checklist-detail').style.display = 'block';
+    document.getElementById('checklist-mod-title').textContent = mod.name;
+
+    switchTab('tugas');
+    renderChecklistDetail(moduleId);
+  }
+
+  function backToModuleList() {
+    appState.activeModuleId = null;
+    document.getElementById('view-checklist-detail').style.display = 'none';
+    document.getElementById('view-module-list').style.display = 'block';
+    renderModuleList();
+  }
+
+  function renderChecklistDetail(moduleId) {
+    const mod       = appState.modules.find(m => m.id === moduleId);
+    const modSteps  = appState.steps.filter(s => s.module_id === moduleId);
+    const done      = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+    const total     = modSteps.length;
+    const color     = mod?.color_hex || '#888';
+
+    document.getElementById('checklist-progress-pill').textContent = `${done}/${total}`;
+    document.getElementById('checklist-progress-pill').style.background = done === total && total > 0
+      ? 'var(--success-light)' : 'var(--surface-2)';
+    document.getElementById('checklist-progress-pill').style.color = done === total && total > 0
+      ? 'var(--success)' : 'var(--text-secondary)';
+
+    // Group by group_name
+    const groups = {};
+    modSteps.forEach(step => {
+      const g = step.group_name || 'Umum';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(step);
+    });
+
+    const container = document.getElementById('checklist-items-container');
+    let html = '';
+
+    Object.entries(groups).forEach(([groupName, steps]) => {
+      html += `<div class="checklist-group-label">${groupName}</div>`;
+      steps.forEach(step => {
+        const prog   = appState.progress[step.id];
+        const isDone = prog?.is_done || false;
+        const doneBy = prog?.done_by || '';
+        const doneAt = prog?.done_at ? new Date(prog.done_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
+        const timer  = appState.timers[step.id];
+
+        let timerHtml = '';
+        if (step.duration_minutes) {
+          const timerState = timer?.interval ? 'running' : (timer?.finished ? 'finished' : '');
+          const timerLabel = timer?.interval
+            ? formatCountdown(timer.remaining)
+            : (timer?.finished ? 'Selesai ✓' : formatDuration(step.duration_minutes));
+          timerHtml = `
+            <div class="timer-pill ${timerState}" onclick="handleTimer(event, '${step.id}', ${step.duration_minutes})">
+              <i class="ti ${timer?.interval ? 'ti-player-pause' : 'ti-player-play'}"></i>
+              ${timerLabel}
+            </div>
+          `;
+        }
+
+        html += `
+          <div class="checklist-item ${isDone ? 'done' : ''}" id="item-${step.id}"
+               onclick="toggleStep('${step.id}')">
+            <div class="check-circle">
+              <i class="ti ti-check"></i>
+            </div>
+            <div class="item-body">
+              <div class="item-title">${step.title}</div>
+              ${step.description ? `<div class="item-desc">${step.description}</div>` : ''}
+              <div class="item-meta">
+                ${step.is_critical ? '<span class="critical-badge"><i class="ti ti-alert-circle"></i> Wajib</span>' : ''}
+                ${timerHtml}
+              </div>
+              ${isDone && (doneBy || doneAt) ? `<div class="item-done-by">✓ ${doneBy} · ${doneAt}</div>` : ''}
+            </div>
+          </div>
+        `;
+      });
+    });
+
+    if (!html) html = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada langkah SOP.</p>';
+    container.innerHTML = html;
+  }
+
+  // ============================================================
+  //  TOGGLE STEP (Checklist)
+  // ============================================================
+  async function toggleStep(stepId) {
+    const prog    = appState.progress[stepId];
+    const isDone  = prog?.is_done || false;
+    const newDone = !isDone;
+    const today   = getTodayISO();
+
+    // Optimistic update
+    appState.progress[stepId] = {
+      ...prog,
+      is_done: newDone,
+      done_by: newDone ? (appState.staffName || 'Staf') : null,
+      done_at: newDone ? new Date().toISOString() : null,
+    };
+    refreshItemUI(stepId);
+    refreshProgressUI();
+
+    try {
+      const { error } = await db.from('checklist_progress').upsert({
+        step_id:    stepId,
+        shift_date: today,
+        shift_type: appState.activeShift,
+        is_done:    newDone,
+        done_by:    newDone ? (appState.staffName || 'Staf') : null,
+        done_at:    newDone ? new Date().toISOString() : null,
+      }, { onConflict: 'step_id,shift_date,shift_type' });
+
+      if (error) throw error;
+
+      if (newDone) showToast('Langkah selesai! ✓', 'success');
+    } catch (err) {
+      // Rollback
+      appState.progress[stepId] = prog || undefined;
+      if (!prog) delete appState.progress[stepId];
+      refreshItemUI(stepId);
+      refreshProgressUI();
+      showToast('Gagal menyimpan. Coba lagi.', 'error');
+      console.error(err);
+    }
+  }
+
+  function refreshItemUI(stepId) {
+    const el = document.getElementById(`item-${stepId}`);
+    if (!el) return;
+    const prog = appState.progress[stepId];
+    const isDone = prog?.is_done || false;
+    el.classList.toggle('done', isDone);
+
+    const doneByEl = el.querySelector('.item-done-by');
+    const doneBy = prog?.done_by || '';
+    const doneAt = prog?.done_at ? new Date(prog.done_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
+
+    if (isDone && (doneBy || doneAt)) {
+      if (doneByEl) {
+        doneByEl.textContent = `✓ ${doneBy} · ${doneAt}`;
+      } else {
+        const body = el.querySelector('.item-body');
+        const d = document.createElement('div');
+        d.className = 'item-done-by';
+        d.textContent = `✓ ${doneBy} · ${doneAt}`;
+        body.appendChild(d);
+      }
+    } else {
+      if (doneByEl) doneByEl.remove();
+    }
+  }
+
+  function refreshProgressUI() {
+    // Hero progress
+    updateHeroProgress();
+
+    // Module grid badges & bars
+    appState.modules.forEach(mod => {
+      const modSteps = appState.steps.filter(s => s.module_id === mod.id);
+      const done     = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+      const total    = modSteps.length;
+      const pct      = total ? Math.round((done / total) * 100) : 0;
+      const color    = mod.color_hex || '#888';
+      const allDone  = total > 0 && done === total;
+
+      // Module card (beranda)
+      const cardBadge = document.querySelector(`#module-grid .module-card:nth-child(${appState.modules.indexOf(mod) + 1}) .module-badge`);
+      const cardFill  = document.querySelector(`#module-grid .module-card:nth-child(${appState.modules.indexOf(mod) + 1}) .module-mini-fill`);
+      if (cardBadge) { cardBadge.textContent = `${done}/${total}`; cardBadge.className = `module-badge ${allDone ? 'done' : ''}`; }
+      if (cardFill)  { cardFill.style.width = pct + '%'; }
+
+      // Module list (tugas)
+      const listItems = document.querySelectorAll('#module-list-container .module-list-item');
+      listItems.forEach(item => {
+        const idx = Array.from(listItems).indexOf(item);
+        const m   = appState.modules[idx];
+        if (!m) return;
+        const ms  = appState.steps.filter(s => s.module_id === m.id);
+        const d   = ms.filter(s => appState.progress[s.id]?.is_done).length;
+        const t   = ms.length;
+        const p   = t ? Math.round((d / t) * 100) : 0;
+        const sub = item.querySelector('.module-list-sub');
+        const fill= item.querySelector('.module-list-fill');
+        if (sub)  sub.textContent = `${d}/${t} langkah · ${p}%`;
+        if (fill) fill.style.width = p + '%';
+      });
+    });
+
+    // Active checklist header pill
+    if (appState.activeModuleId) {
+      const mod      = appState.modules.find(m => m.id === appState.activeModuleId);
+      const modSteps = appState.steps.filter(s => s.module_id === appState.activeModuleId);
+      const done     = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+      const total    = modSteps.length;
+      const pill     = document.getElementById('checklist-progress-pill');
+      if (pill) {
+        pill.textContent = `${done}/${total}`;
+        pill.style.background = done === total && total > 0 ? 'var(--success-light)' : 'var(--surface-2)';
+        pill.style.color = done === total && total > 0 ? 'var(--success)' : 'var(--text-secondary)';
+      }
+    }
+  }
+
+  // ============================================================
+  //  TIMER LOGIC
+  // ============================================================
+  function formatCountdown(secs) {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    return `${m}:${String(s).padStart(2,'0')}`;
+  }
+
+  function handleTimer(evt, stepId, durationMins) {
+    evt.stopPropagation();
+    const existing = appState.timers[stepId];
+
+    if (existing?.interval) {
+      // Pause
+      clearInterval(existing.interval);
+      appState.timers[stepId] = { interval: null, remaining: existing.remaining, finished: false };
+    } else if (existing?.remaining > 0) {
+      // Resume
+      startCountdown(stepId);
+    } else {
+      // Fresh start
+      requestNotifPermission();
+      appState.timers[stepId] = { interval: null, remaining: durationMins * 60, finished: false };
+      startCountdown(stepId);
+    }
+
+    // Re-render checklist detail for this step (partial)
+    if (appState.activeModuleId) renderChecklistDetail(appState.activeModuleId);
+  }
+
+  function startCountdown(stepId) {
+    const t = appState.timers[stepId];
+    if (!t) return;
+    t.interval = setInterval(() => {
+      t.remaining -= 1;
+      // Update pill in DOM without full re-render
+      const pill = document.querySelector(`#item-${stepId} .timer-pill`);
+      if (pill) {
+        pill.textContent = '';
+        const icon = document.createElement('i');
+        icon.className = 'ti ti-player-pause';
+        pill.appendChild(icon);
+        pill.append(' ' + formatCountdown(t.remaining));
+        pill.classList.add('running');
+        pill.classList.remove('finished');
+      }
+      if (t.remaining <= 0) {
+        clearInterval(t.interval);
+        t.interval = null;
+        t.finished = true;
+        t.remaining = 0;
+        if (pill) {
+          pill.innerHTML = '<i class="ti ti-circle-check"></i> Selesai ✓';
+          pill.classList.remove('running');
+          pill.classList.add('finished');
+        }
+        notifyTimerDone(stepId);
+      }
+    }, 1000);
+  }
+
+  function requestNotifPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  function notifyTimerDone(stepId) {
+    const step = appState.steps.find(s => s.id === stepId);
+    showToast(`Timer selesai: "${step?.title || 'Langkah'}"`, 'success');
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('Timer SOP Selesai! 🍜', {
+        body: step?.title || 'Waktu habis',
+        icon: '/favicon.ico',
+      });
+    }
+  }
+
+  // ============================================================
+  //  RESET SHIFT
+  // ============================================================
+  function confirmResetShift() {
+    if (appState.role !== 'manajer') {
+      showToast('Hanya Manajer yang bisa reset shift.', 'error');
+      return;
+    }
+    openModal(
+      'Reset Semua Checklist?',
+      `Semua progress tugas shift ${shiftLabel(appState.activeShift)} hari ini akan dihapus. Tindakan ini tidak bisa dibatalkan.`,
+      resetShift
+    );
+  }
+
+  async function resetShift() {
+    try {
+      const { error } = await db
+        .from('checklist_progress')
+        .delete()
+        .eq('shift_date', getTodayISO())
+        .eq('shift_type', appState.activeShift);
+      if (error) throw error;
+      appState.progress = {};
+      renderModuleList();
+      renderDashboard();
+      showToast('Checklist berhasil direset.', 'success');
+    } catch (err) {
+      showToast('Gagal mereset checklist.', 'error');
+      console.error(err);
+    }
+  }
+
+  // ============================================================
+  //  SEARCH
+  // ============================================================
+  function handleSearch(query) {
+    const q = query.trim().toLowerCase();
+    const container = document.getElementById('search-results');
+
+    if (!q) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-search"></i>
+          <p>Ketik kata kunci untuk<br>mencari prosedur SOP</p>
+        </div>`;
+      return;
+    }
+
+    const results = appState.steps.filter(s =>
+      s.title.toLowerCase().includes(q) ||
+      (s.description || '').toLowerCase().includes(q) ||
+      (s.group_name || '').toLowerCase().includes(q)
+    );
+
+    if (results.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="ti ti-mood-empty"></i>
+          <p>Prosedur "<strong>${query}</strong>"<br>tidak ditemukan.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = results.map(step => {
+      const mod   = appState.modules.find(m => m.id === step.module_id);
+      const color = mod?.color_hex || '#888';
+      return `
+        <div class="search-result-item" onclick="openModuleChecklist('${step.module_id}')">
+          <div class="result-module-tag" style="background:${color}">${mod?.name || 'Modul'}</div>
+          <div class="result-title">${highlight(step.title, q)}</div>
+          <div class="result-group">${step.group_name || ''}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function highlight(text, q) {
+    const idx = text.toLowerCase().indexOf(q);
+    if (idx < 0) return text;
+    return text.slice(0, idx) +
+      `<mark style="background:var(--warning-light);color:var(--warning);border-radius:3px;padding:0 2px">${text.slice(idx, idx + q.length)}</mark>` +
+      text.slice(idx + q.length);
+  }
+
+  // ============================================================
+  //  PROFIL
+  // ============================================================
+  async function saveProfile() {
+    const name = document.getElementById('staff-name-input').value.trim();
+    const role = document.getElementById('role-select').value;
+    appState.staffName = name;
+    appState.role = role;
+
+    try {
+      await db.from('user_sessions')
+        .update({ staff_name: name, role: role })
+        .eq('device_id', appState.deviceId);
+      showToast('Profil disimpan!', 'success');
+    } catch (err) {
+      showToast('Gagal menyimpan profil.', 'error');
+    }
+  }
+
+  async function setShift(shift) {
+    appState.activeShift = shift;
+    updateShiftChips();
+    await loadProgress();
+    renderDashboard();
+    renderModuleList();
+
+    try {
+      await db.from('user_sessions')
+        .update({ active_shift: shift })
+        .eq('device_id', appState.deviceId);
+    } catch (e) {}
+
+    showToast(`Beralih ke ${shiftLabel(shift)}`, 'info');
+  }
+
+  function updateShiftChips() {
+    document.querySelectorAll('.shift-chip').forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.shift === appState.activeShift);
+    });
+  }
+
+  function toggleDarkMode(enabled) {
+    document.documentElement.setAttribute('data-theme', enabled ? 'dark' : '');
+    localStorage.setItem('sop_dark_mode', enabled ? '1' : '0');
+  }
+
+  // ============================================================
+  //  EMERGENCY OVERLAY
+  // ============================================================
+  const emergencyData = {
+    api: {
+      title: '🔥 Prosedur Kebakaran',
+      subtitle: 'Tetap tenang. Ikuti langkah ini segera.',
+      steps: [
+        'Teriak "KEBAKARAN!" keras-keras untuk memperingatkan semua orang.',
+        'Cabut colokan peralatan listrik terdekat jika aman.',
+        'Ambil APAR (Alat Pemadam Api Ringan) di dekat pintu masuk kios.',
+        'Gunakan APAR: cabut pin, arahkan ke dasar api, tekan tuas, sapukan ke kanan-kiri.',
+        'Jika api tidak padam dalam 30 detik, EVAKUASI semua orang segera.',
+        'Hubungi Damkar: 113 dari tempat yang aman.',
+        'Jangan kembali ke dalam bangunan sebelum dinyatakan aman.',
+      ],
+    },
+    luka: {
+      title: '🩹 Prosedur Luka & Cedera',
+      subtitle: 'Tangani dengan tenang dan cepat.',
+      steps: [
+        'Pastikan area sekitar aman. Jangan pindahkan korban jika dicurigai cedera tulang belakang.',
+        'Untuk luka sayat: bilas dengan air mengalir 5 menit, tekan dengan kain bersih untuk hentikan darah.',
+        'Untuk luka bakar ringan: rendam/siram dengan air dingin mengalir 10–20 menit. JANGAN pakai pasta gigi.',
+        'Pasang perban atau plester setelah luka bersih.',
+        'Jika luka dalam, darah tidak berhenti, atau tulang terlihat — SEGERA bawa ke IGD.',
+        'Catat nama korban, waktu kejadian, dan penyebab untuk laporan.',
+        'Hubungi BPJS/RS terdekat atau 119 jika darurat.',
+      ],
+    },
+    racun: {
+      title: '☠️ Prosedur Keracunan Makanan',
+      subtitle: 'Tindakan cepat bisa menyelamatkan nyawa.',
+      steps: [
+        'Identifikasi makanan/bahan yang mungkin jadi penyebab. Amankan sisa makanan untuk pemeriksaan.',
+        'Pindahkan korban ke area berventilasi baik, minta duduk/berbaring nyaman.',
+        'JANGAN paksa korban muntah kecuali atas petunjuk dokter.',
+        'Beri minum air putih secukupnya jika korban masih sadar dan bisa menelan.',
+        'Catat gejala: mual, muntah, diare, kram, demam, waktu mulai gejala.',
+        'Hubungi Hotline Keracunan: (021) 4250767 atau bawa ke IGD RS terdekat.',
+        'Laporkan kejadian ke Dinas Kesehatan setempat dalam 24 jam.',
+      ],
+    },
+  };
+
+  function openEmergency(type) {
+    const data = emergencyData[type];
+    if (!data) return;
+    document.getElementById('emergency-title').textContent   = data.title;
+    document.getElementById('emergency-subtitle').textContent = data.subtitle;
+    document.getElementById('emergency-steps').innerHTML = data.steps.map((s, i) => `
+      <li class="emergency-step">
+        <div class="emergency-step-num">${i + 1}</div>
+        <div class="emergency-step-text">${s}</div>
+      </li>
+    `).join('');
+
+    const overlay = document.getElementById('emergency-overlay');
+    const colors = { api: 'var(--danger)', luka: 'var(--warning)', racun: '#B7950B' };
+    overlay.style.background = colors[type] || 'var(--danger)';
+    overlay.classList.add('active');
+  }
+
+  function closeEmergency() {
+    document.getElementById('emergency-overlay').classList.remove('active');
+  }
+
+  // ============================================================
+  //  MODAL
+  // ============================================================
+  let modalCallback = null;
+  function openModal(title, body, onConfirm) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').textContent  = body;
+    document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); onConfirm(); };
+    document.getElementById('modal-overlay').classList.add('active');
+    modalCallback = onConfirm;
+  }
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+
+  // ============================================================
+  //  TAB NAVIGATION
+  // ============================================================
+  function switchTab(tabName) {
+    appState.activeTab = tabName;
+
+    // Update screens
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(`screen-${tabName}`)?.classList.add('active');
+
+    // Update nav items
+    document.querySelectorAll('.bottom-nav-item, .sidebar-nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.tab === tabName);
+    });
+
+    // Scroll top
+    document.getElementById('screen-container').scrollTop = 0;
+
+    // Re-render based on tab
+    if (tabName === 'beranda') renderDashboard();
+    if (tabName === 'tugas')   renderModuleList();
+  }
+
+  function initNavigation() {
+    document.querySelectorAll('.bottom-nav-item, .sidebar-nav-item').forEach(item => {
+      item.addEventListener('click', () => {
+        // Jika di checklist detail, kembali dulu ke list
+        if (item.dataset.tab === 'tugas' && appState.activeModuleId) {
+          backToModuleList();
+          return;
+        }
+        switchTab(item.dataset.tab);
+      });
+    });
+  }
+
+  // ============================================================
+  //  MAIN INIT
+  // ============================================================
+  async function init() {
+    // Restore dark mode pref
+    if (localStorage.getItem('sop_dark_mode') === '1') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.getElementById('dark-mode-toggle').checked = true;
+    }
+
+    try {
+      await initDeviceSession();
+      await Promise.all([loadModules(), loadSteps()]);
+      await loadProgress();
+      subscribeRealtime();
+
+      renderDashboard();
+      renderModuleList();
+    } catch (err) {
+      console.error('Init error:', err);
+      showToast('Gagal terhubung ke server. Periksa koneksi internet.', 'error');
+    }
+
+    // Search listener
+    document.getElementById('search-input').addEventListener('input', e => {
+      handleSearch(e.target.value);
+    });
+
+    initNavigation();
+
+    // Hide loading screen
+    const ls = document.getElementById('loading-screen');
+    ls.classList.add('fade-out');
+    setTimeout(() => ls.remove(), 350);
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
