@@ -1001,7 +1001,141 @@
     @media (min-width: 1024px) {
       #sidebar { width: 240px; }
     }
+/* ============================================================
+   WELCOME / LOGIN SCREEN
+============================================================ */
+#welcome-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: linear-gradient(160deg, var(--primary) 0%, #8B2500 100%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+#welcome-overlay.active { display: flex; }
 
+.welcome-card {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-lg);
+}
+.welcome-logo {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 32px;
+  margin-bottom: 4px;
+}
+.welcome-title {
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+.welcome-sub {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+}
+.welcome-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+  display: block;
+}
+.welcome-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 15px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  outline: none;
+  margin-bottom: 14px;
+  min-height: 48px;
+  transition: border-color var(--transition);
+}
+.welcome-input:focus { border-color: var(--primary); }
+.welcome-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 50px;
+  transition: opacity var(--transition);
+  margin-top: 4px;
+}
+.welcome-btn:hover { opacity: 0.88; }
+.welcome-btn:active { opacity: 0.75; }
+.welcome-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.welcome-role-chip {
+  padding: 10px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  background: var(--surface-1);
+  transition: all var(--transition);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.welcome-role-chip.active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.welcome-error {
+  font-size: 12px;
+  color: var(--danger);
+  text-align: center;
+  margin-top: 8px;
+  min-height: 16px;
+}
+.welcome-mode-toggle {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.welcome-mode-toggle span {
+  color: var(--primary);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.welcome-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
     /* Loading screen */
     #loading-screen {
       position: fixed;
@@ -1071,6 +1205,52 @@
 </head>
 
 <body>
+    <!-- ============================
+     WELCOME / LOGIN SCREEN
+============================= -->
+<div id="welcome-overlay">
+  <div class="welcome-card">
+    <div class="welcome-logo">🍜</div>
+    <div class="welcome-title">Gurmie Ayam</div>
+    <div class="welcome-sub">SOP Operasional Kios</div>
+
+    <!-- MODE: DAFTAR (pertama kali) -->
+    <div id="welcome-register" style="display:none;">
+      <label class="welcome-label">Nama Kamu</label>
+      <input class="welcome-input" id="reg-name" type="text" placeholder="Masukkan nama lengkap…" autocomplete="name" />
+      <label class="welcome-label">Pilih Peran</label>
+      <div class="welcome-role-grid">
+        <div class="welcome-role-chip active" data-role="koki" onclick="selectRegRole('koki')">👨‍🍳 Koki</div>
+        <div class="welcome-role-chip" data-role="kasir" onclick="selectRegRole('kasir')">💰 Kasir</div>
+        <div class="welcome-role-chip" data-role="pelayan" onclick="selectRegRole('pelayan')">🛎️ Pelayan</div>
+        <div class="welcome-role-chip" data-role="manajer" onclick="selectRegRole('manajer')">📋 Manajer</div>
+      </div>
+      <label class="welcome-label">Buat Password</label>
+      <input class="welcome-input" id="reg-password" type="password" placeholder="Minimal 4 karakter…" />
+      <label class="welcome-label">Konfirmasi Password</label>
+      <input class="welcome-input" id="reg-confirm" type="password" placeholder="Ulangi password…" />
+      <button class="welcome-btn" onclick="doRegister()">Mulai Bekerja →</button>
+      <div class="welcome-error" id="reg-error"></div>
+      <div class="welcome-mode-toggle">
+        Sudah punya akun? <span onclick="showLoginMode()">Masuk</span>
+      </div>
+    </div>
+
+    <!-- MODE: LOGIN -->
+    <div id="welcome-login" style="display:none;">
+      <label class="welcome-label">Nama Kamu</label>
+      <input class="welcome-input" id="login-name" type="text" placeholder="Masukkan nama…" autocomplete="name" />
+      <label class="welcome-label">Password</label>
+      <input class="welcome-input" id="login-password" type="password" placeholder="Masukkan password…" />
+      <button class="welcome-btn" onclick="doLogin()">Masuk →</button>
+      <div class="welcome-error" id="login-error"></div>
+      <hr class="welcome-divider" />
+      <div class="welcome-mode-toggle">
+        Perangkat baru? <span onclick="showRegisterMode()">Daftar akun baru</span>
+      </div>
+    </div>
+  </div>
+</div>
   <!-- ============================
        LOADING SCREEN
   ============================= -->
@@ -1532,53 +1712,229 @@ function shiftLabel(shift) {
         });
   }
 
-  async function initDeviceSession() {
-    let deviceId = sessionStorage.getItem('sop_device_id');
-    if (!deviceId) {
-      deviceId = generateUUID();
-      sessionStorage.setItem('sop_device_id', deviceId);
-    }
-    appState.deviceId = deviceId;
-    document.getElementById('device-id-display').textContent = deviceId.slice(0, 16) + '…';
+// ============================================================
+//  DEVICE ID & SESSION + WELCOME SCREEN
+// ============================================================
+function generateUUID() {
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+}
 
+// --- Welcome screen helpers ---
+let selectedRegRole = 'koki';
+
+function selectRegRole(role) {
+  selectedRegRole = role;
+  document.querySelectorAll('.welcome-role-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.role === role);
+  });
+}
+
+function showWelcomeScreen() {
+  const overlay = document.getElementById('welcome-overlay');
+  overlay.classList.add('active');
+}
+
+function hideWelcomeScreen() {
+  document.getElementById('welcome-overlay').classList.remove('active');
+}
+
+function showLoginMode() {
+  document.getElementById('welcome-register').style.display = 'none';
+  document.getElementById('welcome-login').style.display    = 'block';
+  document.getElementById('login-error').textContent        = '';
+  setTimeout(() => document.getElementById('login-name').focus(), 100);
+}
+
+function showRegisterMode() {
+  document.getElementById('welcome-login').style.display    = 'none';
+  document.getElementById('welcome-register').style.display = 'block';
+  document.getElementById('reg-error').textContent          = '';
+  setTimeout(() => document.getElementById('reg-name').focus(), 100);
+}
+
+async function doRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+  const errEl    = document.getElementById('reg-error');
+
+  errEl.textContent = '';
+  if (!name)              { errEl.textContent = 'Nama tidak boleh kosong.'; return; }
+  if (password.length < 4){ errEl.textContent = 'Password minimal 4 karakter.'; return; }
+  if (password !== confirm){ errEl.textContent = 'Password tidak cocok.'; return; }
+
+  try {
+    // Cek apakah nama sudah terdaftar di Supabase
+    const { data: existing } = await db
+      .from('user_sessions')
+      .select('id')
+      .eq('staff_name', name)
+      .maybeSingle();
+
+    if (existing) {
+      errEl.textContent = 'Nama ini sudah terdaftar. Silakan masuk.';
+      return;
+    }
+
+    const deviceId = generateUUID();
+    sessionStorage.setItem('sop_device_id', deviceId);
+    appState.deviceId  = deviceId;
+    appState.staffName = name;
+    appState.role      = selectedRegRole;
+    appState.activeShift = getAutoShift();
+
+    const { error } = await db.from('user_sessions').insert({
+      device_id:    deviceId,
+      staff_name:   name,
+      role:         selectedRegRole,
+      password:     password,
+      active_shift: appState.activeShift,
+      last_seen:    new Date().toISOString(),
+    });
+
+    if (error) throw error;
+
+    // Simpan ke localStorage untuk login berikutnya
+    localStorage.setItem('sop_saved_name', name);
+    localStorage.setItem('sop_device_id_persist', deviceId);
+
+    syncProfileUI();
+    hideWelcomeScreen();
+    showToast(`Selamat datang, ${name}! 🍜`, 'success');
+  } catch (err) {
+    errEl.textContent = 'Gagal mendaftar: ' + err.message;
+    console.error(err);
+  }
+}
+
+async function doLogin() {
+  const name     = document.getElementById('login-name').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+
+  errEl.textContent = '';
+  if (!name)     { errEl.textContent = 'Masukkan nama kamu.'; return; }
+  if (!password) { errEl.textContent = 'Masukkan password.'; return; }
+
+  try {
+    const { data: session, error } = await db
+      .from('user_sessions')
+      .select('*')
+      .eq('staff_name', name)
+      .eq('password', password)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!session) {
+      errEl.textContent = 'Nama atau password salah.';
+      return;
+    }
+
+    // Login berhasil
+    appState.deviceId    = session.device_id;
+    appState.staffName   = session.staff_name;
+    appState.role        = session.role;
+    appState.activeShift = session.active_shift || getAutoShift();
+
+    sessionStorage.setItem('sop_device_id', session.device_id);
+    localStorage.setItem('sop_saved_name', name);
+    localStorage.setItem('sop_device_id_persist', session.device_id);
+
+    // Update last_seen & shift
+    await db.from('user_sessions')
+      .update({ last_seen: new Date().toISOString(), active_shift: appState.activeShift })
+      .eq('id', session.id);
+
+    document.getElementById('device-id-display').textContent =
+      session.device_id.slice(0, 16) + '…';
+
+    syncProfileUI();
+    hideWelcomeScreen();
+    showToast(`Selamat datang kembali, ${name}! 🍜`, 'success');
+  } catch (err) {
+    errEl.textContent = 'Gagal masuk: ' + err.message;
+    console.error(err);
+  }
+}
+
+function syncProfileUI() {
+  document.getElementById('staff-name-input').value = appState.staffName;
+  document.getElementById('role-select').value      = appState.role;
+  document.getElementById('device-id-display').textContent =
+    (appState.deviceId || '—').slice(0, 16) + '…';
+  updateShiftChips();
+}
+
+async function initDeviceSession() {
+  // Coba ambil device_id dari sessionStorage (tab aktif) atau localStorage (login persisten)
+  let deviceId = sessionStorage.getItem('sop_device_id')
+              || localStorage.getItem('sop_device_id_persist');
+
+  if (deviceId) {
+    // Ada device_id tersimpan — coba load session
     try {
-      // Cek sesi yang ada
-      const { data: existing } = await db
+      const { data: session } = await db
         .from('user_sessions')
         .select('*')
         .eq('device_id', deviceId)
         .maybeSingle();
 
-      if (existing) {
-        appState.staffName = existing.staff_name || '';
-        appState.role      = existing.role || 'koki';
-        appState.activeShift = existing.active_shift || getAutoShift();
-      } else {
-        appState.activeShift = getAutoShift();
-        await db.from('user_sessions').insert({
-          device_id: deviceId,
-          staff_name: '',
-          role: 'koki',
-          active_shift: appState.activeShift,
-          last_seen: new Date().toISOString(),
-        });
+      if (session && session.staff_name && session.password) {
+        // Session valid & sudah setup — langsung masuk
+        appState.deviceId    = session.device_id;
+        appState.staffName   = session.staff_name;
+        appState.role        = session.role || 'koki';
+        appState.activeShift = session.active_shift || getAutoShift();
+
+        sessionStorage.setItem('sop_device_id', deviceId);
+
+        await db.from('user_sessions')
+          .update({ last_seen: new Date().toISOString() })
+          .eq('device_id', deviceId);
+
+        syncProfileUI();
+        return; // Tidak perlu tampilkan welcome
       }
-
-      // Update last_seen
-      await db.from('user_sessions')
-        .update({ last_seen: new Date().toISOString(), active_shift: appState.activeShift })
-        .eq('device_id', deviceId);
-
     } catch (err) {
-      console.warn('Session init error:', err);
-      appState.activeShift = getAutoShift();
+      console.warn('Session load error:', err);
     }
-
-    // Sync UI profil
-    document.getElementById('staff-name-input').value = appState.staffName;
-    document.getElementById('role-select').value = appState.role;
-    updateShiftChips();
   }
+
+  // Tidak ada session valid — tampilkan welcome screen
+  // Isi nama terakhir jika ada
+  const savedName = localStorage.getItem('sop_saved_name');
+  if (savedName) {
+    document.getElementById('login-name').value = savedName;
+    showLoginMode();
+  } else {
+    showRegisterMode();
+  }
+
+  showWelcomeScreen();
+  // Return promise yang resolve saat login/register selesai
+  // (init() akan lanjut setelah hideWelcomeScreen dipanggil)
+  await waitForLogin();
+}
+
+function waitForLogin() {
+  return new Promise(resolve => {
+    const observer = new MutationObserver(() => {
+      if (!document.getElementById('welcome-overlay').classList.contains('active')) {
+        observer.disconnect();
+        resolve();
+      }
+    });
+    observer.observe(document.getElementById('welcome-overlay'), {
+      attributes: true, attributeFilter: ['class']
+    });
+  });
+}
 
   // ============================================================
   //  LOAD DATA DARI SUPABASE
@@ -2126,21 +2482,30 @@ function shiftLabel(shift) {
   // ============================================================
   //  PROFIL
   // ============================================================
-  async function saveProfile() {
-    const name = document.getElementById('staff-name-input').value.trim();
-    const role = document.getElementById('role-select').value;
-    appState.staffName = name;
-    appState.role = role;
+async function saveProfile() {
+  const name = document.getElementById('staff-name-input').value.trim();
+  const role = document.getElementById('role-select').value;
 
-    try {
-      await db.from('user_sessions')
-        .update({ staff_name: name, role: role })
-        .eq('device_id', appState.deviceId);
-      showToast('Profil disimpan!', 'success');
-    } catch (err) {
-      showToast('Gagal menyimpan profil.', 'error');
-    }
+  if (!name) { showToast('Nama tidak boleh kosong.', 'error'); return; }
+  if (!appState.deviceId) { showToast('Sesi tidak valid, coba refresh.', 'error'); return; }
+
+  appState.staffName = name;
+  appState.role      = role;
+
+  try {
+    const { error } = await db.from('user_sessions')
+      .update({ staff_name: name, role: role })
+      .eq('device_id', appState.deviceId);
+
+    if (error) throw error;
+    localStorage.setItem('sop_saved_name', name);
+    syncProfileUI();
+    showToast('Profil berhasil disimpan! ✓', 'success');
+  } catch (err) {
+    showToast('Gagal menyimpan profil: ' + err.message, 'error');
+    console.error('saveProfile error:', err);
   }
+}
 
   async function setShift(shift) {
     appState.activeShift = shift;
@@ -2290,40 +2655,41 @@ function shiftLabel(shift) {
   // ============================================================
   //  MAIN INIT
   // ============================================================
-  async function init() {
-      // Di dalam async function init(), tambahkan di baris pertama:
-loadCustomK3();
-    // Restore dark mode pref
-    if (localStorage.getItem('sop_dark_mode') === '1') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      document.getElementById('dark-mode-toggle').checked = true;
-    }
-
-    try {
-      await initDeviceSession();
-      await Promise.all([loadModules(), loadSteps()]);
-      await loadProgress();
-      subscribeRealtime();
-
-      renderDashboard();
-      renderModuleList();
-    } catch (err) {
-      console.error('Init error:', err);
-      showToast('Gagal terhubung ke server. Periksa koneksi internet.', 'error');
-    }
-
-    // Search listener
-    document.getElementById('search-input').addEventListener('input', e => {
-      handleSearch(e.target.value);
-    });
-
-    initNavigation();
-
-    // Hide loading screen
-    const ls = document.getElementById('loading-screen');
-    ls.classList.add('fade-out');
-    setTimeout(() => ls.remove(), 350);
+async function init() {
+  // Restore dark mode pref — sebelum apapun
+  if (localStorage.getItem('sop_dark_mode') === '1') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('dark-mode-toggle').checked = true;
   }
+
+  // Load K3 custom dari localStorage (harus setelah emergencyData didefinisikan)
+  loadCustomK3();
+
+  try {
+    await initDeviceSession(); // Ini akan menunggu login jika belum ada sesi
+    await Promise.all([loadModules(), loadSteps()]);
+    await loadProgress();
+    subscribeRealtime();
+
+    renderDashboard();
+    renderModuleList();
+  } catch (err) {
+    console.error('Init error:', err);
+    showToast('Gagal terhubung ke server. Periksa koneksi internet.', 'error');
+  }
+
+  // Search listener
+  document.getElementById('search-input').addEventListener('input', e => {
+    handleSearch(e.target.value);
+  });
+
+  initNavigation();
+
+  // Hide loading screen
+  const ls = document.getElementById('loading-screen');
+  ls.classList.add('fade-out');
+  setTimeout(() => ls.remove(), 350);
+}
   // ============================================================
 //  ADMIN: TAB SWITCH
 // ============================================================
