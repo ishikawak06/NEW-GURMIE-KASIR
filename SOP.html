@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>SOP Mie Ayam Pak Budi</title>
+  <title>SOP 🍜 Gurmie Ayam</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" />
 
   <style>
     /* ============================================================
@@ -1032,6 +1032,41 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-sub { font-size: 13px; color: var(--text-muted); }
+    .admin-tab { color: var(--text-secondary); transition: color var(--transition); }
+.admin-tab.active { color: var(--primary); border-bottom-color: var(--primary) !important; }
+
+.admin-item {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+}
+.admin-item-icon {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.admin-item-info { flex: 1; min-width: 0; }
+.admin-item-name { font-size: 14px; font-weight: 700; }
+.admin-item-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.admin-btn-sm {
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  font-family: var(--font-body);
+  font-size: 12px; font-weight: 700;
+  cursor: pointer; min-height: 32px;
+  color: var(--text-primary);
+  transition: background var(--transition);
+}
+.admin-btn-sm:hover { background: var(--surface-2); }
+.admin-btn-sm.danger { border-color: var(--danger); color: var(--danger); }
+.admin-btn-sm.danger:hover { background: var(--danger-light); }
   </style>
 </head>
 
@@ -1040,7 +1075,7 @@
        LOADING SCREEN
   ============================= -->
   <div id="loading-screen">
-    <div class="loading-logo">🍜 Mie Ayam Pak Budi</div>
+    <div class="loading-logo">🍜 Gurmie Ayam</div>
     <div class="loading-spinner"></div>
     <div class="loading-sub">Memuat SOP…</div>
   </div>
@@ -1081,7 +1116,7 @@
     <!-- SIDEBAR (tablet/desktop) -->
     <nav id="sidebar">
       <div class="sidebar-logo">
-        <div class="kios-name">🍜 Mie Ayam Pak Budi</div>
+        <div class="kios-name">🍜 Gurmie Ayam</div>
         <div class="version">SOP v1.0</div>
       </div>
       <div class="sidebar-nav">
@@ -1097,6 +1132,9 @@
         <div class="sidebar-nav-item" data-tab="profil">
           <i class="ti ti-user-circle"></i> Profil
         </div>
+        <div class="sidebar-nav-item" data-tab="admin" id="sidebar-admin-tab">
+  <i class="ti ti-settings"></i> Admin
+</div>
       </div>
     </nav>
 
@@ -1110,7 +1148,7 @@
         <div id="screen-beranda" class="screen active">
           <!-- Hero -->
           <div class="dashboard-hero">
-            <div class="hero-kios-name">Mie Ayam Pak Budi</div>
+            <div class="hero-kios-name">🍜 Gurmie Ayam</div>
             <div class="hero-meta" id="hero-meta">Shift Pagi · Memuat tanggal…</div>
             <div class="hero-progress-label" id="hero-progress-label">0 dari 0 tugas selesai</div>
             <div class="progress-bar-wrap">
@@ -1245,11 +1283,10 @@
             <div class="profile-section-title">Shift Aktif</div>
             <div class="profile-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
               <div class="profile-row-label">Pilih Shift Manual</div>
-              <div class="shift-chips">
-                <div class="shift-chip" data-shift="pagi" onclick="setShift('pagi')">🌅 Pagi</div>
-                <div class="shift-chip" data-shift="siang" onclick="setShift('siang')">☀️ Siang</div>
-                <div class="shift-chip" data-shift="malam" onclick="setShift('malam')">🌙 Malam</div>
-              </div>
+<div class="shift-chips">
+  <div class="shift-chip" data-shift="pagi_sore" onclick="setShift('pagi_sore')">🌅 Pagi–Sore</div>
+  <div class="shift-chip" data-shift="sore_malam" onclick="setShift('sore_malam')">🌙 Sore–Malam</div>
+</div>
             </div>
           </div>
 
@@ -1270,8 +1307,8 @@
           <div class="profile-section">
             <div class="profile-section-title">Info Aplikasi</div>
             <div class="profile-row">
-              <div class="profile-row-label">Nama Kios</div>
-              <div class="profile-row-value">Mie Ayam Pak Budi</div>
+              <div class="profile-row-label">Nama toko kita</div>
+              <div class="profile-row-value">🍜 Gurmie Ayam</div>
             </div>
             <div class="profile-row">
               <div class="profile-row-label">Versi App</div>
@@ -1282,8 +1319,107 @@
               <div class="profile-row-value" id="device-id-display" style="font-size:10px; word-break:break-all; max-width:180px;">—</div>
             </div>
           </div>
-
+<!-- Akses Admin (manajer only) -->
+<div class="profile-section">
+  <div class="profile-section-title">Admin</div>
+  <div class="profile-row" style="cursor:pointer;" onclick="openAdminScreen()">
+    <div class="profile-row-label"><i class="ti ti-settings" style="margin-right:6px;"></i>Kelola Modul SOP & K3</div>
+    <i class="ti ti-chevron-right" style="color:var(--text-muted);"></i>
+  </div>
+</div>
         </div>
+        <!-- ==========================================
+     SCREEN: ADMIN (Manajer only)
+=========================================== -->
+<div id="screen-admin" class="screen">
+  <div class="page-header">
+    <h1>⚙️ Kelola SOP</h1>
+    <div class="sub">Hanya untuk Manajer</div>
+  </div>
+
+  <!-- Tab Admin -->
+  <div style="display:flex; gap:0; border-bottom:1px solid var(--border); background:var(--surface);">
+    <div class="admin-tab active" data-admin-tab="modul" onclick="switchAdminTab('modul')" style="flex:1; padding:10px; text-align:center; font-size:13px; font-weight:700; cursor:pointer; border-bottom:2px solid transparent;">Modul SOP</div>
+    <div class="admin-tab" data-admin-tab="darurat" onclick="switchAdminTab('darurat')" style="flex:1; padding:10px; text-align:center; font-size:13px; font-weight:700; cursor:pointer; border-bottom:2px solid transparent;">Darurat K3</div>
+  </div>
+
+  <!-- Panel: Modul SOP -->
+  <div id="admin-panel-modul">
+    <div style="padding:12px 16px;">
+      <button onclick="openAddModuleForm()" style="display:flex; align-items:center; gap:6px; padding:10px 16px; background:var(--primary); color:white; border:none; border-radius:var(--radius-md); font-family:var(--font-body); font-size:13px; font-weight:700; cursor:pointer; width:100%; justify-content:center; min-height:44px;">
+        <i class="ti ti-plus"></i> Tambah Modul Baru
+      </button>
+    </div>
+    <div id="admin-module-list"></div>
+  </div>
+
+  <!-- Panel: Darurat K3 -->
+  <div id="admin-panel-darurat" style="display:none;">
+    <div style="padding:12px 16px; font-size:12px; color:var(--text-muted);">Klik prosedur untuk mengedit langkah-langkahnya.</div>
+    <div id="admin-k3-list"></div>
+  </div>
+
+  <!-- Form Tambah/Edit Modul (inline, hidden) -->
+  <div id="admin-module-form" style="display:none; padding:16px; background:var(--surface); border-top:1px solid var(--border); margin-top:8px;">
+    <div style="font-family:var(--font-heading); font-size:15px; font-weight:700; margin-bottom:12px;" id="admin-form-title">Tambah Modul</div>
+    <input id="amod-name" type="text" placeholder="Nama modul (mis: Pembukaan Kios)" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); margin-bottom:8px; min-height:44px; outline:none;" />
+    <div style="display:flex; gap:8px; margin-bottom:8px;">
+      <input id="amod-icon" type="text" placeholder="Icon Tabler (ti-list)" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); min-height:44px; outline:none;" />
+      <input id="amod-color" type="color" value="#D4521A" style="width:48px; height:44px; border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; background:var(--surface-1);" />
+    </div>
+    <input id="amod-order" type="number" placeholder="Urutan (0, 1, 2…)" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); margin-bottom:12px; min-height:44px; outline:none;" />
+    <div style="display:flex; gap:8px;">
+      <button onclick="cancelModuleForm()" style="flex:1; padding:11px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--surface-1); color:var(--text-primary); min-height:44px;">Batal</button>
+      <button onclick="saveModuleForm()" style="flex:1; padding:11px; border:none; border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--primary); color:white; min-height:44px;">Simpan</button>
+    </div>
+    <input type="hidden" id="amod-edit-id" value="" />
+  </div>
+
+  <!-- Form Tambah/Edit Step SOP (inline, hidden) -->
+  <div id="admin-step-panel" style="display:none; padding:0;">
+    <div class="checklist-header" style="position:sticky; top:0; z-index:20;">
+      <button class="btn-back" onclick="closeStepPanel()"><i class="ti ti-chevron-left"></i></button>
+      <div class="checklist-mod-title" id="admin-step-panel-title">Langkah SOP</div>
+      <button onclick="openAddStepForm()" style="padding:6px 12px; background:var(--primary); color:white; border:none; border-radius:var(--radius-sm); font-size:12px; font-weight:700; cursor:pointer; min-height:36px; display:flex; align-items:center; gap:4px;">
+        <i class="ti ti-plus"></i> Tambah
+      </button>
+    </div>
+    <div id="admin-step-list"></div>
+    <!-- Form Step -->
+    <div id="admin-step-form" style="display:none; padding:16px; background:var(--surface); border-top:1px solid var(--border);">
+      <div style="font-family:var(--font-heading); font-size:14px; font-weight:700; margin-bottom:10px;" id="admin-step-form-title">Tambah Langkah</div>
+      <input id="astep-title" type="text" placeholder="Judul langkah" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); margin-bottom:8px; min-height:44px; outline:none;" />
+      <textarea id="astep-desc" placeholder="Deskripsi (opsional)" rows="3" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); margin-bottom:8px; resize:vertical; outline:none;"></textarea>
+      <input id="astep-group" type="text" placeholder="Grup/Kategori (mis: Persiapan)" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); margin-bottom:8px; min-height:44px; outline:none;" />
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input id="astep-duration" type="number" placeholder="Durasi (menit)" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); min-height:44px; outline:none;" />
+        <input id="astep-order" type="number" placeholder="Urutan" style="flex:1; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:14px; background:var(--surface-1); color:var(--text-primary); min-height:44px; outline:none;" />
+      </div>
+      <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:14px; cursor:pointer;">
+        <input type="checkbox" id="astep-critical" />
+        <span>Tandai sebagai Langkah Wajib (Critical)</span>
+      </label>
+      <div style="display:flex; gap:8px;">
+        <button onclick="cancelStepForm()" style="flex:1; padding:11px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--surface-1); color:var(--text-primary); min-height:44px;">Batal</button>
+        <button onclick="saveStepForm()" style="flex:1; padding:11px; border:none; border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--primary); color:white; min-height:44px;">Simpan</button>
+      </div>
+      <input type="hidden" id="astep-edit-id" value="" />
+      <input type="hidden" id="astep-module-id" value="" />
+    </div>
+  </div>
+
+  <!-- Form Edit K3 (inline) -->
+  <div id="admin-k3-form" style="display:none; padding:16px; background:var(--surface); border-top:1px solid var(--border);">
+    <div style="font-family:var(--font-heading); font-size:15px; font-weight:700; margin-bottom:4px;" id="admin-k3-form-title">Edit Prosedur</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Satu langkah per baris</div>
+    <textarea id="ak3-steps" rows="10" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:13px; background:var(--surface-1); color:var(--text-primary); margin-bottom:8px; resize:vertical; outline:none;"></textarea>
+    <div style="display:flex; gap:8px;">
+      <button onclick="cancelK3Form()" style="flex:1; padding:11px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--surface-1); color:var(--text-primary); min-height:44px;">Batal</button>
+      <button onclick="saveK3Form()" style="flex:1; padding:11px; border:none; border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--primary); color:white; min-height:44px;">Simpan</button>
+    </div>
+    <input type="hidden" id="ak3-key" value="" />
+  </div>
+</div>
       </div>
 
       <!-- BOTTOM NAV (mobile) -->
@@ -1362,16 +1498,14 @@
     return new Date().toISOString().slice(0, 10);
   }
 
-  function getAutoShift() {
-    const h = new Date().getHours();
-    if (h >= 6 && h < 14)  return 'pagi';
-    if (h >= 14 && h < 21) return 'siang';
-    return 'malam';
-  }
+function getAutoShift() {
+  const h = new Date().getHours();
+  return (h >= 6 && h < 17) ? 'pagi_sore' : 'sore_malam';
+}
 
-  function shiftLabel(shift) {
-    return { pagi: 'Shift Pagi 🌅', siang: 'Shift Siang ☀️', malam: 'Shift Malam 🌙' }[shift] || shift;
-  }
+function shiftLabel(shift) {
+  return { pagi_sore: 'Shift Pagi–Sore 🌅', sore_malam: 'Shift Sore–Malam 🌙' }[shift] || shift;
+}
 
   function formatDate(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
@@ -2157,6 +2291,8 @@
   //  MAIN INIT
   // ============================================================
   async function init() {
+      // Di dalam async function init(), tambahkan di baris pertama:
+loadCustomK3();
     // Restore dark mode pref
     if (localStorage.getItem('sop_dark_mode') === '1') {
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -2188,6 +2324,354 @@
     ls.classList.add('fade-out');
     setTimeout(() => ls.remove(), 350);
   }
+  // ============================================================
+//  ADMIN: TAB SWITCH
+// ============================================================
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.adminTab === tab));
+  document.getElementById('admin-panel-modul').style.display  = tab === 'modul'   ? 'block' : 'none';
+  document.getElementById('admin-panel-darurat').style.display = tab === 'darurat' ? 'block' : 'none';
+}
+
+function openAdminScreen() {
+  if (appState.role !== 'manajer') {
+    showToast('Halaman ini hanya untuk Manajer.', 'error'); return;
+  }
+  switchTab('admin');
+  renderAdminModuleList();
+  renderAdminK3List();
+}
+
+// ============================================================
+//  ADMIN: RENDER MODULE LIST
+// ============================================================
+function renderAdminModuleList() {
+  const container = document.getElementById('admin-module-list');
+  if (!appState.modules.length) {
+    container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada modul. Klik "Tambah Modul Baru".</p>';
+    return;
+  }
+  container.innerHTML = appState.modules.map(mod => {
+    const stepCount = appState.steps.filter(s => s.module_id === mod.id).length;
+    const color = mod.color_hex || '#888';
+    return `
+      <div class="admin-item">
+        <div class="admin-item-icon" style="background:${color}20; color:${color}">
+          <i class="ti ${mod.icon || 'ti-list'}"></i>
+        </div>
+        <div class="admin-item-info">
+          <div class="admin-item-name">${mod.name}</div>
+          <div class="admin-item-sub">${stepCount} langkah · urutan ${mod.order_index}</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="admin-btn-sm" onclick="openStepPanel('${mod.id}')">Langkah</button>
+          <button class="admin-btn-sm" onclick="editModuleForm('${mod.id}')">Edit</button>
+          <button class="admin-btn-sm danger" onclick="confirmDeleteModule('${mod.id}')">Hapus</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+//  ADMIN: MODUL FORM
+// ============================================================
+let editingModuleId = null;
+
+function openAddModuleForm() {
+  editingModuleId = null;
+  document.getElementById('admin-form-title').textContent = 'Tambah Modul';
+  document.getElementById('amod-name').value  = '';
+  document.getElementById('amod-icon').value  = 'ti-list';
+  document.getElementById('amod-color').value = '#D4521A';
+  document.getElementById('amod-order').value = appState.modules.length;
+  document.getElementById('amod-edit-id').value = '';
+  document.getElementById('admin-module-form').style.display = 'block';
+  document.getElementById('amod-name').focus();
+}
+
+function editModuleForm(modId) {
+  const mod = appState.modules.find(m => m.id === modId);
+  if (!mod) return;
+  editingModuleId = modId;
+  document.getElementById('admin-form-title').textContent = 'Edit Modul';
+  document.getElementById('amod-name').value  = mod.name;
+  document.getElementById('amod-icon').value  = mod.icon || 'ti-list';
+  document.getElementById('amod-color').value = mod.color_hex || '#D4521A';
+  document.getElementById('amod-order').value = mod.order_index;
+  document.getElementById('amod-edit-id').value = modId;
+  document.getElementById('admin-module-form').style.display = 'block';
+  document.getElementById('amod-name').focus();
+}
+
+function cancelModuleForm() {
+  document.getElementById('admin-module-form').style.display = 'none';
+}
+
+async function saveModuleForm() {
+  const name  = document.getElementById('amod-name').value.trim();
+  const icon  = document.getElementById('amod-icon').value.trim() || 'ti-list';
+  const color = document.getElementById('amod-color').value;
+  const order = parseInt(document.getElementById('amod-order').value) || 0;
+  const editId = document.getElementById('amod-edit-id').value;
+
+  if (!name) { showToast('Nama modul tidak boleh kosong.', 'error'); return; }
+
+  try {
+    if (editId) {
+      const { error } = await db.from('modules').update({ name, icon, color_hex: color, order_index: order }).eq('id', editId);
+      if (error) throw error;
+      const idx = appState.modules.findIndex(m => m.id === editId);
+      if (idx > -1) appState.modules[idx] = { ...appState.modules[idx], name, icon, color_hex: color, order_index: order };
+      showToast('Modul berhasil diupdate!', 'success');
+    } else {
+      const { data, error } = await db.from('modules').insert({ name, icon, color_hex: color, order_index: order }).select().single();
+      if (error) throw error;
+      appState.modules.push(data);
+      appState.modules.sort((a, b) => a.order_index - b.order_index);
+      showToast('Modul berhasil ditambahkan!', 'success');
+    }
+    cancelModuleForm();
+    renderAdminModuleList();
+    renderDashboard();
+    renderModuleList();
+  } catch (err) {
+    showToast('Gagal menyimpan modul: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+async function confirmDeleteModule(modId) {
+  const mod = appState.modules.find(m => m.id === modId);
+  const stepCount = appState.steps.filter(s => s.module_id === modId).length;
+  openModal(
+    'Hapus Modul?',
+    `Modul "${mod?.name}" dan ${stepCount} langkah SOP-nya akan dihapus permanen.`,
+    () => deleteModule(modId)
+  );
+}
+
+async function deleteModule(modId) {
+  try {
+    // Hapus steps dulu (cascade manual karena RLS)
+    await db.from('sop_steps').delete().eq('module_id', modId);
+    const { error } = await db.from('modules').delete().eq('id', modId);
+    if (error) throw error;
+    appState.modules = appState.modules.filter(m => m.id !== modId);
+    appState.steps   = appState.steps.filter(s => s.module_id !== modId);
+    renderAdminModuleList();
+    renderDashboard();
+    renderModuleList();
+    showToast('Modul dihapus.', 'info');
+  } catch (err) {
+    showToast('Gagal hapus modul: ' + err.message, 'error');
+  }
+}
+
+// ============================================================
+//  ADMIN: STEP PANEL
+// ============================================================
+let adminActiveModuleId = null;
+
+function openStepPanel(modId) {
+  adminActiveModuleId = modId;
+  const mod = appState.modules.find(m => m.id === modId);
+  document.getElementById('admin-step-panel-title').textContent = mod?.name || 'Langkah SOP';
+  document.getElementById('admin-panel-modul').style.display   = 'none';
+  document.getElementById('admin-module-form').style.display   = 'none';
+  document.getElementById('admin-step-panel').style.display    = 'block';
+  renderAdminStepList(modId);
+}
+
+function closeStepPanel() {
+  document.getElementById('admin-step-panel').style.display = 'none';
+  document.getElementById('admin-panel-modul').style.display = 'block';
+  adminActiveModuleId = null;
+  renderAdminModuleList();
+}
+
+function renderAdminStepList(modId) {
+  const steps = appState.steps.filter(s => s.module_id === modId);
+  const container = document.getElementById('admin-step-list');
+  if (!steps.length) {
+    container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada langkah. Klik "+ Tambah".</p>';
+    return;
+  }
+  container.innerHTML = steps.map(step => `
+    <div class="admin-item">
+      <div class="admin-item-info">
+        <div class="admin-item-name">${step.title}</div>
+        <div class="admin-item-sub">
+          ${step.group_name || 'Umum'} 
+          ${step.duration_minutes ? '· ' + step.duration_minutes + ' mnt' : ''}
+          ${step.is_critical ? ' · ⚠️ Wajib' : ''}
+        </div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="admin-btn-sm" onclick="editStepForm('${step.id}')">Edit</button>
+        <button class="admin-btn-sm danger" onclick="confirmDeleteStep('${step.id}')">Hapus</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openAddStepForm() {
+  document.getElementById('admin-step-form-title').textContent = 'Tambah Langkah';
+  document.getElementById('astep-title').value    = '';
+  document.getElementById('astep-desc').value     = '';
+  document.getElementById('astep-group').value    = '';
+  document.getElementById('astep-duration').value = '';
+  document.getElementById('astep-order').value    = appState.steps.filter(s => s.module_id === adminActiveModuleId).length;
+  document.getElementById('astep-critical').checked = false;
+  document.getElementById('astep-edit-id').value  = '';
+  document.getElementById('astep-module-id').value = adminActiveModuleId;
+  document.getElementById('admin-step-form').style.display = 'block';
+  document.getElementById('astep-title').focus();
+}
+
+function editStepForm(stepId) {
+  const step = appState.steps.find(s => s.id === stepId);
+  if (!step) return;
+  document.getElementById('admin-step-form-title').textContent = 'Edit Langkah';
+  document.getElementById('astep-title').value    = step.title;
+  document.getElementById('astep-desc').value     = step.description || '';
+  document.getElementById('astep-group').value    = step.group_name || '';
+  document.getElementById('astep-duration').value = step.duration_minutes || '';
+  document.getElementById('astep-order').value    = step.order_index;
+  document.getElementById('astep-critical').checked = step.is_critical || false;
+  document.getElementById('astep-edit-id').value  = stepId;
+  document.getElementById('astep-module-id').value = step.module_id;
+  document.getElementById('admin-step-form').style.display = 'block';
+  document.getElementById('astep-title').focus();
+}
+
+function cancelStepForm() {
+  document.getElementById('admin-step-form').style.display = 'none';
+}
+
+async function saveStepForm() {
+  const title       = document.getElementById('astep-title').value.trim();
+  const desc        = document.getElementById('astep-desc').value.trim();
+  const group       = document.getElementById('astep-group').value.trim();
+  const duration    = parseInt(document.getElementById('astep-duration').value) || null;
+  const order       = parseInt(document.getElementById('astep-order').value) || 0;
+  const isCritical  = document.getElementById('astep-critical').checked;
+  const editId      = document.getElementById('astep-edit-id').value;
+  const moduleId    = document.getElementById('astep-module-id').value;
+
+  if (!title) { showToast('Judul langkah tidak boleh kosong.', 'error'); return; }
+
+  try {
+    if (editId) {
+      const { error } = await db.from('sop_steps').update({
+        title, description: desc || null, group_name: group || null,
+        duration_minutes: duration, order_index: order, is_critical: isCritical
+      }).eq('id', editId);
+      if (error) throw error;
+      const idx = appState.steps.findIndex(s => s.id === editId);
+      if (idx > -1) appState.steps[idx] = { ...appState.steps[idx], title, description: desc || null, group_name: group || null, duration_minutes: duration, order_index: order, is_critical: isCritical };
+      showToast('Langkah diupdate!', 'success');
+    } else {
+      const { data, error } = await db.from('sop_steps').insert({
+        module_id: moduleId, title, description: desc || null, group_name: group || null,
+        duration_minutes: duration, order_index: order, is_critical: isCritical
+      }).select().single();
+      if (error) throw error;
+      appState.steps.push(data);
+      showToast('Langkah ditambahkan!', 'success');
+    }
+    cancelStepForm();
+    renderAdminStepList(adminActiveModuleId);
+    renderDashboard();
+    renderModuleList();
+  } catch (err) {
+    showToast('Gagal menyimpan: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+async function confirmDeleteStep(stepId) {
+  const step = appState.steps.find(s => s.id === stepId);
+  openModal('Hapus Langkah?', `"${step?.title}" akan dihapus permanen.`, () => deleteStep(stepId));
+}
+
+async function deleteStep(stepId) {
+  try {
+    await db.from('checklist_progress').delete().eq('step_id', stepId);
+    const { error } = await db.from('sop_steps').delete().eq('id', stepId);
+    if (error) throw error;
+    appState.steps = appState.steps.filter(s => s.id !== stepId);
+    if (adminActiveModuleId) renderAdminStepList(adminActiveModuleId);
+    renderDashboard(); renderModuleList();
+    showToast('Langkah dihapus.', 'info');
+  } catch (err) {
+    showToast('Gagal hapus: ' + err.message, 'error');
+  }
+}
+
+// ============================================================
+//  ADMIN: K3 EDITOR
+// ============================================================
+function renderAdminK3List() {
+  const container = document.getElementById('admin-k3-list');
+  const items = [
+    { key: 'api',   icon: 'ti-flame',             label: '🔥 Kebakaran' },
+    { key: 'luka',  icon: 'ti-bandage',            label: '🩹 Luka & Cedera' },
+    { key: 'racun', icon: 'ti-shield-exclamation', label: '☠️ Keracunan Makanan' },
+  ];
+  container.innerHTML = items.map(item => `
+    <div class="admin-item" style="cursor:pointer;" onclick="openK3Form('${item.key}')">
+      <div class="admin-item-icon" style="background:var(--danger-light); color:var(--danger)">
+        <i class="ti ${item.icon}"></i>
+      </div>
+      <div class="admin-item-info">
+        <div class="admin-item-name">${item.label}</div>
+        <div class="admin-item-sub">${emergencyData[item.key].steps.length} langkah</div>
+      </div>
+      <i class="ti ti-pencil" style="color:var(--text-muted); font-size:18px;"></i>
+    </div>
+  `).join('');
+}
+
+function openK3Form(key) {
+  const data = emergencyData[key];
+  document.getElementById('admin-k3-form-title').textContent = 'Edit: ' + data.title;
+  document.getElementById('ak3-steps').value = data.steps.join('\n');
+  document.getElementById('ak3-key').value   = key;
+  document.getElementById('admin-k3-form').style.display = 'block';
+  document.getElementById('admin-k3-list').style.display = 'none';
+}
+
+function cancelK3Form() {
+  document.getElementById('admin-k3-form').style.display  = 'none';
+  document.getElementById('admin-k3-list').style.display  = 'block';
+}
+
+function saveK3Form() {
+  const key   = document.getElementById('ak3-key').value;
+  const lines = document.getElementById('ak3-steps').value
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+  if (!lines.length) { showToast('Minimal 1 langkah darurat.', 'error'); return; }
+  emergencyData[key].steps = lines;
+  // Simpan ke localStorage agar persist
+  localStorage.setItem('k3_custom_' + key, JSON.stringify(lines));
+  cancelK3Form();
+  renderAdminK3List();
+  showToast('Prosedur K3 disimpan!', 'success');
+}
+
+// Load K3 custom dari localStorage saat init
+function loadCustomK3() {
+  ['api', 'luka', 'racun'].forEach(key => {
+    const saved = localStorage.getItem('k3_custom_' + key);
+    if (saved) {
+      try { emergencyData[key].steps = JSON.parse(saved); } catch(e) {}
+    }
+  });
+}
 
   window.addEventListener('DOMContentLoaded', init);
   </script>
