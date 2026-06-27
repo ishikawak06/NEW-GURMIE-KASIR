@@ -1201,11 +1201,180 @@
 .admin-btn-sm:hover { background: var(--surface-2); }
 .admin-btn-sm.danger { border-color: var(--danger); color: var(--danger); }
 .admin-btn-sm.danger:hover { background: var(--danger-light); }
+/* ============================================================
+   PRESENCE AVATARS
+============================================================ */
+.presence-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.12);
+  border-radius: var(--radius-md);
+  margin-top: 14px;
+}
+.presence-bar-label {
+  font-size: 11px;
+  opacity: 0.8;
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: block;
+}
+.presence-avatar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 99px;
+  padding: 4px 10px 4px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+}
+.presence-avatar .av-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #4ade80;
+  flex-shrink: 0;
+}
+.presence-avatar .av-dot.offline { background: rgba(255,255,255,0.35); }
+
+/* ============================================================
+   CATATAN MODAL (saat centang step)
+============================================================ */
+#note-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 6000;
+  align-items: flex-end;
+}
+#note-modal-overlay.active { display: flex; }
+.note-modal-sheet {
+  background: var(--surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 20px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  animation: slideUp 200ms ease;
+}
+.note-modal-sheet textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 14px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  resize: none;
+  outline: none;
+  margin-bottom: 12px;
+}
+.note-modal-sheet textarea:focus { border-color: var(--primary); }
+
+/* ============================================================
+   OMZET CARD
+============================================================ */
+.omzet-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  padding: 12px 16px 0;
+}
+.omzet-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.omzet-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.omzet-value {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.omzet-value.green { color: var(--success); }
+.omzet-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   HARI KE- BADGE
+============================================================ */
+.hari-ke-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 10px;
+}
+
+/* ============================================================
+   CONFETTI CANVAS
+============================================================ */
+#confetti-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 8000;
+  display: none;
+}
+
+/* ============================================================
+   ITEM NOTE DISPLAY
+============================================================ */
+.item-note {
+  font-size: 11px;
+  color: var(--info);
+  margin-top: 3px;
+  font-style: italic;
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+.item-note i { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+
+/* Staff checklist status */
+.staff-unchecked-tag {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--warning-light);
+  color: var(--warning);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
   </style>
 </head>
 
 <body>
     <!-- ============================
+     WELCOME / LOGIN SCREEN
+============================= -->
+<!-- ============================
      WELCOME / LOGIN SCREEN
 ============================= -->
 <div id="welcome-overlay">
@@ -1214,41 +1383,51 @@
     <div class="welcome-title">Gurmie Ayam</div>
     <div class="welcome-sub">SOP Operasional Kios</div>
 
-    <!-- MODE: DAFTAR (pertama kali) -->
+    <!-- MODE: PILIH PROFIL (default) -->
+    <div id="welcome-pick" style="display:none;">
+      <div style="font-size:13px; font-weight:700; color:var(--text-secondary); margin-bottom:10px;">Pilih akun kamu:</div>
+      <div id="profile-chips" style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;"></div>
+      <hr class="welcome-divider" />
+      <div class="welcome-mode-toggle">
+        Akun baru? <span onclick="showRegisterMode()">Daftar di sini</span>
+      </div>
+      <div class="welcome-mode-toggle" style="margin-top:8px;">
+        Atau masuk sebagai <span onclick="doGuestLogin()">👁️ Tamu (hanya lihat)</span>
+      </div>
+    </div>
+
+    <!-- MODE: PASSWORD setelah pilih profil -->
+    <div id="welcome-password" style="display:none;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <div id="wp-avatar" style="width:44px; height:44px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">🍜</div>
+        <div>
+          <div id="wp-name" style="font-weight:700; font-size:15px;"></div>
+          <div style="font-size:12px; color:var(--text-muted);">Masukkan password untuk lanjut</div>
+        </div>
+      </div>
+      <input class="welcome-input" id="pw-password" type="password" placeholder="Password…" autocomplete="current-password" />
+      <button class="welcome-btn" onclick="doPasswordLogin()">Masuk →</button>
+      <div class="welcome-error" id="pw-error"></div>
+      <div class="welcome-mode-toggle" style="margin-top:12px;">
+        <span onclick="backToPickProfile()">← Ganti akun</span>
+      </div>
+    </div>
+
+    <!-- MODE: DAFTAR -->
     <div id="welcome-register" style="display:none;">
       <label class="welcome-label">Nama Kamu</label>
       <input class="welcome-input" id="reg-name" type="text" placeholder="Masukkan nama lengkap…" autocomplete="name" />
-      <label class="welcome-label">Pilih Peran</label>
-      <div class="welcome-role-grid">
-        <div class="welcome-role-chip active" data-role="koki" onclick="selectRegRole('koki')">👨‍🍳 Koki</div>
-        <div class="welcome-role-chip" data-role="kasir" onclick="selectRegRole('kasir')">💰 Kasir</div>
-        <div class="welcome-role-chip" data-role="pelayan" onclick="selectRegRole('pelayan')">🛎️ Pelayan</div>
-        <div class="welcome-role-chip" data-role="manajer" onclick="selectRegRole('manajer')">📋 Manajer</div>
-      </div>
       <label class="welcome-label">Buat Password</label>
       <input class="welcome-input" id="reg-password" type="password" placeholder="Minimal 4 karakter…" />
       <label class="welcome-label">Konfirmasi Password</label>
       <input class="welcome-input" id="reg-confirm" type="password" placeholder="Ulangi password…" />
-      <button class="welcome-btn" onclick="doRegister()">Mulai Bekerja →</button>
+      <button class="welcome-btn" onclick="doRegister()">Daftar & Masuk →</button>
       <div class="welcome-error" id="reg-error"></div>
-      <div class="welcome-mode-toggle">
-        Sudah punya akun? <span onclick="showLoginMode()">Masuk</span>
+      <div class="welcome-mode-toggle" style="margin-top:12px;">
+        <span onclick="backToPickProfile()">← Kembali</span>
       </div>
     </div>
 
-    <!-- MODE: LOGIN -->
-    <div id="welcome-login" style="display:none;">
-      <label class="welcome-label">Nama Kamu</label>
-      <input class="welcome-input" id="login-name" type="text" placeholder="Masukkan nama…" autocomplete="name" />
-      <label class="welcome-label">Password</label>
-      <input class="welcome-input" id="login-password" type="password" placeholder="Masukkan password…" />
-      <button class="welcome-btn" onclick="doLogin()">Masuk →</button>
-      <div class="welcome-error" id="login-error"></div>
-      <hr class="welcome-divider" />
-      <div class="welcome-mode-toggle">
-        Perangkat baru? <span onclick="showRegisterMode()">Daftar akun baru</span>
-      </div>
-    </div>
   </div>
 </div>
   <!-- ============================
@@ -1327,15 +1506,21 @@
         =========================================== -->
         <div id="screen-beranda" class="screen active">
           <!-- Hero -->
-          <div class="dashboard-hero">
-            <div class="hero-kios-name">🍜 Gurmie Ayam</div>
-            <div class="hero-meta" id="hero-meta">Shift Pagi · Memuat tanggal…</div>
-            <div class="hero-progress-label" id="hero-progress-label">0 dari 0 tugas selesai</div>
-            <div class="progress-bar-wrap">
-              <div class="progress-bar-fill" id="hero-progress-bar" style="width:0%"></div>
-            </div>
-            <div class="progress-count" id="hero-progress-count">0%</div>
-          </div>
+<div class="dashboard-hero">
+  <div class="hari-ke-badge" id="hari-ke-badge">📅 Hari ke-1</div>
+  <div class="hero-kios-name">🍜 Gurmie Ayam</div>
+  <div class="hero-meta" id="hero-meta">Shift Pagi–Sore · Memuat tanggal…</div>
+  <div class="hero-progress-label" id="hero-progress-label">0 dari 0 tugas selesai</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="hero-progress-bar" style="width:0%"></div>
+  </div>
+  <div class="progress-count" id="hero-progress-count">0%</div>
+  <!-- Presence bar -->
+  <div class="presence-bar" id="presence-bar">
+    <span class="presence-bar-label">👥 Staff online sekarang:</span>
+    <span style="font-size:12px; opacity:0.7;">Memuat…</span>
+  </div>
+</div>
 
           <!-- Modul Grid -->
           <div class="section-title">Modul SOP</div>
@@ -1363,7 +1548,22 @@
             </div>
           </div>
         </div>
+<!-- Omzet hari ini -->
+<div class="omzet-row" id="omzet-row">
+  <div class="omzet-card">
+    <div class="omzet-label">💰 Omzet Hari Ini</div>
+    <div class="omzet-value green" id="omzet-value">Rp —</div>
+    <div class="omzet-sub" id="omzet-trx">— transaksi</div>
+  </div>
+  <div class="omzet-card">
+    <div class="omzet-label">📦 Pengeluaran</div>
+    <div class="omzet-value" id="expense-value">Rp —</div>
+    <div class="omzet-sub" id="expense-count">— item</div>
+  </div>
+</div>
 
+<!-- Confetti canvas -->
+<canvas id="confetti-canvas"></canvas>
         <!-- ==========================================
              SCREEN: TUGAS
         =========================================== -->
@@ -1623,7 +1823,22 @@
       </nav>
     </div>
   </div>
-
+<!-- NOTE MODAL -->
+<div id="note-modal-overlay">
+  <div class="note-modal-sheet">
+    <div style="font-family:var(--font-heading); font-size:16px; font-weight:700; margin-bottom:8px;">
+      📝 Catatan Tugas
+    </div>
+    <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+      Tambahkan catatan evaluasi: kondisi bahan, masalah peralatan, dll.
+    </div>
+    <textarea id="note-textarea" rows="4" placeholder="Contoh: kaldu habis lebih cepat, kompor no.2 perlu diperbaiki…"></textarea>
+    <div style="display:flex; gap:8px;">
+      <button onclick="closeNoteModal()" style="flex:1; padding:11px; border:1px solid var(--border); border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--surface-1); color:var(--text-primary); min-height:44px;">Batal</button>
+      <button onclick="saveNote()" style="flex:1; padding:11px; border:none; border-radius:var(--radius-md); font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer; background:var(--primary); color:white; min-height:44px;">Simpan Catatan</button>
+    </div>
+  </div>
+</div>
   <!-- ============================
        SUPABASE CDN
   ============================= -->
@@ -1699,22 +1914,197 @@ function shiftLabel(shift) {
     const m = mins % 60;
     return m ? `${h}j ${m}mnt` : `${h} jam`;
   }
+// ============================================================
+//  GUEST MODE
+// ============================================================
+let isGuest = false;
 
-  // ============================================================
-  //  DEVICE ID & SESSION
-  // ============================================================
-  function generateUUID() {
-    return crypto.randomUUID
-      ? crypto.randomUUID()
-      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-          const r = Math.random() * 16 | 0;
-          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-        });
+function doGuestLogin() {
+  isGuest = true;
+  appState.staffName   = 'Tamu';
+  appState.role        = 'guest';
+  appState.deviceId    = 'guest-' + Date.now();
+  appState.activeShift = getAutoShift();
+  syncProfileUI();
+  hideWelcomeScreen();
+  showToast('Masuk sebagai Tamu — hanya bisa melihat 👁️', 'info');
+}
+
+// ============================================================
+//  WELCOME SCREEN LOGIC
+// ============================================================
+let selectedLoginName = '';
+
+async function loadProfileChips() {
+  try {
+    const { data, error } = await db
+      .from('user_sessions')
+      .select('staff_name, device_id')
+      .not('password', 'is', null)
+      .order('last_seen', { ascending: false })
+      .limit(10);
+    if (error) throw error;
+    const chips = document.getElementById('profile-chips');
+    if (!data || data.length === 0) {
+      // Belum ada akun — langsung ke register
+      showRegisterMode();
+      return;
+    }
+    chips.innerHTML = data.map(s => `
+      <div onclick="pickProfile('${s.staff_name}')"
+           style="display:flex; align-items:center; gap:10px; padding:10px 12px;
+                  border:1.5px solid var(--border); border-radius:var(--radius-md);
+                  cursor:pointer; transition:border-color 200ms ease; background:var(--surface-1);"
+           onmouseover="this.style.borderColor='var(--primary)'"
+           onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px; height:36px; border-radius:50%; background:var(--primary-light);
+                    display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;">🍜</div>
+        <div style="font-size:14px; font-weight:700; color:var(--text-primary);">${s.staff_name}</div>
+        <i class="ti ti-chevron-right" style="margin-left:auto; color:var(--text-muted);"></i>
+      </div>
+    `).join('');
+    showPickMode();
+  } catch(err) {
+    // Jika gagal load (mis. belum ada tabel) — tampilkan register
+    showRegisterMode();
   }
+}
 
-// ============================================================
-//  DEVICE ID & SESSION + WELCOME SCREEN
-// ============================================================
+function showPickMode() {
+  document.getElementById('welcome-pick').style.display     = 'block';
+  document.getElementById('welcome-password').style.display = 'none';
+  document.getElementById('welcome-register').style.display = 'none';
+}
+
+function pickProfile(name) {
+  selectedLoginName = name;
+  document.getElementById('wp-name').textContent     = name;
+  document.getElementById('pw-password').value       = '';
+  document.getElementById('pw-error').textContent    = '';
+  document.getElementById('welcome-pick').style.display     = 'none';
+  document.getElementById('welcome-password').style.display = 'block';
+  setTimeout(() => document.getElementById('pw-password').focus(), 100);
+}
+
+function backToPickProfile() {
+  showPickMode();
+  loadProfileChips();
+}
+
+function showRegisterMode() {
+  document.getElementById('welcome-pick').style.display     = 'none';
+  document.getElementById('welcome-password').style.display = 'none';
+  document.getElementById('welcome-register').style.display = 'block';
+  document.getElementById('reg-error').textContent          = '';
+  setTimeout(() => document.getElementById('reg-name')?.focus(), 100);
+}
+
+function showWelcomeScreen() {
+  document.getElementById('welcome-overlay').classList.add('active');
+}
+function hideWelcomeScreen() {
+  document.getElementById('welcome-overlay').classList.remove('active');
+}
+
+// Login dengan profil yang dipilih
+async function doPasswordLogin() {
+  const password = document.getElementById('pw-password').value;
+  const errEl    = document.getElementById('pw-error');
+  errEl.textContent = '';
+
+  if (!password) { errEl.textContent = 'Masukkan password.'; return; }
+
+  try {
+    const { data: session, error } = await db
+      .from('user_sessions')
+      .select('*')
+      .eq('staff_name', selectedLoginName)
+      .eq('password', password)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!session) { errEl.textContent = 'Password salah.'; return; }
+
+    appState.deviceId    = session.device_id;
+    appState.staffName   = session.staff_name;
+    appState.role        = session.role || 'staf';
+    appState.activeShift = session.active_shift || getAutoShift();
+    isGuest = false;
+
+    sessionStorage.setItem('sop_device_id', session.device_id);
+    localStorage.setItem('sop_device_id_persist', session.device_id);
+
+    await db.from('user_sessions')
+      .update({ last_seen: new Date().toISOString(), active_shift: appState.activeShift })
+      .eq('id', session.id);
+
+    syncProfileUI();
+    hideWelcomeScreen();
+    showToast(`Selamat datang, ${session.staff_name}! 🍜`, 'success');
+  } catch(err) {
+    errEl.textContent = 'Gagal masuk: ' + err.message;
+  }
+}
+
+// Enter key di password field
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('pw-password')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doPasswordLogin();
+  });
+  document.getElementById('reg-confirm')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doRegister();
+  });
+});
+
+// Register baru
+async function doRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const confirm  = document.getElementById('reg-confirm').value;
+  const errEl    = document.getElementById('reg-error');
+  errEl.textContent = '';
+
+  if (!name)               { errEl.textContent = 'Nama tidak boleh kosong.'; return; }
+  if (password.length < 4) { errEl.textContent = 'Password minimal 4 karakter.'; return; }
+  if (password !== confirm) { errEl.textContent = 'Password tidak cocok.'; return; }
+
+  try {
+    const { data: existing } = await db
+      .from('user_sessions')
+      .select('id')
+      .eq('staff_name', name)
+      .maybeSingle();
+
+    if (existing) { errEl.textContent = 'Nama sudah terdaftar. Pilih dari daftar akun.'; return; }
+
+    const deviceId = generateUUID();
+    const { error } = await db.from('user_sessions').insert({
+      device_id:    deviceId,
+      staff_name:   name,
+      role:         'staf',
+      password:     password,
+      active_shift: getAutoShift(),
+      last_seen:    new Date().toISOString(),
+    });
+    if (error) throw error;
+
+    appState.deviceId    = deviceId;
+    appState.staffName   = name;
+    appState.role        = 'staf';
+    appState.activeShift = getAutoShift();
+    isGuest = false;
+
+    sessionStorage.setItem('sop_device_id', deviceId);
+    localStorage.setItem('sop_device_id_persist', deviceId);
+
+    syncProfileUI();
+    hideWelcomeScreen();
+    showToast(`Selamat datang, ${name}! 🍜`, 'success');
+  } catch(err) {
+    errEl.textContent = 'Gagal daftar: ' + err.message;
+  }
+}
+
 function generateUUID() {
   return crypto.randomUUID
     ? crypto.randomUUID()
@@ -1724,160 +2114,22 @@ function generateUUID() {
       });
 }
 
-// --- Welcome screen helpers ---
-let selectedRegRole = 'koki';
-
-function selectRegRole(role) {
-  selectedRegRole = role;
-  document.querySelectorAll('.welcome-role-chip').forEach(c => {
-    c.classList.toggle('active', c.dataset.role === role);
-  });
-}
-
-function showWelcomeScreen() {
-  const overlay = document.getElementById('welcome-overlay');
-  overlay.classList.add('active');
-}
-
-function hideWelcomeScreen() {
-  document.getElementById('welcome-overlay').classList.remove('active');
-}
-
-function showLoginMode() {
-  document.getElementById('welcome-register').style.display = 'none';
-  document.getElementById('welcome-login').style.display    = 'block';
-  document.getElementById('login-error').textContent        = '';
-  setTimeout(() => document.getElementById('login-name').focus(), 100);
-}
-
-function showRegisterMode() {
-  document.getElementById('welcome-login').style.display    = 'none';
-  document.getElementById('welcome-register').style.display = 'block';
-  document.getElementById('reg-error').textContent          = '';
-  setTimeout(() => document.getElementById('reg-name').focus(), 100);
-}
-
-async function doRegister() {
-  const name     = document.getElementById('reg-name').value.trim();
-  const password = document.getElementById('reg-password').value;
-  const confirm  = document.getElementById('reg-confirm').value;
-  const errEl    = document.getElementById('reg-error');
-
-  errEl.textContent = '';
-  if (!name)              { errEl.textContent = 'Nama tidak boleh kosong.'; return; }
-  if (password.length < 4){ errEl.textContent = 'Password minimal 4 karakter.'; return; }
-  if (password !== confirm){ errEl.textContent = 'Password tidak cocok.'; return; }
-
-  try {
-    // Cek apakah nama sudah terdaftar di Supabase
-    const { data: existing } = await db
-      .from('user_sessions')
-      .select('id')
-      .eq('staff_name', name)
-      .maybeSingle();
-
-    if (existing) {
-      errEl.textContent = 'Nama ini sudah terdaftar. Silakan masuk.';
-      return;
-    }
-
-    const deviceId = generateUUID();
-    sessionStorage.setItem('sop_device_id', deviceId);
-    appState.deviceId  = deviceId;
-    appState.staffName = name;
-    appState.role      = selectedRegRole;
-    appState.activeShift = getAutoShift();
-
-    const { error } = await db.from('user_sessions').insert({
-      device_id:    deviceId,
-      staff_name:   name,
-      role:         selectedRegRole,
-      password:     password,
-      active_shift: appState.activeShift,
-      last_seen:    new Date().toISOString(),
-    });
-
-    if (error) throw error;
-
-    // Simpan ke localStorage untuk login berikutnya
-    localStorage.setItem('sop_saved_name', name);
-    localStorage.setItem('sop_device_id_persist', deviceId);
-
-    syncProfileUI();
-    hideWelcomeScreen();
-    showToast(`Selamat datang, ${name}! 🍜`, 'success');
-  } catch (err) {
-    errEl.textContent = 'Gagal mendaftar: ' + err.message;
-    console.error(err);
-  }
-}
-
-async function doLogin() {
-  const name     = document.getElementById('login-name').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl    = document.getElementById('login-error');
-
-  errEl.textContent = '';
-  if (!name)     { errEl.textContent = 'Masukkan nama kamu.'; return; }
-  if (!password) { errEl.textContent = 'Masukkan password.'; return; }
-
-  try {
-    const { data: session, error } = await db
-      .from('user_sessions')
-      .select('*')
-      .eq('staff_name', name)
-      .eq('password', password)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!session) {
-      errEl.textContent = 'Nama atau password salah.';
-      return;
-    }
-
-    // Login berhasil
-    appState.deviceId    = session.device_id;
-    appState.staffName   = session.staff_name;
-    appState.role        = session.role;
-    appState.activeShift = session.active_shift || getAutoShift();
-
-    sessionStorage.setItem('sop_device_id', session.device_id);
-    localStorage.setItem('sop_saved_name', name);
-    localStorage.setItem('sop_device_id_persist', session.device_id);
-
-    // Update last_seen & shift
-    await db.from('user_sessions')
-      .update({ last_seen: new Date().toISOString(), active_shift: appState.activeShift })
-      .eq('id', session.id);
-
-    document.getElementById('device-id-display').textContent =
-      session.device_id.slice(0, 16) + '…';
-
-    syncProfileUI();
-    hideWelcomeScreen();
-    showToast(`Selamat datang kembali, ${name}! 🍜`, 'success');
-  } catch (err) {
-    errEl.textContent = 'Gagal masuk: ' + err.message;
-    console.error(err);
-  }
-}
-
 function syncProfileUI() {
-  document.getElementById('staff-name-input').value = appState.staffName;
-  document.getElementById('role-select').value      = appState.role;
+  document.getElementById('staff-name-input').value = appState.staffName || '';
+  document.getElementById('role-select').value      = appState.role || 'staf';
   document.getElementById('device-id-display').textContent =
     (appState.deviceId || '—').slice(0, 16) + '…';
   updateShiftChips();
 }
 
+// ============================================================
+//  AUTO SESSION RESTORE
+// ============================================================
 async function initDeviceSession() {
-  // Coba ambil device_id dari sessionStorage (tab aktif) atau localStorage (login persisten)
-  let deviceId = sessionStorage.getItem('sop_device_id')
-              || localStorage.getItem('sop_device_id_persist');
+  const deviceId = sessionStorage.getItem('sop_device_id')
+                || localStorage.getItem('sop_device_id_persist');
 
   if (deviceId) {
-    // Ada device_id tersimpan — coba load session
     try {
       const { data: session } = await db
         .from('user_sessions')
@@ -1885,866 +2137,889 @@ async function initDeviceSession() {
         .eq('device_id', deviceId)
         .maybeSingle();
 
-      if (session && session.staff_name && session.password) {
-        // Session valid & sudah setup — langsung masuk
+      if (session?.staff_name && session?.password) {
         appState.deviceId    = session.device_id;
         appState.staffName   = session.staff_name;
-        appState.role        = session.role || 'koki';
+        appState.role        = session.role || 'staf';
         appState.activeShift = session.active_shift || getAutoShift();
+        isGuest = false;
 
         sessionStorage.setItem('sop_device_id', deviceId);
-
         await db.from('user_sessions')
           .update({ last_seen: new Date().toISOString() })
           .eq('device_id', deviceId);
 
         syncProfileUI();
-        return; // Tidak perlu tampilkan welcome
+        return;
       }
-    } catch (err) {
-      console.warn('Session load error:', err);
-    }
+    } catch(err) { console.warn('Session restore error:', err); }
   }
 
-  // Tidak ada session valid — tampilkan welcome screen
-  // Isi nama terakhir jika ada
-  const savedName = localStorage.getItem('sop_saved_name');
-  if (savedName) {
-    document.getElementById('login-name').value = savedName;
-    showLoginMode();
-  } else {
-    showRegisterMode();
-  }
-
+  // Tidak ada session — tampilkan welcome
   showWelcomeScreen();
-  // Return promise yang resolve saat login/register selesai
-  // (init() akan lanjut setelah hideWelcomeScreen dipanggil)
+  await loadProfileChips();
   await waitForLogin();
 }
 
 function waitForLogin() {
   return new Promise(resolve => {
-    const observer = new MutationObserver(() => {
+    const obs = new MutationObserver(() => {
       if (!document.getElementById('welcome-overlay').classList.contains('active')) {
-        observer.disconnect();
-        resolve();
+        obs.disconnect(); resolve();
       }
     });
-    observer.observe(document.getElementById('welcome-overlay'), {
+    obs.observe(document.getElementById('welcome-overlay'), {
       attributes: true, attributeFilter: ['class']
     });
   });
 }
 
-  // ============================================================
-  //  LOAD DATA DARI SUPABASE
-  // ============================================================
-  async function loadModules() {
-    const { data, error } = await db
-      .from('modules')
-      .select('*')
-      .order('order_index');
-    if (error) throw error;
-    appState.modules = data || [];
-  }
+// ============================================================
+//  LOAD DATA
+// ============================================================
+async function loadModules() {
+  const { data, error } = await db.from('modules').select('*').order('order_index');
+  if (error) throw error;
+  appState.modules = data || [];
+}
 
-  async function loadSteps() {
-    const { data, error } = await db
-      .from('sop_steps')
-      .select('*')
-      .order('order_index');
-    if (error) throw error;
-    appState.steps = data || [];
-  }
+async function loadSteps() {
+  const { data, error } = await db.from('sop_steps').select('*').order('order_index');
+  if (error) throw error;
+  appState.steps = data || [];
+}
 
-  async function loadProgress() {
-    const today = getTodayISO();
-    const { data, error } = await db
-      .from('checklist_progress')
-      .select('*')
-      .eq('shift_date', today)
-      .eq('shift_type', appState.activeShift);
-    if (error) throw error;
-
-    appState.progress = {};
-    (data || []).forEach(p => {
-      appState.progress[p.step_id] = {
-        id: p.id,
-        is_done: p.is_done,
-        done_by: p.done_by,
-        done_at: p.done_at,
-      };
-    });
-  }
-
-  // ============================================================
-  //  REALTIME SUBSCRIPTION
-  // ============================================================
-  function subscribeRealtime() {
-    db.channel('checklist_progress_changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'checklist_progress',
-      }, payload => {
-        const rec = payload.new || payload.old;
-        if (!rec) return;
-        // Hanya update jika shift & tanggal cocok
-        if (rec.shift_date === getTodayISO() && rec.shift_type === appState.activeShift) {
-          if (payload.eventType === 'DELETE') {
-            delete appState.progress[rec.step_id];
-          } else {
-            appState.progress[rec.step_id] = {
-              id: rec.id,
-              is_done: rec.is_done,
-              done_by: rec.done_by,
-              done_at: rec.done_at,
-            };
-          }
-          refreshProgressUI();
-        }
-      })
-      .subscribe();
-  }
-
-  // ============================================================
-  //  RENDER: BERANDA
-  // ============================================================
-  function renderDashboard() {
-    // Hero info
-    const today = getTodayISO();
-    document.getElementById('hero-meta').textContent =
-      `${shiftLabel(appState.activeShift)} · ${formatDate(today)}`;
-
-    // Module grid
-    const grid = document.getElementById('module-grid');
-    if (appState.modules.length === 0) {
-      grid.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px;grid-column:1/-1">Modul belum tersedia. Jalankan SQL setup terlebih dahulu.</p>';
-      updateHeroProgress();
-      return;
-    }
-
-    grid.innerHTML = appState.modules.map(mod => {
-      const modSteps   = appState.steps.filter(s => s.module_id === mod.id);
-      const doneSteps  = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
-      const total      = modSteps.length;
-      const pct        = total ? Math.round((doneSteps / total) * 100) : 0;
-      const allDone    = total > 0 && doneSteps === total;
-      const color      = mod.color_hex || '#888';
-
-      return `
-        <div class="module-card" onclick="openModuleChecklist('${mod.id}')">
-          <div class="module-card-top">
-            <div class="module-icon-wrap" style="background:${color}20; color:${color}">
-              <i class="ti ${mod.icon || 'ti-list'}"></i>
-            </div>
-            <span class="module-badge ${allDone ? 'done' : ''}">${doneSteps}/${total}</span>
-          </div>
-          <div class="module-card-name">${mod.name}</div>
-          <div class="module-mini-progress">
-            <div class="module-mini-fill" style="width:${pct}%; background:${color}"></div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    updateHeroProgress();
-  }
-
-  function updateHeroProgress() {
-    const totalAll = appState.steps.length;
-    const doneAll  = appState.steps.filter(s => appState.progress[s.id]?.is_done).length;
-    const pct      = totalAll ? Math.round((doneAll / totalAll) * 100) : 0;
-
-    document.getElementById('hero-progress-label').textContent =
-      `${doneAll} dari ${totalAll} tugas selesai hari ini`;
-    document.getElementById('hero-progress-bar').style.width = pct + '%';
-    document.getElementById('hero-progress-count').textContent = pct + '%';
-  }
-
-  // ============================================================
-  //  RENDER: MODULE LIST (Tugas)
-  // ============================================================
-  function renderModuleList() {
-    document.getElementById('tugas-shift-info').textContent = shiftLabel(appState.activeShift);
-    const container = document.getElementById('module-list-container');
-
-    if (appState.modules.length === 0) {
-      container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Modul belum tersedia.</p>';
-      return;
-    }
-
-    container.innerHTML = appState.modules.map(mod => {
-      const modSteps  = appState.steps.filter(s => s.module_id === mod.id);
-      const done      = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
-      const total     = modSteps.length;
-      const pct       = total ? Math.round((done / total) * 100) : 0;
-      const color     = mod.color_hex || '#888';
-
-      return `
-        <div class="module-list-item" onclick="openModuleChecklist('${mod.id}')">
-          <div class="module-list-icon" style="background:${color}20; color:${color}">
-            <i class="ti ${mod.icon || 'ti-list'}"></i>
-          </div>
-          <div class="module-list-info">
-            <div class="module-list-name">${mod.name}</div>
-            <div class="module-list-sub">${done}/${total} langkah · ${pct}%</div>
-            <div class="module-list-bar">
-              <div class="module-list-fill" style="width:${pct}%; background:${color}"></div>
-            </div>
-          </div>
-          <i class="ti ti-chevron-right module-list-arrow"></i>
-        </div>
-      `;
-    }).join('');
-  }
-
-  // ============================================================
-  //  OPEN MODULE CHECKLIST
-  // ============================================================
-  function openModuleChecklist(moduleId) {
-    appState.activeModuleId = moduleId;
-    const mod = appState.modules.find(m => m.id === moduleId);
-    if (!mod) return;
-
-    document.getElementById('view-module-list').style.display = 'none';
-    document.getElementById('view-checklist-detail').style.display = 'block';
-    document.getElementById('checklist-mod-title').textContent = mod.name;
-
-    switchTab('tugas');
-    renderChecklistDetail(moduleId);
-  }
-
-  function backToModuleList() {
-    appState.activeModuleId = null;
-    document.getElementById('view-checklist-detail').style.display = 'none';
-    document.getElementById('view-module-list').style.display = 'block';
-    renderModuleList();
-  }
-
-  function renderChecklistDetail(moduleId) {
-    const mod       = appState.modules.find(m => m.id === moduleId);
-    const modSteps  = appState.steps.filter(s => s.module_id === moduleId);
-    const done      = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
-    const total     = modSteps.length;
-    const color     = mod?.color_hex || '#888';
-
-    document.getElementById('checklist-progress-pill').textContent = `${done}/${total}`;
-    document.getElementById('checklist-progress-pill').style.background = done === total && total > 0
-      ? 'var(--success-light)' : 'var(--surface-2)';
-    document.getElementById('checklist-progress-pill').style.color = done === total && total > 0
-      ? 'var(--success)' : 'var(--text-secondary)';
-
-    // Group by group_name
-    const groups = {};
-    modSteps.forEach(step => {
-      const g = step.group_name || 'Umum';
-      if (!groups[g]) groups[g] = [];
-      groups[g].push(step);
-    });
-
-    const container = document.getElementById('checklist-items-container');
-    let html = '';
-
-    Object.entries(groups).forEach(([groupName, steps]) => {
-      html += `<div class="checklist-group-label">${groupName}</div>`;
-      steps.forEach(step => {
-        const prog   = appState.progress[step.id];
-        const isDone = prog?.is_done || false;
-        const doneBy = prog?.done_by || '';
-        const doneAt = prog?.done_at ? new Date(prog.done_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
-        const timer  = appState.timers[step.id];
-
-        let timerHtml = '';
-        if (step.duration_minutes) {
-          const timerState = timer?.interval ? 'running' : (timer?.finished ? 'finished' : '');
-          const timerLabel = timer?.interval
-            ? formatCountdown(timer.remaining)
-            : (timer?.finished ? 'Selesai ✓' : formatDuration(step.duration_minutes));
-          timerHtml = `
-            <div class="timer-pill ${timerState}" onclick="handleTimer(event, '${step.id}', ${step.duration_minutes})">
-              <i class="ti ${timer?.interval ? 'ti-player-pause' : 'ti-player-play'}"></i>
-              ${timerLabel}
-            </div>
-          `;
-        }
-
-        html += `
-          <div class="checklist-item ${isDone ? 'done' : ''}" id="item-${step.id}"
-               onclick="toggleStep('${step.id}')">
-            <div class="check-circle">
-              <i class="ti ti-check"></i>
-            </div>
-            <div class="item-body">
-              <div class="item-title">${step.title}</div>
-              ${step.description ? `<div class="item-desc">${step.description}</div>` : ''}
-              <div class="item-meta">
-                ${step.is_critical ? '<span class="critical-badge"><i class="ti ti-alert-circle"></i> Wajib</span>' : ''}
-                ${timerHtml}
-              </div>
-              ${isDone && (doneBy || doneAt) ? `<div class="item-done-by">✓ ${doneBy} · ${doneAt}</div>` : ''}
-            </div>
-          </div>
-        `;
-      });
-    });
-
-    if (!html) html = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada langkah SOP.</p>';
-    container.innerHTML = html;
-  }
-
-  // ============================================================
-  //  TOGGLE STEP (Checklist)
-  // ============================================================
-  async function toggleStep(stepId) {
-    const prog    = appState.progress[stepId];
-    const isDone  = prog?.is_done || false;
-    const newDone = !isDone;
-    const today   = getTodayISO();
-
-    // Optimistic update
-    appState.progress[stepId] = {
-      ...prog,
-      is_done: newDone,
-      done_by: newDone ? (appState.staffName || 'Staf') : null,
-      done_at: newDone ? new Date().toISOString() : null,
+async function loadProgress() {
+  const today = getTodayISO();
+  const { data, error } = await db
+    .from('checklist_progress')
+    .select('*')
+    .eq('shift_date', today)
+    .eq('shift_type', appState.activeShift);
+  if (error) throw error;
+  appState.progress = {};
+  (data || []).forEach(p => {
+    appState.progress[p.step_id] = {
+      id: p.id, is_done: p.is_done,
+      done_by: p.done_by, done_at: p.done_at, notes: p.notes || ''
     };
-    refreshItemUI(stepId);
-    refreshProgressUI();
+  });
+}
 
-    try {
-      const { error } = await db.from('checklist_progress').upsert({
-        step_id:    stepId,
-        shift_date: today,
-        shift_type: appState.activeShift,
-        is_done:    newDone,
-        done_by:    newDone ? (appState.staffName || 'Staf') : null,
-        done_at:    newDone ? new Date().toISOString() : null,
-      }, { onConflict: 'step_id,shift_date,shift_type' });
-
-      if (error) throw error;
-
-      if (newDone) showToast('Langkah selesai! ✓', 'success');
-    } catch (err) {
-      // Rollback
-      appState.progress[stepId] = prog || undefined;
-      if (!prog) delete appState.progress[stepId];
-      refreshItemUI(stepId);
-      refreshProgressUI();
-      showToast('Gagal menyimpan. Coba lagi.', 'error');
-      console.error(err);
-    }
-  }
-
-  function refreshItemUI(stepId) {
-    const el = document.getElementById(`item-${stepId}`);
-    if (!el) return;
-    const prog = appState.progress[stepId];
-    const isDone = prog?.is_done || false;
-    el.classList.toggle('done', isDone);
-
-    const doneByEl = el.querySelector('.item-done-by');
-    const doneBy = prog?.done_by || '';
-    const doneAt = prog?.done_at ? new Date(prog.done_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
-
-    if (isDone && (doneBy || doneAt)) {
-      if (doneByEl) {
-        doneByEl.textContent = `✓ ${doneBy} · ${doneAt}`;
-      } else {
-        const body = el.querySelector('.item-body');
-        const d = document.createElement('div');
-        d.className = 'item-done-by';
-        d.textContent = `✓ ${doneBy} · ${doneAt}`;
-        body.appendChild(d);
-      }
-    } else {
-      if (doneByEl) doneByEl.remove();
-    }
-  }
-
-  function refreshProgressUI() {
-    // Hero progress
-    updateHeroProgress();
-
-    // Module grid badges & bars
-    appState.modules.forEach(mod => {
-      const modSteps = appState.steps.filter(s => s.module_id === mod.id);
-      const done     = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
-      const total    = modSteps.length;
-      const pct      = total ? Math.round((done / total) * 100) : 0;
-      const color    = mod.color_hex || '#888';
-      const allDone  = total > 0 && done === total;
-
-      // Module card (beranda)
-      const cardBadge = document.querySelector(`#module-grid .module-card:nth-child(${appState.modules.indexOf(mod) + 1}) .module-badge`);
-      const cardFill  = document.querySelector(`#module-grid .module-card:nth-child(${appState.modules.indexOf(mod) + 1}) .module-mini-fill`);
-      if (cardBadge) { cardBadge.textContent = `${done}/${total}`; cardBadge.className = `module-badge ${allDone ? 'done' : ''}`; }
-      if (cardFill)  { cardFill.style.width = pct + '%'; }
-
-      // Module list (tugas)
-      const listItems = document.querySelectorAll('#module-list-container .module-list-item');
-      listItems.forEach(item => {
-        const idx = Array.from(listItems).indexOf(item);
-        const m   = appState.modules[idx];
-        if (!m) return;
-        const ms  = appState.steps.filter(s => s.module_id === m.id);
-        const d   = ms.filter(s => appState.progress[s.id]?.is_done).length;
-        const t   = ms.length;
-        const p   = t ? Math.round((d / t) * 100) : 0;
-        const sub = item.querySelector('.module-list-sub');
-        const fill= item.querySelector('.module-list-fill');
-        if (sub)  sub.textContent = `${d}/${t} langkah · ${p}%`;
-        if (fill) fill.style.width = p + '%';
-      });
-    });
-
-    // Active checklist header pill
-    if (appState.activeModuleId) {
-      const mod      = appState.modules.find(m => m.id === appState.activeModuleId);
-      const modSteps = appState.steps.filter(s => s.module_id === appState.activeModuleId);
-      const done     = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
-      const total    = modSteps.length;
-      const pill     = document.getElementById('checklist-progress-pill');
-      if (pill) {
-        pill.textContent = `${done}/${total}`;
-        pill.style.background = done === total && total > 0 ? 'var(--success-light)' : 'var(--surface-2)';
-        pill.style.color = done === total && total > 0 ? 'var(--success)' : 'var(--text-secondary)';
-      }
-    }
-  }
-
-  // ============================================================
-  //  TIMER LOGIC
-  // ============================================================
-  function formatCountdown(secs) {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    const s = secs % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    return `${m}:${String(s).padStart(2,'0')}`;
-  }
-
-  function handleTimer(evt, stepId, durationMins) {
-    evt.stopPropagation();
-    const existing = appState.timers[stepId];
-
-    if (existing?.interval) {
-      // Pause
-      clearInterval(existing.interval);
-      appState.timers[stepId] = { interval: null, remaining: existing.remaining, finished: false };
-    } else if (existing?.remaining > 0) {
-      // Resume
-      startCountdown(stepId);
-    } else {
-      // Fresh start
-      requestNotifPermission();
-      appState.timers[stepId] = { interval: null, remaining: durationMins * 60, finished: false };
-      startCountdown(stepId);
-    }
-
-    // Re-render checklist detail for this step (partial)
-    if (appState.activeModuleId) renderChecklistDetail(appState.activeModuleId);
-  }
-
-  function startCountdown(stepId) {
-    const t = appState.timers[stepId];
-    if (!t) return;
-    t.interval = setInterval(() => {
-      t.remaining -= 1;
-      // Update pill in DOM without full re-render
-      const pill = document.querySelector(`#item-${stepId} .timer-pill`);
-      if (pill) {
-        pill.textContent = '';
-        const icon = document.createElement('i');
-        icon.className = 'ti ti-player-pause';
-        pill.appendChild(icon);
-        pill.append(' ' + formatCountdown(t.remaining));
-        pill.classList.add('running');
-        pill.classList.remove('finished');
-      }
-      if (t.remaining <= 0) {
-        clearInterval(t.interval);
-        t.interval = null;
-        t.finished = true;
-        t.remaining = 0;
-        if (pill) {
-          pill.innerHTML = '<i class="ti ti-circle-check"></i> Selesai ✓';
-          pill.classList.remove('running');
-          pill.classList.add('finished');
-        }
-        notifyTimerDone(stepId);
-      }
-    }, 1000);
-  }
-
-  function requestNotifPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }
-
-  function notifyTimerDone(stepId) {
-    const step = appState.steps.find(s => s.id === stepId);
-    showToast(`Timer selesai: "${step?.title || 'Langkah'}"`, 'success');
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Timer SOP Selesai! 🍜', {
-        body: step?.title || 'Waktu habis',
-        icon: '/favicon.ico',
-      });
-    }
-  }
-
-  // ============================================================
-  //  RESET SHIFT
-  // ============================================================
-  function confirmResetShift() {
-    if (appState.role !== 'manajer') {
-      showToast('Hanya Manajer yang bisa reset shift.', 'error');
-      return;
-    }
-    openModal(
-      'Reset Semua Checklist?',
-      `Semua progress tugas shift ${shiftLabel(appState.activeShift)} hari ini akan dihapus. Tindakan ini tidak bisa dibatalkan.`,
-      resetShift
-    );
-  }
-
-  async function resetShift() {
-    try {
-      const { error } = await db
-        .from('checklist_progress')
-        .delete()
-        .eq('shift_date', getTodayISO())
-        .eq('shift_type', appState.activeShift);
-      if (error) throw error;
-      appState.progress = {};
-      renderModuleList();
-      renderDashboard();
-      showToast('Checklist berhasil direset.', 'success');
-    } catch (err) {
-      showToast('Gagal mereset checklist.', 'error');
-      console.error(err);
-    }
-  }
-
-  // ============================================================
-  //  SEARCH
-  // ============================================================
-  function handleSearch(query) {
-    const q = query.trim().toLowerCase();
-    const container = document.getElementById('search-results');
-
-    if (!q) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="ti ti-search"></i>
-          <p>Ketik kata kunci untuk<br>mencari prosedur SOP</p>
-        </div>`;
-      return;
-    }
-
-    const results = appState.steps.filter(s =>
-      s.title.toLowerCase().includes(q) ||
-      (s.description || '').toLowerCase().includes(q) ||
-      (s.group_name || '').toLowerCase().includes(q)
-    );
-
-    if (results.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <i class="ti ti-mood-empty"></i>
-          <p>Prosedur "<strong>${query}</strong>"<br>tidak ditemukan.</p>
-        </div>`;
-      return;
-    }
-
-    container.innerHTML = results.map(step => {
-      const mod   = appState.modules.find(m => m.id === step.module_id);
-      const color = mod?.color_hex || '#888';
-      return `
-        <div class="search-result-item" onclick="openModuleChecklist('${step.module_id}')">
-          <div class="result-module-tag" style="background:${color}">${mod?.name || 'Modul'}</div>
-          <div class="result-title">${highlight(step.title, q)}</div>
-          <div class="result-group">${step.group_name || ''}</div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function highlight(text, q) {
-    const idx = text.toLowerCase().indexOf(q);
-    if (idx < 0) return text;
-    return text.slice(0, idx) +
-      `<mark style="background:var(--warning-light);color:var(--warning);border-radius:3px;padding:0 2px">${text.slice(idx, idx + q.length)}</mark>` +
-      text.slice(idx + q.length);
-  }
-
-  // ============================================================
-  //  PROFIL
-  // ============================================================
-async function saveProfile() {
-  const name = document.getElementById('staff-name-input').value.trim();
-  const role = document.getElementById('role-select').value;
-
-  if (!name) { showToast('Nama tidak boleh kosong.', 'error'); return; }
-  if (!appState.deviceId) { showToast('Sesi tidak valid, coba refresh.', 'error'); return; }
-
-  appState.staffName = name;
-  appState.role      = role;
-
+// ============================================================
+//  OMZET HARI INI (dari tabel transactions + expenses)
+// ============================================================
+async function loadOmzet() {
+  const today = getTodayISO();
   try {
-    const { error } = await db.from('user_sessions')
-      .update({ staff_name: name, role: role })
-      .eq('device_id', appState.deviceId);
+    // Omzet dari transactions
+    const { data: trxData } = await db
+      .from('transactions')
+      .select('total_price')
+      .gte('created_at', today + 'T00:00:00+07:00')
+      .lte('created_at', today + 'T23:59:59+07:00');
 
-    if (error) throw error;
-    localStorage.setItem('sop_saved_name', name);
-    syncProfileUI();
-    showToast('Profil berhasil disimpan! ✓', 'success');
-  } catch (err) {
-    showToast('Gagal menyimpan profil: ' + err.message, 'error');
-    console.error('saveProfile error:', err);
+    const omzet  = (trxData || []).reduce((s, t) => s + (t.total_price || 0), 0);
+    const trxCnt = (trxData || []).length;
+
+    // Pengeluaran dari expenses
+    const { data: expData } = await db
+      .from('expenses')
+      .select('amount')
+      .eq('expense_date', today);
+
+    const expense = (expData || []).reduce((s, e) => s + (e.amount || 0), 0);
+    const expCnt  = (expData || []).length;
+
+    document.getElementById('omzet-value').textContent   = 'Rp ' + omzet.toLocaleString('id-ID');
+    document.getElementById('omzet-trx').textContent     = trxCnt + ' transaksi';
+    document.getElementById('expense-value').textContent = 'Rp ' + expense.toLocaleString('id-ID');
+    document.getElementById('expense-count').textContent = expCnt + ' item';
+  } catch(err) {
+    console.warn('loadOmzet error:', err);
   }
 }
 
-  async function setShift(shift) {
-    appState.activeShift = shift;
-    updateShiftChips();
-    await loadProgress();
-    renderDashboard();
-    renderModuleList();
+// ============================================================
+//  HARI KE-
+// ============================================================
+function updateHariKe() {
+  const openDate = new Date('2026-04-16T00:00:00');
+  const today    = new Date();
+  today.setHours(0,0,0,0);
+  const diff = Math.floor((today - openDate) / (1000 * 60 * 60 * 24)) + 1;
+  const hari = Math.max(1, diff);
+  document.getElementById('hari-ke-badge').textContent = `📅 Hari ke-${hari}`;
+}
 
-    try {
-      await db.from('user_sessions')
-        .update({ active_shift: shift })
-        .eq('device_id', appState.deviceId);
-    } catch (e) {}
-
-    showToast(`Beralih ke ${shiftLabel(shift)}`, 'info');
-  }
-
-  function updateShiftChips() {
-    document.querySelectorAll('.shift-chip').forEach(chip => {
-      chip.classList.toggle('active', chip.dataset.shift === appState.activeShift);
-    });
-  }
-
-  function toggleDarkMode(enabled) {
-    document.documentElement.setAttribute('data-theme', enabled ? 'dark' : '');
-    localStorage.setItem('sop_dark_mode', enabled ? '1' : '0');
-  }
-
-  // ============================================================
-  //  EMERGENCY OVERLAY
-  // ============================================================
-  const emergencyData = {
-    api: {
-      title: '🔥 Prosedur Kebakaran',
-      subtitle: 'Tetap tenang. Ikuti langkah ini segera.',
-      steps: [
-        'Teriak "KEBAKARAN!" keras-keras untuk memperingatkan semua orang.',
-        'Cabut colokan peralatan listrik terdekat jika aman.',
-        'Ambil APAR (Alat Pemadam Api Ringan) di dekat pintu masuk kios.',
-        'Gunakan APAR: cabut pin, arahkan ke dasar api, tekan tuas, sapukan ke kanan-kiri.',
-        'Jika api tidak padam dalam 30 detik, EVAKUASI semua orang segera.',
-        'Hubungi Damkar: 113 dari tempat yang aman.',
-        'Jangan kembali ke dalam bangunan sebelum dinyatakan aman.',
-      ],
-    },
-    luka: {
-      title: '🩹 Prosedur Luka & Cedera',
-      subtitle: 'Tangani dengan tenang dan cepat.',
-      steps: [
-        'Pastikan area sekitar aman. Jangan pindahkan korban jika dicurigai cedera tulang belakang.',
-        'Untuk luka sayat: bilas dengan air mengalir 5 menit, tekan dengan kain bersih untuk hentikan darah.',
-        'Untuk luka bakar ringan: rendam/siram dengan air dingin mengalir 10–20 menit. JANGAN pakai pasta gigi.',
-        'Pasang perban atau plester setelah luka bersih.',
-        'Jika luka dalam, darah tidak berhenti, atau tulang terlihat — SEGERA bawa ke IGD.',
-        'Catat nama korban, waktu kejadian, dan penyebab untuk laporan.',
-        'Hubungi BPJS/RS terdekat atau 119 jika darurat.',
-      ],
-    },
-    racun: {
-      title: '☠️ Prosedur Keracunan Makanan',
-      subtitle: 'Tindakan cepat bisa menyelamatkan nyawa.',
-      steps: [
-        'Identifikasi makanan/bahan yang mungkin jadi penyebab. Amankan sisa makanan untuk pemeriksaan.',
-        'Pindahkan korban ke area berventilasi baik, minta duduk/berbaring nyaman.',
-        'JANGAN paksa korban muntah kecuali atas petunjuk dokter.',
-        'Beri minum air putih secukupnya jika korban masih sadar dan bisa menelan.',
-        'Catat gejala: mual, muntah, diare, kram, demam, waktu mulai gejala.',
-        'Hubungi Hotline Keracunan: (021) 4250767 atau bawa ke IGD RS terdekat.',
-        'Laporkan kejadian ke Dinas Kesehatan setempat dalam 24 jam.',
-      ],
-    },
-  };
-
-  function openEmergency(type) {
-    const data = emergencyData[type];
-    if (!data) return;
-    document.getElementById('emergency-title').textContent   = data.title;
-    document.getElementById('emergency-subtitle').textContent = data.subtitle;
-    document.getElementById('emergency-steps').innerHTML = data.steps.map((s, i) => `
-      <li class="emergency-step">
-        <div class="emergency-step-num">${i + 1}</div>
-        <div class="emergency-step-text">${s}</div>
-      </li>
-    `).join('');
-
-    const overlay = document.getElementById('emergency-overlay');
-    const colors = { api: 'var(--danger)', luka: 'var(--warning)', racun: '#B7950B' };
-    overlay.style.background = colors[type] || 'var(--danger)';
-    overlay.classList.add('active');
-  }
-
-  function closeEmergency() {
-    document.getElementById('emergency-overlay').classList.remove('active');
-  }
-
-  // ============================================================
-  //  MODAL
-  // ============================================================
-  let modalCallback = null;
-  function openModal(title, body, onConfirm) {
-    document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-body').textContent  = body;
-    document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); onConfirm(); };
-    document.getElementById('modal-overlay').classList.add('active');
-    modalCallback = onConfirm;
-  }
-  function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('active');
-  }
-
-  // ============================================================
-  //  TAB NAVIGATION
-  // ============================================================
-  function switchTab(tabName) {
-    appState.activeTab = tabName;
-
-    // Update screens
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(`screen-${tabName}`)?.classList.add('active');
-
-    // Update nav items
-    document.querySelectorAll('.bottom-nav-item, .sidebar-nav-item').forEach(item => {
-      item.classList.toggle('active', item.dataset.tab === tabName);
-    });
-
-    // Scroll top
-    document.getElementById('screen-container').scrollTop = 0;
-
-    // Re-render based on tab
-    if (tabName === 'beranda') renderDashboard();
-    if (tabName === 'tugas')   renderModuleList();
-  }
-
-  function initNavigation() {
-    document.querySelectorAll('.bottom-nav-item, .sidebar-nav-item').forEach(item => {
-      item.addEventListener('click', () => {
-        // Jika di checklist detail, kembali dulu ke list
-        if (item.dataset.tab === 'tugas' && appState.activeModuleId) {
-          backToModuleList();
-          return;
+// ============================================================
+//  REALTIME SUBSCRIPTION
+// ============================================================
+function subscribeRealtime() {
+  db.channel('checklist_progress_changes')
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'checklist_progress',
+    }, payload => {
+      const rec = payload.new || payload.old;
+      if (!rec) return;
+      if (rec.shift_date === getTodayISO() && rec.shift_type === appState.activeShift) {
+        if (payload.eventType === 'DELETE') {
+          delete appState.progress[rec.step_id];
+        } else {
+          appState.progress[rec.step_id] = {
+            id: rec.id, is_done: rec.is_done,
+            done_by: rec.done_by, done_at: rec.done_at, notes: rec.notes || ''
+          };
         }
-        switchTab(item.dataset.tab);
-      });
-    });
-  }
+        refreshProgressUI();
+        if (appState.activeModuleId) renderChecklistDetail(appState.activeModuleId);
+        checkAllDoneConfetti();
+      }
+    })
+    .subscribe();
+}
 
-  // ============================================================
-  //  MAIN INIT
-  // ============================================================
-async function init() {
-  // Restore dark mode pref — sebelum apapun
-  if (localStorage.getItem('sop_dark_mode') === '1') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.getElementById('dark-mode-toggle').checked = true;
-  }
+// ============================================================
+//  PRESENCE (Supabase Channel Presence)
+// ============================================================
+let presenceChannel = null;
 
-  // Load K3 custom dari localStorage (harus setelah emergencyData didefinisikan)
-  loadCustomK3();
+function initPresence() {
+  if (isGuest) return;
 
-  try {
-    await initDeviceSession(); // Ini akan menunggu login jika belum ada sesi
-    await Promise.all([loadModules(), loadSteps()]);
-    await loadProgress();
-    subscribeRealtime();
-
-    renderDashboard();
-    renderModuleList();
-  } catch (err) {
-    console.error('Init error:', err);
-    showToast('Gagal terhubung ke server. Periksa koneksi internet.', 'error');
-  }
-
-  // Search listener
-  document.getElementById('search-input').addEventListener('input', e => {
-    handleSearch(e.target.value);
+  presenceChannel = db.channel('sop_presence', {
+    config: { presence: { key: appState.deviceId } }
   });
 
-  initNavigation();
-
-  // Hide loading screen
-  const ls = document.getElementById('loading-screen');
-  ls.classList.add('fade-out');
-  setTimeout(() => ls.remove(), 350);
-}
-  // ============================================================
-//  ADMIN: TAB SWITCH
-// ============================================================
-function switchAdminTab(tab) {
-  document.querySelectorAll('.admin-tab').forEach(t =>
-    t.classList.toggle('active', t.dataset.adminTab === tab));
-  document.getElementById('admin-panel-modul').style.display  = tab === 'modul'   ? 'block' : 'none';
-  document.getElementById('admin-panel-darurat').style.display = tab === 'darurat' ? 'block' : 'none';
-}
-
-function openAdminScreen() {
-  if (appState.role !== 'manajer') {
-    showToast('Halaman ini hanya untuk Manajer.', 'error'); return;
-  }
-  switchTab('admin');
-  renderAdminModuleList();
-  renderAdminK3List();
+  presenceChannel
+    .on('presence', { event: 'sync' }, () => {
+      const state = presenceChannel.presenceState();
+      renderPresenceBar(state);
+    })
+    .subscribe(async status => {
+      if (status === 'SUBSCRIBED') {
+        await presenceChannel.track({
+          name:     appState.staffName,
+          deviceId: appState.deviceId,
+          joinedAt: Date.now(),
+        });
+      }
+    });
 }
 
-// ============================================================
-//  ADMIN: RENDER MODULE LIST
-// ============================================================
-function renderAdminModuleList() {
-  const container = document.getElementById('admin-module-list');
-  if (!appState.modules.length) {
-    container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada modul. Klik "Tambah Modul Baru".</p>';
+function renderPresenceBar(state) {
+  const bar = document.getElementById('presence-bar');
+  if (!bar) return;
+
+  const users = Object.values(state).flat();
+  if (users.length === 0) {
+    bar.innerHTML = '<span class="presence-bar-label">👥 Staff online:</span><span style="font-size:12px; opacity:0.7;">Belum ada yang online</span>';
     return;
   }
-  container.innerHTML = appState.modules.map(mod => {
-    const stepCount = appState.steps.filter(s => s.module_id === mod.id).length;
-    const color = mod.color_hex || '#888';
+
+  const avatars = users.map(u => `
+    <div class="presence-avatar">
+      <div class="av-dot"></div>
+      ${u.name || 'Staf'}
+    </div>
+  `).join('');
+
+  bar.innerHTML = `<span class="presence-bar-label">👥 Online (${users.length}):</span>${avatars}`;
+}
+
+// ============================================================
+//  RENDER: BERANDA
+// ============================================================
+function renderDashboard() {
+  updateHariKe();
+  const today = getTodayISO();
+  document.getElementById('hero-meta').textContent =
+    `${shiftLabel(appState.activeShift)} · ${formatDate(today)}`;
+
+  const grid = document.getElementById('module-grid');
+  if (appState.modules.length === 0) {
+    grid.innerHTML = '<p style="padding:16px;color:var(--text-muted);font-size:13px;grid-column:1/-1">Modul belum tersedia.</p>';
+    updateHeroProgress();
+    return;
+  }
+
+  grid.innerHTML = appState.modules.map(mod => {
+    const modSteps  = appState.steps.filter(s => s.module_id === mod.id);
+    const doneSteps = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+    const total     = modSteps.length;
+    const pct       = total ? Math.round((doneSteps / total) * 100) : 0;
+    const allDone   = total > 0 && doneSteps === total;
+    const color     = mod.color_hex || '#888';
+
+    // Cari siapa yang belum centang (dari progress realtime)
+    const uncheckedCount = modSteps.filter(s => !appState.progress[s.id]?.is_done).length;
+
     return `
-      <div class="admin-item">
-        <div class="admin-item-icon" style="background:${color}20; color:${color}">
+      <div class="module-card" onclick="openModuleChecklist('${mod.id}')">
+        <div class="module-card-top">
+          <div class="module-icon-wrap" style="background:${color}20; color:${color}">
+            <i class="ti ${mod.icon || 'ti-list'}"></i>
+          </div>
+          <span class="module-badge ${allDone ? 'done' : ''}">${doneSteps}/${total}</span>
+        </div>
+        <div class="module-card-name">${mod.name}</div>
+        ${uncheckedCount > 0 && !allDone ? `<div><span class="staff-unchecked-tag"><i class="ti ti-clock"></i> ${uncheckedCount} belum</span></div>` : ''}
+        <div class="module-mini-progress">
+          <div class="module-mini-fill" style="width:${pct}%; background:${color}"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  updateHeroProgress();
+  loadOmzet();
+}
+
+// ============================================================
+//  CONFETTI
+// ============================================================
+function checkAllDoneConfetti() {
+  const total = appState.steps.length;
+  if (total === 0) return;
+  const done = appState.steps.filter(s => appState.progress[s.id]?.is_done).length;
+  if (done === total) fireConfetti();
+}
+
+function fireConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  if (!canvas) return;
+  canvas.style.display = 'block';
+  const ctx = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const particles = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -10,
+    r: 5 + Math.random() * 8,
+    d: 2 + Math.random() * 3,
+    color: ['#D4521A','#F5A672','#2D7A3A','#2980B9','#E67E22','#F7DC6F'][Math.floor(Math.random()*6)],
+    tilt: Math.random() * 10 - 5,
+    tiltAngle: 0,
+    tiltSpeed: 0.05 + Math.random() * 0.1,
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.tiltAngle += p.tiltSpeed;
+      p.y += p.d;
+      p.x += Math.sin(frame * 0.01 + p.tiltAngle) * 1.5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = 0.85;
+      ctx.fill();
+    });
+    frame++;
+    if (frame < 200) requestAnimationFrame(draw);
+    else {
+      canvas.style.display = 'none';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  draw();
+  showToast('🎉 Semua tugas shift selesai! Kerja bagus!', 'success');
+}
+
+// ============================================================
+//  RENDER: MODULE LIST (Tugas)
+// ============================================================
+function renderModuleList() {
+  document.getElementById('tugas-shift-info').textContent = shiftLabel(appState.activeShift);
+  const container = document.getElementById('module-list-container');
+
+  if (appState.modules.length === 0) {
+    container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Modul belum tersedia.</p>';
+    return;
+  }
+
+  container.innerHTML = appState.modules.map(mod => {
+    const modSteps = appState.steps.filter(s => s.module_id === mod.id);
+    const done     = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+    const total    = modSteps.length;
+    const pct      = total ? Math.round((done / total) * 100) : 0;
+    const color    = mod.color_hex || '#888';
+
+    return `
+      <div class="module-list-item" onclick="openModuleChecklist('${mod.id}')">
+        <div class="module-list-icon" style="background:${color}20; color:${color}">
           <i class="ti ${mod.icon || 'ti-list'}"></i>
         </div>
-        <div class="admin-item-info">
-          <div class="admin-item-name">${mod.name}</div>
-          <div class="admin-item-sub">${stepCount} langkah · urutan ${mod.order_index}</div>
+        <div class="module-list-info">
+          <div class="module-list-name">${mod.name}</div>
+          <div class="module-list-sub">${done}/${total} langkah · ${pct}%</div>
+          <div class="module-list-bar">
+            <div class="module-list-fill" style="width:${pct}%; background:${color}"></div>
+          </div>
         </div>
-        <div style="display:flex; gap:6px;">
-          <button class="admin-btn-sm" onclick="openStepPanel('${mod.id}')">Langkah</button>
-          <button class="admin-btn-sm" onclick="editModuleForm('${mod.id}')">Edit</button>
-          <button class="admin-btn-sm danger" onclick="confirmDeleteModule('${mod.id}')">Hapus</button>
-        </div>
+        <i class="ti ti-chevron-right module-list-arrow"></i>
       </div>
     `;
   }).join('');
 }
 
 // ============================================================
-//  ADMIN: MODUL FORM
+//  CHECKLIST DETAIL + CATATAN
 // ============================================================
-let editingModuleId = null;
+function openModuleChecklist(moduleId) {
+  appState.activeModuleId = moduleId;
+  const mod = appState.modules.find(m => m.id === moduleId);
+  if (!mod) return;
+  document.getElementById('view-module-list').style.display = 'none';
+  document.getElementById('view-checklist-detail').style.display = 'block';
+  document.getElementById('checklist-mod-title').textContent = mod.name;
+  switchTab('tugas');
+  renderChecklistDetail(moduleId);
+}
 
+function backToModuleList() {
+  appState.activeModuleId = null;
+  document.getElementById('view-checklist-detail').style.display = 'none';
+  document.getElementById('view-module-list').style.display = 'block';
+  renderModuleList();
+}
+
+function renderChecklistDetail(moduleId) {
+  const mod      = appState.modules.find(m => m.id === moduleId);
+  const modSteps = appState.steps.filter(s => s.module_id === moduleId);
+  const done     = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+  const total    = modSteps.length;
+
+  document.getElementById('checklist-progress-pill').textContent = `${done}/${total}`;
+  document.getElementById('checklist-progress-pill').style.background =
+    done === total && total > 0 ? 'var(--success-light)' : 'var(--surface-2)';
+  document.getElementById('checklist-progress-pill').style.color =
+    done === total && total > 0 ? 'var(--success)' : 'var(--text-secondary)';
+
+  const groups = {};
+  modSteps.forEach(step => {
+    const g = step.group_name || 'Umum';
+    if (!groups[g]) groups[g] = [];
+    groups[g].push(step);
+  });
+
+  const container = document.getElementById('checklist-items-container');
+  let html = '';
+
+  Object.entries(groups).forEach(([groupName, steps]) => {
+    html += `<div class="checklist-group-label">${groupName}</div>`;
+    steps.forEach(step => {
+      const prog   = appState.progress[step.id];
+      const isDone = prog?.is_done || false;
+      const doneBy = prog?.done_by || '';
+      const doneAt = prog?.done_at ? new Date(prog.done_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
+      const note   = prog?.notes || '';
+      const timer  = appState.timers[step.id];
+
+      let timerHtml = '';
+      if (step.duration_minutes) {
+        const timerState = timer?.interval ? 'running' : (timer?.finished ? 'finished' : '');
+        const timerLabel = timer?.interval
+          ? formatCountdown(timer.remaining)
+          : (timer?.finished ? 'Selesai ✓' : formatDuration(step.duration_minutes));
+        timerHtml = `
+          <div class="timer-pill ${timerState}" onclick="handleTimer(event, '${step.id}', ${step.duration_minutes})">
+            <i class="ti ${timer?.interval ? 'ti-player-pause' : 'ti-player-play'}"></i>
+            ${timerLabel}
+          </div>`;
+      }
+
+      // Guest tidak bisa centang
+      const clickHandler = isGuest
+        ? `onclick="showToast('Mode Tamu: tidak bisa mencentang.','info')"`
+        : `onclick="toggleStep('${step.id}')"`;
+
+      html += `
+        <div class="checklist-item ${isDone ? 'done' : ''}" id="item-${step.id}" ${clickHandler}>
+          <div class="check-circle"><i class="ti ti-check"></i></div>
+          <div class="item-body">
+            <div class="item-title">${step.title}</div>
+            ${step.description ? `<div class="item-desc">${step.description}</div>` : ''}
+            <div class="item-meta">
+              ${step.is_critical ? '<span class="critical-badge"><i class="ti ti-alert-circle"></i> Wajib</span>' : ''}
+              ${timerHtml}
+              ${!isGuest ? `<div class="timer-pill" style="background:var(--surface-2); color:var(--text-muted);" onclick="openNoteModal(event,'${step.id}')">
+                <i class="ti ti-notes"></i> ${note ? 'Edit catatan' : 'Tambah catatan'}
+              </div>` : ''}
+            </div>
+            ${note ? `<div class="item-note"><i class="ti ti-message-circle"></i>${note}</div>` : ''}
+            ${isDone && (doneBy || doneAt) ? `<div class="item-done-by">✓ ${doneBy} · ${doneAt}</div>` : ''}
+          </div>
+        </div>`;
+    });
+  });
+
+  if (!html) html = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada langkah SOP.</p>';
+  container.innerHTML = html;
+}
+
+// ============================================================
+//  NOTE MODAL
+// ============================================================
+let noteTargetStepId = null;
+
+function openNoteModal(evt, stepId) {
+  evt.stopPropagation();
+  noteTargetStepId = stepId;
+  const existing = appState.progress[stepId]?.notes || '';
+  document.getElementById('note-textarea').value       = existing;
+  document.getElementById('note-modal-overlay').classList.add('active');
+  setTimeout(() => document.getElementById('note-textarea').focus(), 100);
+}
+
+function closeNoteModal() {
+  document.getElementById('note-modal-overlay').classList.remove('active');
+  noteTargetStepId = null;
+}
+
+async function saveNote() {
+  if (!noteTargetStepId) return;
+  const note  = document.getElementById('note-textarea').value.trim();
+  const today = getTodayISO();
+
+  const prog = appState.progress[noteTargetStepId];
+  if (prog) {
+    appState.progress[noteTargetStepId].notes = note;
+  }
+
+  try {
+    await db.from('checklist_progress').upsert({
+      step_id:    noteTargetStepId,
+      shift_date: today,
+      shift_type: appState.activeShift,
+      is_done:    prog?.is_done || false,
+      done_by:    prog?.done_by || null,
+      done_at:    prog?.done_at || null,
+      notes:      note,
+    }, { onConflict: 'step_id,shift_date,shift_type' });
+    showToast('Catatan disimpan ✓', 'success');
+  } catch(err) {
+    showToast('Gagal simpan catatan.', 'error');
+  }
+
+  closeNoteModal();
+  if (appState.activeModuleId) renderChecklistDetail(appState.activeModuleId);
+}
+
+// ============================================================
+//  TOGGLE STEP (Checklist) — update: tambah catatan
+// ============================================================
+async function toggleStep(stepId) {
+  if (isGuest) { showToast('Mode Tamu: tidak bisa mencentang.', 'info'); return; }
+
+  const prog    = appState.progress[stepId];
+  const isDone  = prog?.is_done || false;
+  const newDone = !isDone;
+  const today   = getTodayISO();
+
+  appState.progress[stepId] = {
+    ...prog,
+    is_done: newDone,
+    done_by: newDone ? (appState.staffName || 'Staf') : null,
+    done_at: newDone ? new Date().toISOString() : null,
+    notes:   prog?.notes || '',
+  };
+  refreshItemUI(stepId);
+  refreshProgressUI();
+
+  try {
+    const { error } = await db.from('checklist_progress').upsert({
+      step_id:    stepId,
+      shift_date: today,
+      shift_type: appState.activeShift,
+      is_done:    newDone,
+      done_by:    newDone ? (appState.staffName || 'Staf') : null,
+      done_at:    newDone ? new Date().toISOString() : null,
+      notes:      prog?.notes || null,
+    }, { onConflict: 'step_id,shift_date,shift_type' });
+    if (error) throw error;
+    if (newDone) {
+      showToast('Langkah selesai! ✓', 'success');
+      checkAllDoneConfetti();
+    }
+  } catch(err) {
+    appState.progress[stepId] = prog || undefined;
+    if (!prog) delete appState.progress[stepId];
+    refreshItemUI(stepId);
+    refreshProgressUI();
+    showToast('Gagal menyimpan. Coba lagi.', 'error');
+  }
+}
+
+function refreshItemUI(stepId) {
+  const el = document.getElementById(`item-${stepId}`);
+  if (!el) return;
+  const prog = appState.progress[stepId];
+  const isDone = prog?.is_done || false;
+  el.classList.toggle('done', isDone);
+
+  const doneByEl = el.querySelector('.item-done-by');
+  const doneBy = prog?.done_by || '';
+  const doneAt = prog?.done_at ? new Date(prog.done_at).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}) : '';
+
+  if (isDone && (doneBy || doneAt)) {
+    if (doneByEl) doneByEl.textContent = `✓ ${doneBy} · ${doneAt}`;
+    else {
+      const body = el.querySelector('.item-body');
+      const d = document.createElement('div');
+      d.className = 'item-done-by';
+      d.textContent = `✓ ${doneBy} · ${doneAt}`;
+      body.appendChild(d);
+    }
+  } else {
+    if (doneByEl) doneByEl.remove();
+  }
+}
+
+function refreshProgressUI() {
+  updateHeroProgress();
+  appState.modules.forEach(mod => {
+    const modSteps = appState.steps.filter(s => s.module_id === mod.id);
+    const done     = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+    const total    = modSteps.length;
+    const pct      = total ? Math.round((done / total) * 100) : 0;
+    const allDone  = total > 0 && done === total;
+
+    const idx = appState.modules.indexOf(mod);
+    const cardBadge = document.querySelector(`#module-grid .module-card:nth-child(${idx+1}) .module-badge`);
+    const cardFill  = document.querySelector(`#module-grid .module-card:nth-child(${idx+1}) .module-mini-fill`);
+    if (cardBadge) { cardBadge.textContent = `${done}/${total}`; cardBadge.className = `module-badge ${allDone ? 'done' : ''}`; }
+    if (cardFill)  cardFill.style.width = pct + '%';
+
+    const listItems = document.querySelectorAll('#module-list-container .module-list-item');
+    listItems.forEach((item, i) => {
+      const m  = appState.modules[i];
+      if (!m) return;
+      const ms = appState.steps.filter(s => s.module_id === m.id);
+      const d  = ms.filter(s => appState.progress[s.id]?.is_done).length;
+      const t  = ms.length;
+      const p  = t ? Math.round((d / t) * 100) : 0;
+      const sub  = item.querySelector('.module-list-sub');
+      const fill = item.querySelector('.module-list-fill');
+      if (sub)  sub.textContent = `${d}/${t} langkah · ${p}%`;
+      if (fill) fill.style.width = p + '%';
+    });
+  });
+
+  if (appState.activeModuleId) {
+    const modSteps = appState.steps.filter(s => s.module_id === appState.activeModuleId);
+    const done  = modSteps.filter(s => appState.progress[s.id]?.is_done).length;
+    const total = modSteps.length;
+    const pill  = document.getElementById('checklist-progress-pill');
+    if (pill) {
+      pill.textContent = `${done}/${total}`;
+      pill.style.background = done === total && total > 0 ? 'var(--success-light)' : 'var(--surface-2)';
+      pill.style.color = done === total && total > 0 ? 'var(--success)' : 'var(--text-secondary)';
+    }
+  }
+}
+
+// ============================================================
+//  TIMER LOGIC (unchanged)
+// ============================================================
+function formatCountdown(secs) {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+function handleTimer(evt, stepId, durationMins) {
+  evt.stopPropagation();
+  const existing = appState.timers[stepId];
+  if (existing?.interval) {
+    clearInterval(existing.interval);
+    appState.timers[stepId] = { interval: null, remaining: existing.remaining, finished: false };
+  } else if (existing?.remaining > 0) {
+    startCountdown(stepId);
+  } else {
+    requestNotifPermission();
+    appState.timers[stepId] = { interval: null, remaining: durationMins * 60, finished: false };
+    startCountdown(stepId);
+  }
+  if (appState.activeModuleId) renderChecklistDetail(appState.activeModuleId);
+}
+
+function startCountdown(stepId) {
+  const t = appState.timers[stepId];
+  if (!t) return;
+  t.interval = setInterval(() => {
+    t.remaining -= 1;
+    const pill = document.querySelector(`#item-${stepId} .timer-pill.running`);
+    if (pill) {
+      pill.innerHTML = `<i class="ti ti-player-pause"></i> ${formatCountdown(t.remaining)}`;
+    }
+    if (t.remaining <= 0) {
+      clearInterval(t.interval); t.interval = null; t.finished = true; t.remaining = 0;
+      if (pill) { pill.innerHTML = '<i class="ti ti-circle-check"></i> Selesai ✓'; pill.classList.remove('running'); pill.classList.add('finished'); }
+      notifyTimerDone(stepId);
+    }
+  }, 1000);
+}
+
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+}
+
+function notifyTimerDone(stepId) {
+  const step = appState.steps.find(s => s.id === stepId);
+  showToast(`Timer selesai: "${step?.title || 'Langkah'}"`, 'success');
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('Timer SOP Selesai! 🍜', { body: step?.title || 'Waktu habis' });
+  }
+}
+
+// ============================================================
+//  RESET SHIFT
+// ============================================================
+function confirmResetShift() {
+  if (isGuest) { showToast('Mode Tamu tidak bisa reset.', 'error'); return; }
+  openModal(
+    'Reset Semua Checklist?',
+    `Semua progress tugas shift ${shiftLabel(appState.activeShift)} hari ini akan dihapus.`,
+    resetShift
+  );
+}
+
+async function resetShift() {
+  try {
+    const { error } = await db.from('checklist_progress').delete()
+      .eq('shift_date', getTodayISO()).eq('shift_type', appState.activeShift);
+    if (error) throw error;
+    appState.progress = {};
+    renderModuleList(); renderDashboard();
+    showToast('Checklist berhasil direset.', 'success');
+  } catch(err) { showToast('Gagal mereset.', 'error'); }
+}
+
+// ============================================================
+//  SEARCH
+// ============================================================
+function handleSearch(query) {
+  const q = query.trim().toLowerCase();
+  const container = document.getElementById('search-results');
+  if (!q) {
+    container.innerHTML = `<div class="empty-state"><i class="ti ti-search"></i><p>Ketik kata kunci untuk<br>mencari prosedur SOP</p></div>`;
+    return;
+  }
+  const results = appState.steps.filter(s =>
+    s.title.toLowerCase().includes(q) ||
+    (s.description || '').toLowerCase().includes(q) ||
+    (s.group_name || '').toLowerCase().includes(q)
+  );
+  if (!results.length) {
+    container.innerHTML = `<div class="empty-state"><i class="ti ti-mood-empty"></i><p>Prosedur "<strong>${query}</strong>" tidak ditemukan.</p></div>`;
+    return;
+  }
+  container.innerHTML = results.map(step => {
+    const mod = appState.modules.find(m => m.id === step.module_id);
+    return `
+      <div class="search-result-item" onclick="openModuleChecklist('${step.module_id}')">
+        <div class="result-module-tag" style="background:${mod?.color_hex||'#888'}">${mod?.name||'Modul'}</div>
+        <div class="result-title">${highlight(step.title, q)}</div>
+        <div class="result-group">${step.group_name||''}</div>
+      </div>`;
+  }).join('');
+}
+
+function highlight(text, q) {
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx < 0) return text;
+  return text.slice(0, idx) +
+    `<mark style="background:var(--warning-light);color:var(--warning);border-radius:3px;padding:0 2px">${text.slice(idx, idx+q.length)}</mark>` +
+    text.slice(idx + q.length);
+}
+
+// ============================================================
+//  PROFIL
+// ============================================================
+async function saveProfile() {
+  if (isGuest) { showToast('Mode Tamu tidak bisa simpan profil.', 'error'); return; }
+  const name = document.getElementById('staff-name-input').value.trim();
+  const role = document.getElementById('role-select').value;
+  if (!name) { showToast('Nama tidak boleh kosong.', 'error'); return; }
+  appState.staffName = name; appState.role = role;
+  try {
+    const { error } = await db.from('user_sessions')
+      .update({ staff_name: name, role })
+      .eq('device_id', appState.deviceId);
+    if (error) throw error;
+    syncProfileUI();
+    showToast('Profil berhasil disimpan! ✓', 'success');
+  } catch(err) { showToast('Gagal simpan: ' + err.message, 'error'); }
+}
+
+async function setShift(shift) {
+  appState.activeShift = shift;
+  updateShiftChips();
+  await loadProgress();
+  renderDashboard(); renderModuleList();
+  if (!isGuest) {
+    try { await db.from('user_sessions').update({ active_shift: shift }).eq('device_id', appState.deviceId); } catch(e) {}
+  }
+  showToast(`Beralih ke ${shiftLabel(shift)}`, 'info');
+}
+
+function updateShiftChips() {
+  document.querySelectorAll('.shift-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.shift === appState.activeShift);
+  });
+}
+
+function toggleDarkMode(enabled) {
+  document.documentElement.setAttribute('data-theme', enabled ? 'dark' : '');
+  localStorage.setItem('sop_dark_mode', enabled ? '1' : '0');
+}
+
+// ============================================================
+//  EMERGENCY OVERLAY (unchanged)
+// ============================================================
+const emergencyData = {
+  api: {
+    title: '🔥 Prosedur Kebakaran',
+    subtitle: 'Tetap tenang. Ikuti langkah ini segera.',
+    steps: [
+      'Teriak "KEBAKARAN!" keras-keras untuk memperingatkan semua orang.',
+      'Cabut colokan peralatan listrik terdekat jika aman.',
+      'Ambil APAR (Alat Pemadam Api Ringan) di dekat pintu masuk kios.',
+      'Gunakan APAR: cabut pin, arahkan ke dasar api, tekan tuas, sapukan ke kanan-kiri.',
+      'Jika api tidak padam dalam 30 detik, EVAKUASI semua orang segera.',
+      'Hubungi Damkar: 113 dari tempat yang aman.',
+      'Jangan kembali ke dalam bangunan sebelum dinyatakan aman.',
+    ],
+  },
+  luka: {
+    title: '🩹 Prosedur Luka & Cedera',
+    subtitle: 'Tangani dengan tenang dan cepat.',
+    steps: [
+      'Pastikan area sekitar aman. Jangan pindahkan korban jika dicurigai cedera tulang belakang.',
+      'Untuk luka sayat: bilas dengan air mengalir 5 menit, tekan dengan kain bersih.',
+      'Untuk luka bakar ringan: rendam/siram air dingin 10–20 menit. JANGAN pakai pasta gigi.',
+      'Pasang perban atau plester setelah luka bersih.',
+      'Jika luka dalam, darah tidak berhenti — SEGERA bawa ke IGD.',
+      'Catat nama korban, waktu, dan penyebab untuk laporan.',
+      'Hubungi 119 jika darurat.',
+    ],
+  },
+  racun: {
+    title: '☠️ Prosedur Keracunan Makanan',
+    subtitle: 'Tindakan cepat bisa menyelamatkan nyawa.',
+    steps: [
+      'Identifikasi makanan/bahan penyebab. Amankan sisa makanan untuk pemeriksaan.',
+      'Pindahkan korban ke area berventilasi baik.',
+      'JANGAN paksa korban muntah kecuali atas petunjuk dokter.',
+      'Beri minum air putih secukupnya jika korban masih sadar.',
+      'Catat gejala: mual, muntah, diare, kram, demam, waktu mulai.',
+      'Hubungi Hotline Keracunan: (021) 4250767 atau bawa ke IGD.',
+      'Laporkan ke Dinas Kesehatan setempat dalam 24 jam.',
+    ],
+  },
+};
+
+function openEmergency(type) {
+  const data = emergencyData[type];
+  if (!data) return;
+  document.getElementById('emergency-title').textContent    = data.title;
+  document.getElementById('emergency-subtitle').textContent = data.subtitle;
+  document.getElementById('emergency-steps').innerHTML = data.steps.map((s, i) => `
+    <li class="emergency-step">
+      <div class="emergency-step-num">${i+1}</div>
+      <div class="emergency-step-text">${s}</div>
+    </li>`).join('');
+  const colors = { api: 'var(--danger)', luka: 'var(--warning)', racun: '#B7950B' };
+  document.getElementById('emergency-overlay').style.background = colors[type] || 'var(--danger)';
+  document.getElementById('emergency-overlay').classList.add('active');
+}
+function closeEmergency() {
+  document.getElementById('emergency-overlay').classList.remove('active');
+}
+
+// ============================================================
+//  MODAL
+// ============================================================
+let modalCallback = null;
+function openModal(title, body, onConfirm) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent  = body;
+  document.getElementById('modal-confirm-btn').onclick = () => { closeModal(); onConfirm(); };
+  document.getElementById('modal-overlay').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// ============================================================
+//  TAB NAVIGATION
+// ============================================================
+function switchTab(tabName) {
+  appState.activeTab = tabName;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${tabName}`)?.classList.add('active');
+  document.querySelectorAll('.bottom-nav-item, .sidebar-nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.tab === tabName);
+  });
+  document.getElementById('screen-container').scrollTop = 0;
+  if (tabName === 'beranda') renderDashboard();
+  if (tabName === 'tugas')   renderModuleList();
+}
+
+function initNavigation() {
+  document.querySelectorAll('.bottom-nav-item, .sidebar-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (item.dataset.tab === 'tugas' && appState.activeModuleId) { backToModuleList(); return; }
+      switchTab(item.dataset.tab);
+    });
+  });
+}
+
+// ============================================================
+//  ADMIN FUNCTIONS (unchanged, hanya sembunyikan jika guest)
+// ============================================================
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.adminTab === tab));
+  document.getElementById('admin-panel-modul').style.display   = tab === 'modul'   ? 'block' : 'none';
+  document.getElementById('admin-panel-darurat').style.display = tab === 'darurat' ? 'block' : 'none';
+}
+
+function openAdminScreen() {
+  if (isGuest) { showToast('Tamu tidak bisa akses admin.', 'error'); return; }
+  switchTab('admin');
+  renderAdminModuleList();
+  renderAdminK3List();
+}
+
+function renderAdminModuleList() {
+  const container = document.getElementById('admin-module-list');
+  if (!appState.modules.length) {
+    container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada modul.</p>'; return;
+  }
+  container.innerHTML = appState.modules.map(mod => {
+    const stepCount = appState.steps.filter(s => s.module_id === mod.id).length;
+    const color = mod.color_hex || '#888';
+    return `<div class="admin-item">
+      <div class="admin-item-icon" style="background:${color}20; color:${color}"><i class="ti ${mod.icon||'ti-list'}"></i></div>
+      <div class="admin-item-info">
+        <div class="admin-item-name">${mod.name}</div>
+        <div class="admin-item-sub">${stepCount} langkah · urutan ${mod.order_index}</div>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="admin-btn-sm" onclick="openStepPanel('${mod.id}')">Langkah</button>
+        <button class="admin-btn-sm" onclick="editModuleForm('${mod.id}')">Edit</button>
+        <button class="admin-btn-sm danger" onclick="confirmDeleteModule('${mod.id}')">Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let editingModuleId = null;
 function openAddModuleForm() {
   editingModuleId = null;
   document.getElementById('admin-form-title').textContent = 'Tambah Modul';
@@ -2756,7 +3031,6 @@ function openAddModuleForm() {
   document.getElementById('admin-module-form').style.display = 'block';
   document.getElementById('amod-name').focus();
 }
-
 function editModuleForm(modId) {
   const mod = appState.modules.find(m => m.id === modId);
   if (!mod) return;
@@ -2770,76 +3044,49 @@ function editModuleForm(modId) {
   document.getElementById('admin-module-form').style.display = 'block';
   document.getElementById('amod-name').focus();
 }
-
-function cancelModuleForm() {
-  document.getElementById('admin-module-form').style.display = 'none';
-}
-
+function cancelModuleForm() { document.getElementById('admin-module-form').style.display = 'none'; }
 async function saveModuleForm() {
   const name  = document.getElementById('amod-name').value.trim();
   const icon  = document.getElementById('amod-icon').value.trim() || 'ti-list';
   const color = document.getElementById('amod-color').value;
   const order = parseInt(document.getElementById('amod-order').value) || 0;
   const editId = document.getElementById('amod-edit-id').value;
-
   if (!name) { showToast('Nama modul tidak boleh kosong.', 'error'); return; }
-
   try {
     if (editId) {
       const { error } = await db.from('modules').update({ name, icon, color_hex: color, order_index: order }).eq('id', editId);
       if (error) throw error;
       const idx = appState.modules.findIndex(m => m.id === editId);
       if (idx > -1) appState.modules[idx] = { ...appState.modules[idx], name, icon, color_hex: color, order_index: order };
-      showToast('Modul berhasil diupdate!', 'success');
+      showToast('Modul diupdate!', 'success');
     } else {
       const { data, error } = await db.from('modules').insert({ name, icon, color_hex: color, order_index: order }).select().single();
       if (error) throw error;
       appState.modules.push(data);
-      appState.modules.sort((a, b) => a.order_index - b.order_index);
-      showToast('Modul berhasil ditambahkan!', 'success');
+      appState.modules.sort((a,b) => a.order_index - b.order_index);
+      showToast('Modul ditambahkan!', 'success');
     }
-    cancelModuleForm();
-    renderAdminModuleList();
-    renderDashboard();
-    renderModuleList();
-  } catch (err) {
-    showToast('Gagal menyimpan modul: ' + err.message, 'error');
-    console.error(err);
-  }
+    cancelModuleForm(); renderAdminModuleList(); renderDashboard(); renderModuleList();
+  } catch(err) { showToast('Gagal: ' + err.message, 'error'); }
 }
-
 async function confirmDeleteModule(modId) {
   const mod = appState.modules.find(m => m.id === modId);
-  const stepCount = appState.steps.filter(s => s.module_id === modId).length;
-  openModal(
-    'Hapus Modul?',
-    `Modul "${mod?.name}" dan ${stepCount} langkah SOP-nya akan dihapus permanen.`,
-    () => deleteModule(modId)
-  );
+  const cnt = appState.steps.filter(s => s.module_id === modId).length;
+  openModal('Hapus Modul?', `"${mod?.name}" dan ${cnt} langkah akan dihapus permanen.`, () => deleteModule(modId));
 }
-
 async function deleteModule(modId) {
   try {
-    // Hapus steps dulu (cascade manual karena RLS)
     await db.from('sop_steps').delete().eq('module_id', modId);
     const { error } = await db.from('modules').delete().eq('id', modId);
     if (error) throw error;
     appState.modules = appState.modules.filter(m => m.id !== modId);
     appState.steps   = appState.steps.filter(s => s.module_id !== modId);
-    renderAdminModuleList();
-    renderDashboard();
-    renderModuleList();
+    renderAdminModuleList(); renderDashboard(); renderModuleList();
     showToast('Modul dihapus.', 'info');
-  } catch (err) {
-    showToast('Gagal hapus modul: ' + err.message, 'error');
-  }
+  } catch(err) { showToast('Gagal hapus: ' + err.message, 'error'); }
 }
 
-// ============================================================
-//  ADMIN: STEP PANEL
-// ============================================================
 let adminActiveModuleId = null;
-
 function openStepPanel(modId) {
   adminActiveModuleId = modId;
   const mod = appState.modules.find(m => m.id === modId);
@@ -2849,53 +3096,36 @@ function openStepPanel(modId) {
   document.getElementById('admin-step-panel').style.display    = 'block';
   renderAdminStepList(modId);
 }
-
 function closeStepPanel() {
   document.getElementById('admin-step-panel').style.display = 'none';
   document.getElementById('admin-panel-modul').style.display = 'block';
-  adminActiveModuleId = null;
-  renderAdminModuleList();
+  adminActiveModuleId = null; renderAdminModuleList();
 }
-
 function renderAdminStepList(modId) {
   const steps = appState.steps.filter(s => s.module_id === modId);
   const container = document.getElementById('admin-step-list');
-  if (!steps.length) {
-    container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada langkah. Klik "+ Tambah".</p>';
-    return;
-  }
+  if (!steps.length) { container.innerHTML = '<p style="padding:24px 16px; color:var(--text-muted); font-size:13px;">Belum ada langkah.</p>'; return; }
   container.innerHTML = steps.map(step => `
     <div class="admin-item">
       <div class="admin-item-info">
         <div class="admin-item-name">${step.title}</div>
-        <div class="admin-item-sub">
-          ${step.group_name || 'Umum'} 
-          ${step.duration_minutes ? '· ' + step.duration_minutes + ' mnt' : ''}
-          ${step.is_critical ? ' · ⚠️ Wajib' : ''}
-        </div>
+        <div class="admin-item-sub">${step.group_name||'Umum'}${step.duration_minutes ? ' · '+step.duration_minutes+' mnt' : ''}${step.is_critical ? ' · ⚠️ Wajib' : ''}</div>
       </div>
       <div style="display:flex; gap:6px;">
         <button class="admin-btn-sm" onclick="editStepForm('${step.id}')">Edit</button>
         <button class="admin-btn-sm danger" onclick="confirmDeleteStep('${step.id}')">Hapus</button>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
 function openAddStepForm() {
   document.getElementById('admin-step-form-title').textContent = 'Tambah Langkah';
-  document.getElementById('astep-title').value    = '';
-  document.getElementById('astep-desc').value     = '';
-  document.getElementById('astep-group').value    = '';
-  document.getElementById('astep-duration').value = '';
+  ['astep-title','astep-desc','astep-group','astep-duration','astep-edit-id'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('astep-order').value    = appState.steps.filter(s => s.module_id === adminActiveModuleId).length;
   document.getElementById('astep-critical').checked = false;
-  document.getElementById('astep-edit-id').value  = '';
   document.getElementById('astep-module-id').value = adminActiveModuleId;
   document.getElementById('admin-step-form').style.display = 'block';
   document.getElementById('astep-title').focus();
 }
-
 function editStepForm(stepId) {
   const step = appState.steps.find(s => s.id === stepId);
   if (!step) return;
@@ -2911,57 +3141,37 @@ function editStepForm(stepId) {
   document.getElementById('admin-step-form').style.display = 'block';
   document.getElementById('astep-title').focus();
 }
-
-function cancelStepForm() {
-  document.getElementById('admin-step-form').style.display = 'none';
-}
-
+function cancelStepForm() { document.getElementById('admin-step-form').style.display = 'none'; }
 async function saveStepForm() {
-  const title       = document.getElementById('astep-title').value.trim();
-  const desc        = document.getElementById('astep-desc').value.trim();
-  const group       = document.getElementById('astep-group').value.trim();
-  const duration    = parseInt(document.getElementById('astep-duration').value) || null;
-  const order       = parseInt(document.getElementById('astep-order').value) || 0;
-  const isCritical  = document.getElementById('astep-critical').checked;
-  const editId      = document.getElementById('astep-edit-id').value;
-  const moduleId    = document.getElementById('astep-module-id').value;
-
-  if (!title) { showToast('Judul langkah tidak boleh kosong.', 'error'); return; }
-
+  const title      = document.getElementById('astep-title').value.trim();
+  const desc       = document.getElementById('astep-desc').value.trim();
+  const group      = document.getElementById('astep-group').value.trim();
+  const duration   = parseInt(document.getElementById('astep-duration').value) || null;
+  const order      = parseInt(document.getElementById('astep-order').value) || 0;
+  const isCritical = document.getElementById('astep-critical').checked;
+  const editId     = document.getElementById('astep-edit-id').value;
+  const moduleId   = document.getElementById('astep-module-id').value;
+  if (!title) { showToast('Judul tidak boleh kosong.', 'error'); return; }
   try {
     if (editId) {
-      const { error } = await db.from('sop_steps').update({
-        title, description: desc || null, group_name: group || null,
-        duration_minutes: duration, order_index: order, is_critical: isCritical
-      }).eq('id', editId);
+      const { error } = await db.from('sop_steps').update({ title, description: desc||null, group_name: group||null, duration_minutes: duration, order_index: order, is_critical: isCritical }).eq('id', editId);
       if (error) throw error;
       const idx = appState.steps.findIndex(s => s.id === editId);
-      if (idx > -1) appState.steps[idx] = { ...appState.steps[idx], title, description: desc || null, group_name: group || null, duration_minutes: duration, order_index: order, is_critical: isCritical };
+      if (idx > -1) appState.steps[idx] = { ...appState.steps[idx], title, description: desc||null, group_name: group||null, duration_minutes: duration, order_index: order, is_critical: isCritical };
       showToast('Langkah diupdate!', 'success');
     } else {
-      const { data, error } = await db.from('sop_steps').insert({
-        module_id: moduleId, title, description: desc || null, group_name: group || null,
-        duration_minutes: duration, order_index: order, is_critical: isCritical
-      }).select().single();
+      const { data, error } = await db.from('sop_steps').insert({ module_id: moduleId, title, description: desc||null, group_name: group||null, duration_minutes: duration, order_index: order, is_critical: isCritical }).select().single();
       if (error) throw error;
       appState.steps.push(data);
       showToast('Langkah ditambahkan!', 'success');
     }
-    cancelStepForm();
-    renderAdminStepList(adminActiveModuleId);
-    renderDashboard();
-    renderModuleList();
-  } catch (err) {
-    showToast('Gagal menyimpan: ' + err.message, 'error');
-    console.error(err);
-  }
+    cancelStepForm(); renderAdminStepList(adminActiveModuleId); renderDashboard(); renderModuleList();
+  } catch(err) { showToast('Gagal: ' + err.message, 'error'); }
 }
-
 async function confirmDeleteStep(stepId) {
   const step = appState.steps.find(s => s.id === stepId);
   openModal('Hapus Langkah?', `"${step?.title}" akan dihapus permanen.`, () => deleteStep(stepId));
 }
-
 async function deleteStep(stepId) {
   try {
     await db.from('checklist_progress').delete().eq('step_id', stepId);
@@ -2971,14 +3181,9 @@ async function deleteStep(stepId) {
     if (adminActiveModuleId) renderAdminStepList(adminActiveModuleId);
     renderDashboard(); renderModuleList();
     showToast('Langkah dihapus.', 'info');
-  } catch (err) {
-    showToast('Gagal hapus: ' + err.message, 'error');
-  }
+  } catch(err) { showToast('Gagal hapus: ' + err.message, 'error'); }
 }
 
-// ============================================================
-//  ADMIN: K3 EDITOR
-// ============================================================
 function renderAdminK3List() {
   const container = document.getElementById('admin-k3-list');
   const items = [
@@ -2988,18 +3193,14 @@ function renderAdminK3List() {
   ];
   container.innerHTML = items.map(item => `
     <div class="admin-item" style="cursor:pointer;" onclick="openK3Form('${item.key}')">
-      <div class="admin-item-icon" style="background:var(--danger-light); color:var(--danger)">
-        <i class="ti ${item.icon}"></i>
-      </div>
+      <div class="admin-item-icon" style="background:var(--danger-light); color:var(--danger)"><i class="ti ${item.icon}"></i></div>
       <div class="admin-item-info">
         <div class="admin-item-name">${item.label}</div>
         <div class="admin-item-sub">${emergencyData[item.key].steps.length} langkah</div>
       </div>
       <i class="ti ti-pencil" style="color:var(--text-muted); font-size:18px;"></i>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
-
 function openK3Form(key) {
   const data = emergencyData[key];
   document.getElementById('admin-k3-form-title').textContent = 'Edit: ' + data.title;
@@ -3008,38 +3209,60 @@ function openK3Form(key) {
   document.getElementById('admin-k3-form').style.display = 'block';
   document.getElementById('admin-k3-list').style.display = 'none';
 }
-
 function cancelK3Form() {
   document.getElementById('admin-k3-form').style.display  = 'none';
   document.getElementById('admin-k3-list').style.display  = 'block';
 }
-
 function saveK3Form() {
   const key   = document.getElementById('ak3-key').value;
-  const lines = document.getElementById('ak3-steps').value
-    .split('\n')
-    .map(l => l.trim())
-    .filter(l => l.length > 0);
+  const lines = document.getElementById('ak3-steps').value.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   if (!lines.length) { showToast('Minimal 1 langkah darurat.', 'error'); return; }
   emergencyData[key].steps = lines;
-  // Simpan ke localStorage agar persist
   localStorage.setItem('k3_custom_' + key, JSON.stringify(lines));
-  cancelK3Form();
-  renderAdminK3List();
+  cancelK3Form(); renderAdminK3List();
   showToast('Prosedur K3 disimpan!', 'success');
 }
-
-// Load K3 custom dari localStorage saat init
 function loadCustomK3() {
   ['api', 'luka', 'racun'].forEach(key => {
     const saved = localStorage.getItem('k3_custom_' + key);
-    if (saved) {
-      try { emergencyData[key].steps = JSON.parse(saved); } catch(e) {}
-    }
+    if (saved) { try { emergencyData[key].steps = JSON.parse(saved); } catch(e) {} }
   });
 }
 
-  window.addEventListener('DOMContentLoaded', init);
+// ============================================================
+//  MAIN INIT
+// ============================================================
+async function init() {
+  if (localStorage.getItem('sop_dark_mode') === '1') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.getElementById('dark-mode-toggle').checked = true;
+  }
+
+  loadCustomK3();
+
+  try {
+    await initDeviceSession();
+    await Promise.all([loadModules(), loadSteps()]);
+    await loadProgress();
+    subscribeRealtime();
+    initPresence();
+
+    renderDashboard();
+    renderModuleList();
+  } catch(err) {
+    console.error('Init error:', err);
+    showToast('Gagal terhubung ke server.', 'error');
+  }
+
+  document.getElementById('search-input').addEventListener('input', e => handleSearch(e.target.value));
+  initNavigation();
+
+  const ls = document.getElementById('loading-screen');
+  ls.classList.add('fade-out');
+  setTimeout(() => ls.remove(), 350);
+}
+
+window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
