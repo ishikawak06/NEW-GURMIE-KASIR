@@ -3459,7 +3459,6 @@ async function downloadHistoryExcel() {
     const customerFilter = document.getElementById('hist-customer-filter')?.value;
     const typeFilter = state.historyTypeFilter || 'all';
 
-    // Semua data mentah
     let combined = [
         ...state.history.map(t => ({ type: 'trx', date: new Date(t.created_at), data: t })),
         ...(customerFilter ? [] : state.historyExpenses.map(e => ({
@@ -3497,7 +3496,6 @@ async function downloadHistoryExcel() {
             loan: 'Pinjaman / Hutang Masuk'
         };
 
-        // ── Pisah data ──
         const trxNormal  = combined.filter(i => i.type === 'trx' && !isGratisTrx(i.data));
         const trxGratis  = combined.filter(i => i.type === 'trx' && isGratisTrx(i.data));
         const incItems   = combined.filter(i => i.type === 'inc');
@@ -3508,29 +3506,40 @@ async function downloadHistoryExcel() {
         const totalPengeluaran = expItems.reduce((s, i) => s + parseFloat(i.data.amount || 0), 0);
         const selisih = totalPenjualan + totalIncome - totalPengeluaran;
 
+        // HPP dari expenses kategori cogs
+        const totalHPP = expItems
+            .filter(i => (i.data.category || (i.data.affects_profit ? 'cogs' : 'opex')) === 'cogs')
+            .reduce((s, i) => s + parseFloat(i.data.amount || 0), 0);
+        const totalOpex = expItems
+            .filter(i => (i.data.category || (i.data.affects_profit ? 'cogs' : 'opex')) === 'opex')
+            .reduce((s, i) => s + parseFloat(i.data.amount || 0), 0);
+        const labaKotor = totalPenjualan - totalHPP;
+        const labaBersih = labaKotor - totalOpex;
+
         const wb = XLSX.utils.book_new();
 
-        // ══════════════════════════════════════════
+        // ── Helper style ──
+        const H = (txt) => ({ v: txt, t: 's' });
+
+        // ════════════════════════════════════════════════════════
         // SHEET 1 — RIWAYAT LENGKAP
-        // ══════════════════════════════════════════
+        // ════════════════════════════════════════════════════════
         const s1Meta = [
-            ['GurmieKasir — Laporan Riwayat Transaksi Lengkap'],
-            ['Dicetak', new Date().toLocaleString('id-ID')],
-            ['Periode', periodLabel],
-            ['Pelanggan', custName],
+            [`🍜 GURMIE AYAM — LAPORAN RIWAYAT TRANSAKSI`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`, '', `Pelanggan: ${custName}`],
             [],
-            ['RINGKASAN'],
+            ['RINGKASAN CEPAT', '', '', '', '', '', '', '', '', '', ''],
             ['Total Penjualan', totalPenjualan, '', 'Total Pemasukan Lain', totalIncome, '', 'Total Pengeluaran', totalPengeluaran, '', 'Selisih / Net', selisih],
             [],
-            ['Tanggal', 'Waktu', 'ID Referensi', 'Tipe', 'Kategori', 'Pelanggan / Keterangan',
-             'Metode', 'Nama Item', 'Qty', 'Harga Satuan (Rp)', 'Subtotal Item (Rp)',
-             'Pemasukan (Rp)', 'Pengeluaran (Rp)', 'Saldo (Rp)', 'Catatan']
+            [],
+            ['TANGGAL', 'WAKTU', 'ID REFERENSI', 'TIPE', 'KATEGORI', 'PELANGGAN / KETERANGAN',
+             'METODE', 'NAMA ITEM', 'QTY', 'HARGA SATUAN (Rp)', 'SUBTOTAL ITEM (Rp)',
+             'PEMASUKAN (Rp)', 'PENGELUARAN (Rp)', 'SALDO BERJALAN (Rp)', 'CATATAN']
         ];
 
         const s1Rows = [];
         let saldo = 0;
-
-        combined.forEach(item => {
+        [...combined].sort((a, b) => a.date - b.date).forEach(item => {
             const d = item.date;
             const tgl = d.toLocaleDateString('id-ID');
             const wkt = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -3542,12 +3551,8 @@ async function downloadHistoryExcel() {
                 const cName = trx.customers ? trx.customers.name : (isGratis ? (trx.payment_method || '-') : 'Pelanggan Umum');
                 const refId = 'TRX-' + trx.id.substring(0, 8).toUpperCase();
                 const tipe = isGratis ? 'Gratis' : 'Penjualan';
-                const kat  = isGratis ? (trx.payment_method || 'Gratis') : 'Penjualan Produk';
-                const adjAmt = (trx.adjustment_type && parseFloat(trx.adjustment_amount) > 0) ? parseFloat(trx.adjustment_amount) : 0;
-                const adjLbl = trx.adjustment_type === 'discount' ? 'Diskon' : trx.adjustment_type === 'fee' ? 'Fee' : '';
-
+                const kat = isGratis ? (trx.payment_method || 'Gratis') : 'Penjualan Produk';
                 if (!isGratis) saldo += net;
-
                 const tiList = trx.transaction_items || [];
                 if (tiList.length === 0) {
                     s1Rows.push([tgl, wkt, refId, tipe, kat, cName,
@@ -3557,7 +3562,7 @@ async function downloadHistoryExcel() {
                     tiList.forEach((ti, idx) => {
                         const pName = ti.products ? ti.products.name : 'Produk Terhapus';
                         const harga = parseFloat(ti.custom_price || ti.price || 0);
-                        const qty   = parseInt(ti.quantity || 0);
+                        const qty = parseInt(ti.quantity || 0);
                         s1Rows.push([
                             tgl, wkt, refId, tipe, kat, cName,
                             trx.payment_method || 'Tunai',
@@ -3569,16 +3574,13 @@ async function downloadHistoryExcel() {
                         ]);
                     });
                 }
-
             } else if (item.type === 'inc') {
                 const inc = item.data;
                 const amt = parseFloat(inc.amount || 0);
                 saldo += amt;
                 const refId = 'INC-' + inc.id.substring(0, 8).toUpperCase();
                 const kat = catLabelMap[inc.category] || inc.category;
-                const incItemList = inc.items
-                    ? (typeof inc.items === 'string' ? JSON.parse(inc.items) : inc.items)
-                    : [];
+                const incItemList = inc.items ? (typeof inc.items === 'string' ? JSON.parse(inc.items) : inc.items) : [];
                 if (incItemList.length === 0) {
                     s1Rows.push([tgl, '-', refId, 'Pemasukan Lainnya', kat,
                         inc.name, inc.method === 'transfer' ? 'Transfer' : 'Kas',
@@ -3592,7 +3594,6 @@ async function downloadHistoryExcel() {
                             idx === 0 ? amt : '', '', idx === 0 ? saldo : '', inc.notes || '']);
                     });
                 }
-
             } else {
                 const exp = item.data;
                 const amt = parseFloat(exp.amount || 0);
@@ -3600,8 +3601,7 @@ async function downloadHistoryExcel() {
                 const refId = 'EXP-' + exp.id.substring(0, 8).toUpperCase();
                 const catMap = { opex: 'Beban Operasional', cogs: 'Bahan Baku / HPP', asset: 'Pembelian Aset' };
                 const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
-                const expItemList = exp.items
-                    ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items) : [];
+                const expItemList = exp.items ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items) : [];
                 if (expItemList.length === 0) {
                     s1Rows.push([tgl, '-', refId, 'Pengeluaran', catMap[cat] || cat,
                         '-', exp.is_personal ? 'Uang Pribadi' : 'Kas',
@@ -3632,30 +3632,331 @@ async function downloadHistoryExcel() {
             { wch: 16 }, { wch: 30 }, { wch: 6 }, { wch: 18 }, { wch: 18 },
             { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 24 }
         ];
-        ws1['!freeze'] = { xSplit: 0, ySplit: 9 };
-        XLSX.utils.book_append_sheet(wb, ws1, 'Riwayat Lengkap');
+        ws1['!freeze'] = { xSplit: 0, ySplit: 8 };
+        ws1['!autofilter'] = { ref: `A8:O8` };
+        XLSX.utils.book_append_sheet(wb, ws1, '1. Riwayat Lengkap');
 
-        // ══════════════════════════════════════════
-        // SHEET 2 — GRATIS (Konsumsi & Sedekah)
-        // ══════════════════════════════════════════
-        const s2Meta = [
-            ['GurmieKasir — Rekapan Gratis (Konsumsi & Sedekah)'],
-            ['Dicetak', new Date().toLocaleString('id-ID')],
-            ['Periode', periodLabel],
+        // ════════════════════════════════════════════════════════
+        // SHEET 2 — JURNAL AKUNTANSI (DOUBLE ENTRY)
+        // ════════════════════════════════════════════════════════
+        const s2Header = [
+            [`🍜 GURMIE AYAM — JURNAL AKUNTANSI (DOUBLE-ENTRY)`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`],
+            [`Balance Debet: (lihat total bawah)`, '', '', `Balance Kredit: (lihat total bawah)`],
             [],
-            ['Tanggal', 'Waktu', 'ID Transaksi', 'Jenis Gratis', 'Nama Item', 'Qty', 'Catatan']
+            ['TANGGAL', 'NO. JURNAL', 'KETERANGAN TRANSAKSI', 'KATEGORI',
+             'KODE AKUN (DEBET)', 'NAMA AKUN (DEBET)', 'DEBET (Rp)',
+             'KODE AKUN (KREDIT)', 'NAMA AKUN (KREDIT)', 'KREDIT (Rp)',
+             'BALANCE CHECK', 'REF ID']
         ];
 
-        const s2Rows = trxGratis.map(item => {
+        const s2Rows = [];
+        let juIdx = 1;
+
+        const sortedForJurnal = [...combined].sort((a, b) => a.date - b.date);
+        sortedForJurnal.forEach(item => {
+            const tgl = item.date.toLocaleDateString('id-ID');
+
+            if (item.type === 'trx' && !isGratisTrx(item.data)) {
+                const trx = item.data;
+                const net = getTrxNetPrice(trx);
+                const isTransfer = (trx.payment_method || '').toLowerCase().includes('transfer') ||
+                                   (trx.payment_method || '').toLowerCase().includes('qris');
+                const kasKode = isTransfer ? '120000' : '110000';
+                const kasNama = isTransfer ? 'Bank / Transfer' : 'Kas Rupiah';
+                const juNo = `JU-${String(juIdx++).padStart(3,'0')}`;
+                // Debet Kas / Kredit Pendapatan
+                s2Rows.push([tgl, juNo,
+                    `Penjualan${trx.customers ? ' - ' + trx.customers.name : ' Tunai'}`,
+                    'PENJUALAN',
+                    kasKode, kasNama, net,
+                    '410000', 'Pendapatan Penjualan', net,
+                    net === net ? 'BALANCE ✓' : 'ERROR ✗',
+                    'TRX-' + trx.id.substring(0,8).toUpperCase()
+                ]);
+                // Jika ada diskon
+                if (trx.adjustment_type === 'discount' && parseFloat(trx.adjustment_amount) > 0) {
+                    const adj = parseFloat(trx.adjustment_amount);
+                    s2Rows.push([tgl, juNo + '-adj',
+                        'Potongan / Diskon Penjualan', 'PENYESUAIAN',
+                        '490000', 'Beban Diskon', adj,
+                        '410000', 'Pendapatan Penjualan', adj,
+                        'BALANCE ✓',
+                        'TRX-' + trx.id.substring(0,8).toUpperCase()
+                    ]);
+                }
+            } else if (item.type === 'trx' && isGratisTrx(item.data)) {
+                const trx = item.data;
+                const juNo = `JU-${String(juIdx++).padStart(3,'0')}`;
+                s2Rows.push([tgl, juNo,
+                    `Gratis / Konsumsi: ${trx.payment_method || 'Gratis'}`,
+                    'GRATIS',
+                    '680000', 'Beban Konsumsi / Sedekah', 0,
+                    '410000', 'Pendapatan (Nihil)', 0,
+                    'GRATIS - Rp 0',
+                    'TRX-' + trx.id.substring(0,8).toUpperCase()
+                ]);
+            } else if (item.type === 'exp') {
+                const exp = item.data;
+                const amt = parseFloat(exp.amount || 0);
+                const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
+                const catMap = {
+                    opex:  { debit: '610000', namaDebit: 'Beban Operasional' },
+                    cogs:  { debit: '510000', namaDebit: 'Beban HPP / Bahan Baku' },
+                    asset: { debit: '200000', namaDebit: 'Aset Tetap' }
+                };
+                const akun = catMap[cat] || catMap.opex;
+                const kasKode = exp.is_personal ? '310000' : '110000';
+                const kasNama = exp.is_personal ? 'Modal Pemilik (Pribadi)' : 'Kas Rupiah';
+                const juNo = `JU-${String(juIdx++).padStart(3,'0')}`;
+                s2Rows.push([tgl, juNo,
+                    exp.name, cat.toUpperCase(),
+                    akun.debit, akun.namaDebit, amt,
+                    kasKode, kasNama, amt,
+                    amt === amt ? 'BALANCE ✓' : 'ERROR ✗',
+                    'EXP-' + exp.id.substring(0,8).toUpperCase()
+                ]);
+            } else if (item.type === 'inc') {
+                const inc = item.data;
+                const amt = parseFloat(inc.amount || 0);
+                const kasKode = inc.method === 'transfer' ? '120000' : '110000';
+                const kasNama = inc.method === 'transfer' ? 'Bank / Transfer' : 'Kas Rupiah';
+                const kreditMap = {
+                    other_income: { kode: '420000', nama: 'Pendapatan Lainnya' },
+                    capital_injection: { kode: '310000', nama: 'Modal Pemilik' },
+                    loan: { kode: '210000', nama: 'Hutang / Pinjaman' }
+                };
+                const kreditAkun = kreditMap[inc.category] || kreditMap.other_income;
+                const juNo = `JU-${String(juIdx++).padStart(3,'0')}`;
+                s2Rows.push([tgl, juNo,
+                    inc.name, (inc.category || 'other_income').toUpperCase(),
+                    kasKode, kasNama, amt,
+                    kreditAkun.kode, kreditAkun.nama, amt,
+                    'BALANCE ✓',
+                    'INC-' + inc.id.substring(0,8).toUpperCase()
+                ]);
+            }
+        });
+
+        const totalDebet  = s2Rows.reduce((s, r) => s + (parseFloat(r[6]) || 0), 0);
+        const totalKredit = s2Rows.reduce((s, r) => s + (parseFloat(r[9]) || 0), 0);
+
+        const s2Total = [
+            [],
+            ['', '', '', '', 'TOTAL DEBET', '', totalDebet, 'TOTAL KREDIT', '', totalKredit,
+             totalDebet === totalKredit ? '✅ BALANCE' : '❌ TIDAK BALANCE', '']
+        ];
+
+        const ws2 = XLSX.utils.aoa_to_sheet([...s2Header, ...s2Rows, ...s2Total]);
+        ws2['!cols'] = [
+            { wch: 12 }, { wch: 10 }, { wch: 36 }, { wch: 18 },
+            { wch: 10 }, { wch: 26 }, { wch: 18 },
+            { wch: 10 }, { wch: 26 }, { wch: 18 },
+            { wch: 16 }, { wch: 18 }
+        ];
+        ws2['!freeze'] = { xSplit: 0, ySplit: 5 };
+        ws2['!autofilter'] = { ref: 'A5:L5' };
+        XLSX.utils.book_append_sheet(wb, ws2, '2. Jurnal Akuntansi');
+
+        // ════════════════════════════════════════════════════════
+        // SHEET 3 — LAPORAN LABA RUGI
+        // ════════════════════════════════════════════════════════
+        const totalAsset = expItems
+            .filter(i => (i.data.category || '') === 'asset')
+            .reduce((s, i) => s + parseFloat(i.data.amount || 0), 0);
+        const grossMargin = totalPenjualan > 0 ? labaKotor / totalPenjualan : 0;
+        const netMargin   = totalPenjualan > 0 ? labaBersih / totalPenjualan : 0;
+        const hppRatio    = totalPenjualan > 0 ? totalHPP / totalPenjualan : 0;
+        const opexRatio   = totalPenjualan > 0 ? totalOpex / totalPenjualan : 0;
+
+        // Breakdown beban opex per nama
+        const opexBreakdown = {};
+        expItems.filter(i => (i.data.category || (i.data.affects_profit ? 'cogs':'opex')) === 'opex')
+            .forEach(i => {
+                const nm = i.data.name || 'Lain-lain';
+                opexBreakdown[nm] = (opexBreakdown[nm] || 0) + parseFloat(i.data.amount || 0);
+            });
+
+        const s3Rows = [
+            [`🍜 GURMIE AYAM — LAPORAN LABA RUGI`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`],
+            [],
+            ['PENDAPATAN', '', '', ''],
+            ['  Pendapatan Penjualan Produk', '', totalPenjualan, ''],
+            ['  Pendapatan Lainnya', '', totalIncome, ''],
+            ['TOTAL PENDAPATAN', '', '', totalPenjualan + totalIncome],
+            [],
+            ['HARGA POKOK PENJUALAN (HPP)', '', '', ''],
+            ['  Beban Bahan Baku & Produksi', '', totalHPP, ''],
+            ['TOTAL HPP', '', '', totalHPP],
+            [],
+            ['LABA KOTOR', '', '', labaKotor],
+            [],
+            ['BEBAN OPERASIONAL', '', '', ''],
+            ...Object.entries(opexBreakdown).map(([nm, amt]) => [`  ${nm}`, '', amt, '']),
+            ['TOTAL BEBAN OPERASIONAL', '', '', totalOpex],
+            [],
+            ['LABA BERSIH SEBELUM PAJAK', '', '', labaBersih],
+            ['Estimasi Pajak (0.5% Omzet - UMKM)', '', totalPenjualan * 0.005, ''],
+            ['LABA BERSIH SETELAH PAJAK', '', '', labaBersih - (totalPenjualan * 0.005)],
+            [],
+            ['PEMBELIAN ASET (di luar P&L)', '', totalAsset, ''],
+            [],
+            ['ANALISIS MARGIN', '', '', ''],
+            ['  Gross Margin', `${(grossMargin*100).toFixed(1)}%`, '', '(Laba Kotor / Pendapatan)'],
+            ['  Net Margin', `${(netMargin*100).toFixed(1)}%`, '', '(Laba Bersih / Pendapatan)'],
+            ['  HPP Ratio', `${(hppRatio*100).toFixed(1)}%`, '', '(HPP / Pendapatan)'],
+            ['  Opex Ratio', `${(opexRatio*100).toFixed(1)}%`, '', '(Opex / Pendapatan)'],
+            ['  Break Even Omzet', `Rp ${(totalHPP + totalOpex).toLocaleString('id-ID')}`, '', '(HPP + Opex)'],
+        ];
+
+        const ws3 = XLSX.utils.aoa_to_sheet(s3Rows);
+        ws3['!cols'] = [{ wch: 38 }, { wch: 16 }, { wch: 20 }, { wch: 20 }];
+        XLSX.utils.book_append_sheet(wb, ws3, '3. Laba Rugi');
+
+        // ════════════════════════════════════════════════════════
+        // SHEET 4 — ANALISIS HARIAN (Omzet per Hari)
+        // ════════════════════════════════════════════════════════
+        const dailyMap = {};
+        trxNormal.forEach(item => {
+            const d = item.date.toLocaleDateString('id-ID');
+            const dayKey = item.date.toISOString().slice(0,10);
+            if (!dailyMap[dayKey]) dailyMap[dayKey] = {
+                tgl: d, hari: item.date.toLocaleDateString('id-ID', { weekday: 'long' }),
+                omzet: 0, trxCount: 0, itemCount: 0, avgPerTrx: 0
+            };
+            dailyMap[dayKey].omzet += getTrxNetPrice(item.data);
+            dailyMap[dayKey].trxCount++;
+            dailyMap[dayKey].itemCount += (item.data.transaction_items || []).reduce((s, i) => s + i.quantity, 0);
+        });
+
+        const dailyArr = Object.entries(dailyMap).sort((a, b) => a[0].localeCompare(b[0]));
+        dailyArr.forEach(([,d]) => { d.avgPerTrx = d.trxCount > 0 ? d.omzet / d.trxCount : 0; });
+
+        const totalHariAktif = dailyArr.length;
+        const avgOmzetPerHari = totalHariAktif > 0 ? totalPenjualan / totalHariAktif : 0;
+        const maxHari = dailyArr.reduce((m, [,d]) => d.omzet > m.omzet ? d : m, { omzet: 0 });
+        const minHari = dailyArr.length > 0
+            ? dailyArr.reduce((m, [,d]) => d.omzet < m.omzet ? d : m, dailyArr[0][1])
+            : { tgl: '-', omzet: 0 };
+
+        const s4Header = [
+            [`🍜 GURMIE AYAM — ANALISIS HARIAN`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`],
+            [],
+            ['RINGKASAN', '', '', '', ''],
+            ['Hari Aktif Berjualan', totalHariAktif, '', 'Rata-rata Omzet/Hari', Math.round(avgOmzetPerHari)],
+            ['Hari Terbaik', `${maxHari.tgl || '-'} (Rp ${(maxHari.omzet || 0).toLocaleString('id-ID')})`,
+             '', 'Hari Terendah', `${minHari.tgl || '-'} (Rp ${(minHari.omzet || 0).toLocaleString('id-ID')})`],
+            [],
+            ['TANGGAL', 'HARI', 'OMZET (Rp)', 'JML TRANSAKSI', 'TOTAL ITEM', 'RATA-RATA / TRX (Rp)', 'VS RATA-RATA (%)', 'STATUS']
+        ];
+
+        const s4Rows = dailyArr.map(([, d]) => {
+            const vsAvg = avgOmzetPerHari > 0 ? ((d.omzet - avgOmzetPerHari) / avgOmzetPerHari * 100).toFixed(1) + '%' : '0%';
+            const status = d.omzet >= avgOmzetPerHari * 1.2 ? '🔥 Luar Biasa' :
+                           d.omzet >= avgOmzetPerHari ? '✅ Di Atas Rata-rata' :
+                           d.omzet >= avgOmzetPerHari * 0.8 ? '📊 Normal' : '⚠️ Di Bawah Rata-rata';
+            return [d.tgl, d.hari, d.omzet, d.trxCount, d.itemCount, Math.round(d.avgPerTrx), vsAvg, status];
+        });
+
+        const s4Total = [
+            [],
+            ['TOTAL', '', totalPenjualan, trxNormal.length,
+             trxNormal.reduce((s, i) => s + (i.data.transaction_items || []).reduce((ss, ti) => ss + ti.quantity, 0), 0),
+             Math.round(trxNormal.length > 0 ? totalPenjualan / trxNormal.length : 0), '', '']
+        ];
+
+        const ws4 = XLSX.utils.aoa_to_sheet([...s4Header, ...s4Rows, ...s4Total]);
+        ws4['!cols'] = [
+            { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 16 }, { wch: 22 }
+        ];
+        ws4['!freeze'] = { xSplit: 0, ySplit: 8 };
+        ws4['!autofilter'] = { ref: 'A8:H8' };
+        XLSX.utils.book_append_sheet(wb, ws4, '4. Analisis Harian');
+
+        // ════════════════════════════════════════════════════════
+        // SHEET 5 — REKAP PENGELUARAN DETAIL
+        // ════════════════════════════════════════════════════════
+        const expByDate = [...expItems].sort((a, b) => a.date - b.date);
+
+        // Group by kategori
+        const expByCat = {};
+        expItems.forEach(item => {
+            const cat = item.data.category || (item.data.affects_profit ? 'cogs' : 'opex');
+            if (!expByCat[cat]) expByCat[cat] = { total: 0, count: 0, items: [] };
+            expByCat[cat].total += parseFloat(item.data.amount || 0);
+            expByCat[cat].count++;
+            expByCat[cat].items.push(item.data.name || '-');
+        });
+
+        const catNamMap = { opex: 'Beban Operasional', cogs: 'Bahan Baku / HPP', asset: 'Pembelian Aset' };
+
+        const s5Header = [
+            [`🍜 GURMIE AYAM — REKAP PENGELUARAN DETAIL`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`],
+            [`Total Pengeluaran: Rp ${totalPengeluaran.toLocaleString('id-ID')}`],
+            [],
+            ['RINGKASAN PER KATEGORI', '', '', '', ''],
+            ['Kategori', 'Jumlah Transaksi', 'Total (Rp)', '% dari Total', 'Item Terbanyak'],
+            ...Object.entries(expByCat).map(([cat, d]) => [
+                catNamMap[cat] || cat, d.count, d.total,
+                totalPengeluaran > 0 ? (d.total / totalPengeluaran * 100).toFixed(1) + '%' : '0%',
+                [...new Set(d.items)].slice(0, 3).join(', ')
+            ]),
+            [],
+            ['DETAIL PENGELUARAN', '', '', '', '', '', '', ''],
+            ['TANGGAL', 'ID', 'NAMA / KETERANGAN', 'KATEGORI', 'TOTAL (Rp)', 'SUMBER DANA', 'NAMA ITEM', 'NOMINAL ITEM (Rp)']
+        ];
+
+        const s5Rows = [];
+        expByDate.forEach(item => {
+            const exp = item.data;
+            const tgl = item.date.toLocaleDateString('id-ID');
+            const cat = exp.category || (exp.affects_profit ? 'cogs' : 'opex');
+            const refId = 'EXP-' + exp.id.substring(0,8).toUpperCase();
+            const sumber = exp.is_personal ? 'Uang Pribadi' : 'Kas Kios';
+            const expItemList = exp.items ? (typeof exp.items === 'string' ? JSON.parse(exp.items) : exp.items) : [];
+            if (expItemList.length === 0) {
+                s5Rows.push([tgl, refId, exp.name, catNamMap[cat] || cat,
+                    parseFloat(exp.amount), sumber, exp.name, parseFloat(exp.amount)]);
+            } else {
+                expItemList.forEach((ei, idx) => {
+                    s5Rows.push([
+                        tgl, refId, exp.name, catNamMap[cat] || cat,
+                        idx === 0 ? parseFloat(exp.amount) : '',
+                        sumber,
+                        ei.name || '-',
+                        (ei.qty || 1) * (ei.price || 0)
+                    ]);
+                });
+            }
+        });
+
+        const ws5 = XLSX.utils.aoa_to_sheet([...s5Header, ...s5Rows]);
+        ws5['!cols'] = [
+            { wch: 12 }, { wch: 16 }, { wch: 32 }, { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 28 }, { wch: 18 }
+        ];
+        ws5['!freeze'] = { xSplit: 0, ySplit: s5Header.length };
+        XLSX.utils.book_append_sheet(wb, ws5, '5. Pengeluaran Detail');
+
+        // ════════════════════════════════════════════════════════
+        // SHEET 6 — GRATIS & SEDEKAH
+        // ════════════════════════════════════════════════════════
+        const s6Meta = [
+            [`🍜 GURMIE AYAM — REKAPAN GRATIS (KONSUMSI & SEDEKAH)`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`],
+            [],
+            ['TANGGAL', 'WAKTU', 'ID TRANSAKSI', 'JENIS GRATIS', 'NAMA ITEM', 'QTY', 'CATATAN']
+        ];
+        const s6Rows = trxGratis.map(item => {
             const trx = item.data;
             const tgl = item.date.toLocaleDateString('id-ID');
             const wkt = item.date.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             const refId = 'TRX-' + trx.id.substring(0, 8).toUpperCase();
             const jenis = trx.payment_method || 'Gratis';
             const tiList = trx.transaction_items || [];
-            if (tiList.length === 0) {
-                return [[tgl, wkt, refId, jenis, '-', '', '']];
-            }
+            if (tiList.length === 0) return [[tgl, wkt, refId, jenis, '-', '', '']];
             return tiList.map(ti => [
                 tgl, wkt, refId, jenis,
                 ti.products ? ti.products.name : 'Produk Terhapus',
@@ -3663,41 +3964,30 @@ async function downloadHistoryExcel() {
                 ti.notes || jenis
             ]);
         }).flat();
+        const totalGratisItem = s6Rows.reduce((s, r) => s + (parseInt(r[5]) || 0), 0);
+        const ws6 = XLSX.utils.aoa_to_sheet([...s6Meta, ...s6Rows,
+            [], ['', '', '', `Total: ${trxGratis.length} transaksi`, '', totalGratisItem + ' item', '']
+        ]);
+        ws6['!cols'] = [{ wch: 12 }, { wch: 7 }, { wch: 18 }, { wch: 24 }, { wch: 32 }, { wch: 6 }, { wch: 30 }];
+        ws6['!freeze'] = { xSplit: 0, ySplit: 4 };
+        XLSX.utils.book_append_sheet(wb, ws6, '6. Gratis & Sedekah');
 
-        const totalGratisItem = s2Rows.reduce((s, r) => s + (parseInt(r[5]) || 0), 0);
-        const s2Total = [
+        // ════════════════════════════════════════════════════════
+        // SHEET 7 — PEMASUKAN LAINNYA
+        // ════════════════════════════════════════════════════════
+        const s7Meta = [
+            [`🍜 GURMIE AYAM — PEMASUKAN LAINNYA`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`, '', `Total: Rp ${totalIncome.toLocaleString('id-ID')}`],
             [],
-            ['', '', '', `Total: ${trxGratis.length} transaksi`, '', totalGratisItem + ' item', '']
+            ['TANGGAL', 'ID', 'NAMA / KETERANGAN', 'KATEGORI', 'METODE', 'CATATAN', 'NAMA ITEM', 'QTY', 'NOMINAL (Rp)', 'TOTAL (Rp)']
         ];
-
-        const ws2 = XLSX.utils.aoa_to_sheet([...s2Meta, ...s2Rows, ...s2Total]);
-        ws2['!cols'] = [
-            { wch: 12 }, { wch: 7 }, { wch: 18 }, { wch: 24 }, { wch: 32 }, { wch: 6 }, { wch: 30 }
-        ];
-        ws2['!freeze'] = { xSplit: 0, ySplit: 5 };
-        XLSX.utils.book_append_sheet(wb, ws2, 'Gratis (Konsumsi & Sedekah)');
-
-        // ══════════════════════════════════════════
-        // SHEET 3 — PEMASUKAN LAINNYA
-        // ══════════════════════════════════════════
-        const s3Meta = [
-            ['GurmieKasir — Pemasukan Lainnya'],
-            ['Dicetak', new Date().toLocaleString('id-ID')],
-            ['Periode', periodLabel],
-            ['Total Pemasukan Lainnya', totalIncome],
-            [],
-            ['Tanggal', 'ID', 'Nama / Keterangan', 'Kategori', 'Metode', 'Catatan',
-             'Nama Item', 'Qty', 'Nominal (Rp)', 'Total (Rp)']
-        ];
-
-        const s3Rows = incItems.map(item => {
+        const s7Rows = incItems.map(item => {
             const inc = item.data;
             const tgl = item.date.toLocaleDateString('id-ID');
             const refId = 'INC-' + inc.id.substring(0, 8).toUpperCase();
             const kat = catLabelMap[inc.category] || inc.category;
             const met = inc.method === 'transfer' ? 'Transfer / Bank' : 'Kas Tunai';
-            const incItemList = inc.items
-                ? (typeof inc.items === 'string' ? JSON.parse(inc.items) : inc.items) : [];
+            const incItemList = inc.items ? (typeof inc.items === 'string' ? JSON.parse(inc.items) : inc.items) : [];
             if (incItemList.length === 0) {
                 return [[tgl, refId, inc.name, kat, met, inc.notes || '', '-', 1, parseFloat(inc.amount), parseFloat(inc.amount)]];
             }
@@ -3707,23 +3997,21 @@ async function downloadHistoryExcel() {
                 idx === 0 ? parseFloat(inc.amount) : ''
             ]);
         }).flat();
-
-        const s3Total = [[], ['', '', '', '', '', '', '', 'TOTAL', '', totalIncome]];
-
-        const ws3 = XLSX.utils.aoa_to_sheet([...s3Meta, ...s3Rows, ...s3Total]);
-        ws3['!cols'] = [
+        const ws7 = XLSX.utils.aoa_to_sheet([...s7Meta, ...s7Rows,
+            [], ['', '', '', '', '', '', '', 'TOTAL', '', totalIncome]
+        ]);
+        ws7['!cols'] = [
             { wch: 12 }, { wch: 16 }, { wch: 28 }, { wch: 26 }, { wch: 16 },
             { wch: 26 }, { wch: 28 }, { wch: 6 }, { wch: 18 }, { wch: 18 }
         ];
-        ws3['!freeze'] = { xSplit: 0, ySplit: 6 };
-        XLSX.utils.book_append_sheet(wb, ws3, 'Pemasukan Lainnya');
+        ws7['!freeze'] = { xSplit: 0, ySplit: 4 };
+        XLSX.utils.book_append_sheet(wb, ws7, '7. Pemasukan Lainnya');
 
-        // ══════════════════════════════════════════
-        // SHEET 4 — REKAP PELANGGAN
-        // ══════════════════════════════════════════
-        const trxForCustomer = trxNormal;
+        // ════════════════════════════════════════════════════════
+        // SHEET 8 — REKAP PELANGGAN
+        // ════════════════════════════════════════════════════════
         const customerMap = {};
-        trxForCustomer.forEach(item => {
+        trxNormal.forEach(item => {
             const trx = item.data;
             const cId = trx.customer_id || '__umum__';
             const cName = trx.customers ? trx.customers.name : 'Pelanggan Umum';
@@ -3738,30 +4026,25 @@ async function downloadHistoryExcel() {
             customerMap[cId].totalBelanja += net;
             const met = trx.payment_method || 'Tunai';
             customerMap[cId].metode[met] = (customerMap[cId].metode[met] || 0) + 1;
-            if (!customerMap[cId].transaksiTerakhir || item.date > customerMap[cId].transaksiTerakhir) {
+            if (!customerMap[cId].transaksiTerakhir || item.date > customerMap[cId].transaksiTerakhir)
                 customerMap[cId].transaksiTerakhir = item.date;
-            }
         });
-
         const customerArr = Object.values(customerMap).sort((a, b) => b.totalBelanja - a.totalBelanja);
         const totalBelanjaAll = customerArr.reduce((s, c) => s + c.totalBelanja, 0);
-
-        const s4Meta = [
-            ['GurmieKasir — Rekap Pelanggan'],
-            ['Dicetak', new Date().toLocaleString('id-ID')],
-            ['Periode', periodLabel],
-            ['Total Pelanggan Unik', customerArr.length, '', 'Total Transaksi', trxForCustomer.length],
+        const s8Meta = [
+            [`🍜 GURMIE AYAM — REKAP PELANGGAN`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`],
+            [`Total Pelanggan Unik: ${customerArr.length}`, '', '', `Total Transaksi: ${trxNormal.length}`],
             [],
-            ['No', 'Nama Pelanggan', 'No. Telepon', 'Jml Transaksi', 'Total Item',
-             'Total Belanja (Rp)', 'Rata-rata / Trx (Rp)', 'Kontribusi (%)', 'Metode Favorit', 'Trx Terakhir', 'Kategori']
+            ['NO', 'NAMA PELANGGAN', 'NO. TELEPON', 'JML TRANSAKSI', 'TOTAL ITEM',
+             'TOTAL BELANJA (Rp)', 'RATA-RATA / TRX (Rp)', 'KONTRIBUSI (%)', 'METODE FAVORIT', 'TRX TERAKHIR', 'KATEGORI']
         ];
-
-        const s4Rows = customerArr.map((c, idx) => {
+        const s8Rows = customerArr.map((c, idx) => {
             const kontribusi = totalBelanjaAll > 0 ? ((c.totalBelanja / totalBelanjaAll) * 100).toFixed(2) + '%' : '0%';
             let kategori = 'Baru (1x)';
-            if (c.jumlahTransaksi >= 10) kategori = 'Setia (10x+)';
-            else if (c.jumlahTransaksi >= 5) kategori = 'Aktif (5-9x)';
-            else if (c.jumlahTransaksi >= 2) kategori = 'Reguler (2-4x)';
+            if (c.jumlahTransaksi >= 10) kategori = '⭐ Setia (10x+)';
+            else if (c.jumlahTransaksi >= 5) kategori = '✅ Aktif (5-9x)';
+            else if (c.jumlahTransaksi >= 2) kategori = '📊 Reguler (2-4x)';
             return [
                 idx + 1, c.nama, c.telepon, c.jumlahTransaksi, c.totalItem,
                 c.totalBelanja, Math.round(c.jumlahTransaksi > 0 ? c.totalBelanja / c.jumlahTransaksi : 0),
@@ -3771,21 +4054,21 @@ async function downloadHistoryExcel() {
                 kategori
             ];
         });
-
-        const ws4 = XLSX.utils.aoa_to_sheet([...s4Meta, ...s4Rows,
-            [[], ['', 'TOTAL', '', customerArr.reduce((s, c) => s + c.jumlahTransaksi, 0),
-             customerArr.reduce((s, c) => s + c.totalItem, 0), totalBelanjaAll]]
+        const ws8 = XLSX.utils.aoa_to_sheet([...s8Meta, ...s8Rows,
+            [], ['', 'TOTAL', '', customerArr.reduce((s,c)=>s+c.jumlahTransaksi,0),
+                customerArr.reduce((s,c)=>s+c.totalItem,0), totalBelanjaAll]
         ]);
-        ws4['!cols'] = [
+        ws8['!cols'] = [
             { wch: 5 }, { wch: 28 }, { wch: 16 }, { wch: 14 }, { wch: 12 },
             { wch: 20 }, { wch: 22 }, { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 22 }
         ];
-        ws4['!freeze'] = { xSplit: 0, ySplit: 6 };
-        XLSX.utils.book_append_sheet(wb, ws4, 'Rekap Pelanggan');
+        ws8['!freeze'] = { xSplit: 0, ySplit: 5 };
+        ws8['!autofilter'] = { ref: 'A5:K5' };
+        XLSX.utils.book_append_sheet(wb, ws8, '8. Rekap Pelanggan');
 
-        // ══════════════════════════════════════════
-        // SHEET 5 — REKAP PRODUK TERJUAL
-        // ══════════════════════════════════════════
+        // ════════════════════════════════════════════════════════
+        // SHEET 9 — REKAP PRODUK TERJUAL
+        // ════════════════════════════════════════════════════════
         const productMap = {};
         trxNormal.forEach(item => {
             const trx = item.data;
@@ -3795,7 +4078,8 @@ async function downloadHistoryExcel() {
                 const harga = parseFloat(ti.custom_price || ti.price || 0);
                 const qty = parseInt(ti.quantity || 0);
                 if (!productMap[pId]) {
-                    productMap[pId] = { nama: pName, totalQty: 0, totalOmzet: 0, hargaJual: harga, tanggalPertama: item.date, tanggalTerakhir: item.date };
+                    productMap[pId] = { nama: pName, totalQty: 0, totalOmzet: 0, hargaJual: harga,
+                        tanggalPertama: item.date, tanggalTerakhir: item.date };
                     const mp = state.products.find(p => p.id === pId);
                     if (mp) productMap[pId].hargaJual = mp.price;
                 }
@@ -3805,43 +4089,40 @@ async function downloadHistoryExcel() {
                 if (item.date > productMap[pId].tanggalTerakhir) productMap[pId].tanggalTerakhir = item.date;
             });
         });
-
         const productArr = Object.values(productMap).sort((a, b) => b.totalQty - a.totalQty);
-        const totalQtyAll  = productArr.reduce((s, p) => s + p.totalQty, 0);
+        const totalQtyAll   = productArr.reduce((s, p) => s + p.totalQty, 0);
         const totalOmzetAll = productArr.reduce((s, p) => s + p.totalOmzet, 0);
-
-        const s5Meta = [
-            ['GurmieKasir — Rekap Produk Terjual'],
-            ['Dicetak', new Date().toLocaleString('id-ID')],
-            ['Periode', periodLabel],
-            ['Total Produk', productArr.length, '', 'Total Item Terjual', totalQtyAll],
+        const s9Meta = [
+            [`🍜 GURMIE AYAM — REKAP PRODUK TERJUAL`],
+            [`Dicetak: ${new Date().toLocaleString('id-ID')}`, '', `Periode: ${periodLabel}`],
+            [`Total Produk: ${productArr.length}`, '', '', `Total Item Terjual: ${totalQtyAll}`],
             [],
-            ['No', 'Nama Produk', 'Total Qty', 'Total Omzet (Rp)', 'Harga Jual (Rp)',
-             'Kontribusi Qty (%)', 'Kontribusi Omzet (%)', 'Rata-rata Harga (Rp)', 'Pertama Terjual', 'Terakhir Terjual']
+            ['NO', 'NAMA PRODUK', 'TOTAL QTY', 'TOTAL OMZET (Rp)', 'HARGA JUAL (Rp)',
+             'KONTRIBUSI QTY (%)', 'KONTRIBUSI OMZET (%)', 'RATA-RATA HARGA (Rp)', 'PERTAMA TERJUAL', 'TERAKHIR TERJUAL', 'RANKING']
         ];
-
-        const s5Rows = productArr.map((p, idx) => [
+        const s9Rows = productArr.map((p, idx) => [
             idx + 1, p.nama, p.totalQty, p.totalOmzet, p.hargaJual,
             totalQtyAll > 0 ? ((p.totalQty / totalQtyAll) * 100).toFixed(2) + '%' : '0%',
             totalOmzetAll > 0 ? ((p.totalOmzet / totalOmzetAll) * 100).toFixed(2) + '%' : '0%',
             p.totalQty > 0 ? Math.round(p.totalOmzet / p.totalQty) : 0,
             p.tanggalPertama ? p.tanggalPertama.toLocaleDateString('id-ID') : '-',
-            p.tanggalTerakhir ? p.tanggalTerakhir.toLocaleDateString('id-ID') : '-'
+            p.tanggalTerakhir ? p.tanggalTerakhir.toLocaleDateString('id-ID') : '-',
+            idx < 3 ? ['🥇 Top 1', '🥈 Top 2', '🥉 Top 3'][idx] : `#${idx+1}`
         ]);
-
-        const ws5 = XLSX.utils.aoa_to_sheet([...s5Meta, ...s5Rows,
-            [[], ['', 'TOTAL', totalQtyAll, totalOmzetAll]]
+        const ws9 = XLSX.utils.aoa_to_sheet([...s9Meta, ...s9Rows,
+            [], ['', 'TOTAL', totalQtyAll, totalOmzetAll]
         ]);
-        ws5['!cols'] = [
+        ws9['!cols'] = [
             { wch: 5 }, { wch: 30 }, { wch: 12 }, { wch: 20 }, { wch: 18 },
-            { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 16 }, { wch: 16 }
+            { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, { wch: 10 }
         ];
-        ws5['!freeze'] = { xSplit: 0, ySplit: 6 };
-        XLSX.utils.book_append_sheet(wb, ws5, 'Rekap Produk');
+        ws9['!freeze'] = { xSplit: 0, ySplit: 5 };
+        ws9['!autofilter'] = { ref: 'A5:K5' };
+        XLSX.utils.book_append_sheet(wb, ws9, '9. Rekap Produk');
 
         const fileName = `Laporan_GurmieKasir_${new Date().toISOString().split('T')[0]}.xlsx`;
         XLSX.writeFile(wb, fileName);
-        showToast('Excel (5 sheet) berhasil diunduh!', 'success');
+        showToast('✅ Excel 9 sheet berhasil diunduh!', 'success');
 
     } catch (err) {
         console.error(err);
