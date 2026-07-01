@@ -248,6 +248,93 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
 /* RIWAYAT */
 .history-date-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--surface-1);color:var(--text-secondary);transition:all var(--transition);margin:4px;}
 .history-date-chip.active{background:var(--primary);color:white;border-color:var(--primary);}
+/* MEJA — GROUP TABS (live view) */
+.meja-group-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;position:sticky;top:0;z-index:15;}
+.meja-group-tab{padding:12px 16px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color var(--transition);flex-shrink:0;}
+.meja-group-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+.meja-group-tab-sub{font-size:10px;font-weight:600;opacity:.75;margin-left:4px;}
+/* MEJA — FREE POSITION CANVAS */
+.table-canvas-wrap{overflow:auto;padding:16px;-webkit-overflow-scrolling:touch;}
+.table-canvas{position:relative;min-height:280px;background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:24px 24px;border-radius:var(--radius-md);}
+.table-node{position:absolute;width:84px;height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;border:2px solid var(--border);background:var(--surface);transition:transform 120ms ease,box-shadow var(--transition);-webkit-tap-highlight-color:transparent;box-shadow:var(--shadow-sm);}
+.table-node.shape-square{border-radius:var(--radius-md);}
+.table-node.shape-circle{border-radius:50%;}
+.table-node:active{transform:scale(.95);}
+.table-node.empty{background:var(--surface);border-color:var(--border-strong);}
+.table-node.open{background:var(--danger);border-color:var(--danger);color:white;}
+.table-node-label{font-size:12px;font-weight:700;line-height:1.1;}
+.table-node.open .table-node-label{color:white;}
+.table-node-pax{font-size:9px;font-weight:600;color:var(--text-muted);}
+.table-node.open .table-node-pax{color:rgba(255,255,255,.85);}
+.table-node-total{font-size:9px;font-weight:700;color:var(--text-primary);}
+.table-node.open .table-node-total{color:white;}
+.table-node-timer{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:white;background:var(--text-primary);padding:1px 6px;border-radius:99px;white-space:nowrap;}
+.table-node-badge{position:absolute;top:-6px;right:-6px;background:var(--primary);color:white;font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.meja-empty-canvas{text-align:center;padding:48px 24px;color:var(--text-muted);}
+.meja-empty-canvas i{font-size:44px;margin-bottom:10px;color:var(--surface-3);}
+/* MEJA — SUMMARY */
+.table-status-legend{display:flex;gap:14px;padding:10px 16px 0;flex-wrap:wrap;}
+.table-status-legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);}
+.table-status-dot{width:10px;height:10px;border-radius:4px;flex-shrink:0;}
+.table-summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 16px;}
+.table-summary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px;text-align:center;}
+.table-summary-value{font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);}
+.table-summary-label{font-size:10px;color:var(--text-muted);font-weight:600;margin-top:2px;}
+/* MEJA DETAIL OVERLAY */
+#table-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:7000;align-items:flex-end;}
+#table-detail-overlay.active{display:flex;}
+.table-detail-sheet{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;margin:0 auto;max-height:92vh;display:flex;flex-direction:column;animation:slideUp 200ms ease;}
+.table-detail-header{padding:18px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.table-detail-title{flex:1;font-family:var(--font-heading);font-size:18px;font-weight:700;color:var(--text-primary);}
+.table-detail-close{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);font-size:18px;flex-shrink:0;}
+.table-detail-body{flex:1;overflow-y:auto;padding:12px 20px;}
+.table-detail-pax-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.table-detail-pax-label{flex:1;font-size:13px;font-weight:600;color:var(--text-secondary);}
+.table-order-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.table-order-item-name{flex:1;font-size:14px;font-weight:600;color:var(--text-primary);}
+.table-order-item-price{font-size:12px;color:var(--text-muted);}
+.qty-stepper{display:flex;align-items:center;gap:8px;}
+.qty-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface-1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;font-weight:700;color:var(--text-primary);}
+.qty-btn:active{background:var(--surface-2);}
+.qty-val{font-size:14px;font-weight:700;min-width:18px;text-align:center;}
+.table-add-item-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;border:1.5px dashed var(--border-strong);border-radius:var(--radius-md);background:none;color:var(--primary);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;margin-top:10px;min-height:44px;}
+.table-detail-footer{padding:14px 20px;border-top:1px solid var(--border);background:var(--surface-1);}
+.table-detail-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.table-detail-total-label{font-size:13px;color:var(--text-secondary);font-weight:600;}
+.table-detail-total-value{font-family:var(--font-heading);font-size:20px;font-weight:700;color:var(--text-primary);}
+.table-detail-actions{display:flex;gap:8px;}
+.table-detail-actions button{flex:1;padding:12px;border-radius:var(--radius-md);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;min-height:46px;}
+/* PRODUCT PICKER */
+#product-picker-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:7100;align-items:flex-end;}
+#product-picker-overlay.active{display:flex;}
+.product-picker-sheet{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;margin:0 auto;max-height:85vh;display:flex;flex-direction:column;animation:slideUp 200ms ease;}
+.product-picker-search{padding:14px 20px 10px;}
+.product-picker-list{flex:1;overflow-y:auto;padding:0 20px 16px;}
+.product-pick-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.product-pick-item:hover{background:var(--surface-1);}
+.product-pick-name{flex:1;font-size:14px;font-weight:600;color:var(--text-primary);}
+.product-pick-price{font-size:12px;color:var(--text-muted);}
+.product-pick-stock{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;}
+/* ADMIN — TABLE GROUP LIST */
+.tgroup-item{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;min-height:56px;}
+.tgroup-item-info{flex:1;min-width:0;}
+.tgroup-item-name{font-size:14px;font-weight:700;color:var(--text-primary);}
+.tgroup-item-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.tgroup-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.tgroup-status-dot.active{background:var(--success);}
+.tgroup-status-dot.inactive{background:var(--text-muted);}
+/* ADMIN — LAYOUT EDITOR */
+.layout-editor-toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:15;flex-wrap:wrap;}
+.layout-editor-toolbar select{flex:1;min-width:140px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;background:var(--surface-1);color:var(--text-primary);min-height:40px;outline:none;}
+.layout-editor-canvas-wrap{overflow:auto;padding:16px;-webkit-overflow-scrolling:touch;background:var(--surface-1);}
+.layout-editor-canvas{position:relative;width:600px;height:420px;background:var(--surface);background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:40px 40px;border-radius:var(--radius-md);border:1px solid var(--border);margin:0 auto;}
+.layout-table-node{position:absolute;width:78px;height:78px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;cursor:grab;border:2px solid var(--primary);background:var(--primary-light);touch-action:none;user-select:none;}
+.layout-table-node.shape-square{border-radius:var(--radius-sm);}
+.layout-table-node.shape-circle{border-radius:50%;}
+.layout-table-node:active{cursor:grabbing;box-shadow:var(--shadow-lg);z-index:50;}
+.layout-table-node-label{font-size:11px;font-weight:700;color:var(--primary);pointer-events:none;}
+.layout-table-node-pax{font-size:9px;color:var(--primary);opacity:.8;pointer-events:none;}
+.layout-table-node-del{position:absolute;top:-8px;right:-8px;width:20px;height:20px;border-radius:50%;background:var(--danger);color:white;border:none;font-size:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
 /* WELCOME */
 #welcome-overlay{display:none;position:fixed;inset:0;z-index:10001;background:linear-gradient(160deg,var(--primary) 0%,#8B2500 100%);flex-direction:column;align-items:center;justify-content:center;padding:24px;}
 #welcome-overlay.active{display:flex;}
@@ -379,6 +466,53 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
   </div>
 </div>
 
+<!-- TABLE DETAIL OVERLAY -->
+<div id="table-detail-overlay">
+  <div class="table-detail-sheet">
+    <div class="table-detail-header">
+      <div class="table-detail-title" id="table-detail-title">Meja 1</div>
+      <button class="table-detail-close" onclick="closeTableDetail()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="table-detail-body">
+      <div class="table-detail-pax-row">
+        <div class="table-detail-pax-label"><i class="ti ti-users" style="margin-right:6px;"></i>Jumlah Tamu</div>
+        <div class="qty-stepper">
+          <button class="qty-btn" onclick="changeTablePax(-1)">−</button>
+          <div class="qty-val" id="table-detail-pax-val">0</div>
+          <button class="qty-btn" onclick="changeTablePax(1)">+</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);" id="table-detail-pax-capacity"></div>
+      </div>
+      <div id="table-order-items-list"></div>
+      <button class="table-add-item-btn" onclick="openProductPicker()"><i class="ti ti-plus"></i> Tambah Menu</button>
+    </div>
+    <div class="table-detail-footer">
+      <div class="table-detail-total-row">
+        <div class="table-detail-total-label">Total Tagihan</div>
+        <div class="table-detail-total-value" id="table-detail-total">Rp 0</div>
+      </div>
+      <div class="table-detail-actions">
+        <button onclick="confirmClearTable()" style="border:1px solid var(--danger);background:none;color:var(--danger);"><i class="ti ti-trash"></i> Kosongkan</button>
+        <button onclick="confirmCheckoutTable()" style="border:none;background:var(--success);color:white;"><i class="ti ti-cash-register"></i> Checkout</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRODUCT PICKER OVERLAY -->
+<div id="product-picker-overlay">
+  <div class="product-picker-sheet">
+    <div class="table-detail-header">
+      <div class="table-detail-title">Pilih Menu</div>
+      <button class="table-detail-close" onclick="closeProductPicker()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="product-picker-search">
+      <div class="search-input-row"><i class="ti ti-search"></i><input type="text" id="product-picker-search-input" placeholder="Cari menu…" autocomplete="off" oninput="filterProductPicker(this.value)"/></div>
+    </div>
+    <div class="product-picker-list" id="product-picker-list"></div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <nav id="sidebar">
@@ -388,6 +522,7 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
       <div class="sidebar-nav-item" data-tab="tugas"><i class="ti ti-checklist"></i> Tugas</div>
       <div class="sidebar-nav-item" data-tab="cari"><i class="ti ti-search"></i> Cari SOP</div>
       <div class="sidebar-nav-item" data-tab="staff"><i class="ti ti-users"></i> Staff</div>
+      <div class="sidebar-nav-item" data-tab="meja"><i class="ti ti-tools-kitchen-2"></i> Meja</div>
       <div class="sidebar-nav-item" data-tab="riwayat"><i class="ti ti-history"></i> Riwayat</div>
       <div class="sidebar-nav-item" data-tab="profil"><i class="ti ti-user-circle"></i> Profil</div>
       <div class="sidebar-nav-item" data-tab="admin" id="sidebar-admin-tab" style="display:none;"><i class="ti ti-settings"></i> Admin</div>
@@ -456,6 +591,26 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
         <div id="staff-list-container"><div class="empty-state"><i class="ti ti-users"></i><p>Memuat data staff…</p></div></div>
       </div>
 
+      <!-- MEJA -->
+      <div id="screen-meja" class="screen">
+        <div class="page-header"><h1>Manajemen Meja</h1><div class="sub">Pantau & catat pesanan per meja</div></div>
+        <div class="table-summary-row">
+          <div class="table-summary-card"><div class="table-summary-value" id="meja-summary-aktif">0</div><div class="table-summary-label">Meja Aktif</div></div>
+          <div class="table-summary-card"><div class="table-summary-value" id="meja-summary-kosong">0</div><div class="table-summary-label">Meja Kosong</div></div>
+          <div class="table-summary-card"><div class="table-summary-value green" style="color:var(--success);" id="meja-summary-omzet">Rp 0</div><div class="table-summary-label">Omzet Meja</div></div>
+        </div>
+        <div class="table-status-legend">
+          <div class="table-status-legend-item"><div class="table-status-dot" style="background:var(--surface);border:1px solid var(--border-strong);"></div> Kosong</div>
+          <div class="table-status-legend-item"><div class="table-status-dot" style="background:var(--danger);"></div> Ada Pesanan</div>
+        </div>
+        <div class="meja-group-tabs" id="meja-group-tabs"></div>
+        <div class="table-canvas-wrap">
+          <div class="table-canvas" id="table-canvas">
+            <div class="meja-empty-canvas"><i class="ti ti-loader" style="animation:spin .8s linear infinite;"></i><p>Memuat layout meja…</p></div>
+          </div>
+        </div>
+      </div>
+
       <!-- RIWAYAT -->
       <div id="screen-riwayat" class="screen">
         <div class="page-header"><h1>Riwayat Checklist</h1><div class="sub">Progress shift hari-hari sebelumnya</div></div>
@@ -489,10 +644,15 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
           <div class="profile-row"><div class="profile-row-label">Versi App</div><div class="profile-row-value">v3.0.0</div></div>
           <div class="profile-row"><div class="profile-row-label">Device ID</div><div class="profile-row-value" id="device-id-display" style="font-size:10px;word-break:break-all;max-width:180px;">—</div></div>
         </div>
+        <div class="profile-section">
+          <div class="profile-section-title">Lainnya</div>
+          <div class="profile-row" style="cursor:pointer;" onclick="switchTab('riwayat')"><div class="profile-row-label"><i class="ti ti-history" style="margin-right:6px;"></i>Riwayat Checklist</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
+        </div>
         <div class="profile-section" id="admin-access-section" style="display:none;">
           <div class="profile-section-title">Admin</div>
           <div class="profile-row" style="cursor:pointer;" onclick="switchTab('admin')"><div class="profile-row-label"><i class="ti ti-settings" style="margin-right:6px;"></i>Kelola Modul SOP & Prosedur</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
           <div class="profile-row" style="cursor:pointer;" onclick="exportShiftReportAll()"><div class="profile-row-label"><i class="ti ti-download" style="margin-right:6px;"></i>Ekspor Laporan Shift</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
+          <div class="profile-row" style="cursor:pointer;" onclick="switchTab('admin');setTimeout(()=>switchAdminTab('meja'),50);"><div class="profile-row-label"><i class="ti ti-tools-kitchen-2" style="margin-right:6px;"></i>Atur Grup & Layout Meja</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
         </div>
         <div style="padding:0 16px 32px;"><button onclick="doLogout()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:1px solid var(--danger);border-radius:var(--radius-md);background:none;color:var(--danger);font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer;min-height:44px;"><i class="ti ti-logout"></i> Keluar / Logout</button></div>
       </div>
@@ -500,11 +660,12 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
       <!-- ADMIN -->
       <div id="screen-admin" class="screen">
         <div class="page-header"><h1>⚙️ Kelola SOP</h1><div class="sub">Hanya untuk Manajer</div></div>
-        <div class="admin-tab-bar">
+        <div class="admin-tab-bar" id="admin-top-tab-bar">
           <div class="admin-tab active" data-admin-tab="modul" onclick="switchAdminTab('modul')">Modul</div>
           <div class="admin-tab" data-admin-tab="prosedur" onclick="switchAdminTab('prosedur')">Prosedur</div>
           <div class="admin-tab" data-admin-tab="pengumuman" onclick="switchAdminTab('pengumuman')">Pengumuman</div>
           <div class="admin-tab" data-admin-tab="tren" onclick="switchAdminTab('tren')">Tren</div>
+          <div class="admin-tab" data-admin-tab="meja" onclick="switchAdminTab('meja')">Meja</div>
         </div>
         <!-- MODUL -->
         <div id="admin-panel-modul">
@@ -577,14 +738,60 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
           <div class="page-header" style="position:static;"><h1 style="font-size:15px;">📊 Tren Completion</h1><div class="sub">7 hari terakhir</div></div>
           <div id="tren-content"><div class="empty-state"><i class="ti ti-chart-bar"></i><p>Memuat data tren…</p></div></div>
         </div>
+
+        <!-- PANEL MEJA (Table Group + Layout Editor) -->
+        <div id="admin-panel-meja" style="display:none;">
+          <div class="admin-tab-bar" style="border-top:1px solid var(--border);">
+            <div class="admin-tab active" data-meja-subtab="grup" onclick="switchMejaSubTab('grup')">Grup Meja</div>
+            <div class="admin-tab" data-meja-subtab="layout" onclick="switchMejaSubTab('layout')">Layout Meja</div>
+          </div>
+
+          <!-- SUB: GRUP MEJA -->
+          <div id="meja-subpanel-grup">
+            <div style="padding:12px 16px;"><button onclick="openAddGroupForm()" style="display:flex;align-items:center;gap:6px;padding:10px 16px;background:var(--primary);color:white;border:none;border-radius:var(--radius-md);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;width:100%;justify-content:center;min-height:44px;"><i class="ti ti-plus"></i> Tambah Grup Meja</button></div>
+            <div id="admin-tgroup-list"></div>
+            <div id="admin-tgroup-form" style="display:none;" class="admin-form-wrap">
+              <div class="admin-form-title" id="admin-tgroup-form-title">Tambah Grup</div>
+              <input id="tgroup-name" class="admin-input" type="text" placeholder="Nama grup (mis: Smoking Area)"/>
+              <input id="tgroup-order" class="admin-input" type="number" placeholder="Urutan tab (0,1,2…)"/>
+              <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:14px;cursor:pointer;color:var(--text-primary);"><input type="checkbox" id="tgroup-active" checked/> Aktif (tampil di live view)</label>
+              <div class="admin-form-btns"><button class="btn-cancel" onclick="cancelGroupForm()">Batal</button><button class="btn-primary" onclick="saveGroupForm()">Simpan</button></div>
+              <input type="hidden" id="tgroup-edit-id" value=""/>
+            </div>
+          </div>
+
+          <!-- SUB: LAYOUT MEJA (drag & drop editor) -->
+          <div id="meja-subpanel-layout" style="display:none;">
+            <div class="layout-editor-toolbar">
+              <select id="layout-group-select" onchange="loadLayoutEditor(this.value)"><option value="">— Pilih grup meja —</option></select>
+              <button onclick="openAddTableForm()" style="padding:8px 12px;background:var(--primary);color:white;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;min-height:40px;display:flex;align-items:center;gap:4px;white-space:nowrap;"><i class="ti ti-plus"></i> Tambah Meja</button>
+            </div>
+            <div style="padding:8px 16px 0;font-size:11px;color:var(--text-muted);">💡 Seret (drag) kotak meja untuk atur posisi. Posisi tersimpan otomatis.</div>
+            <div class="layout-editor-canvas-wrap">
+              <div class="layout-editor-canvas" id="layout-editor-canvas">
+                <div class="meja-empty-canvas" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;"><i class="ti ti-tools-kitchen-2"></i><p>Pilih grup meja di atas untuk mulai atur layout.</p></div>
+              </div>
+            </div>
+            <div id="admin-table-form" style="display:none;" class="admin-form-wrap">
+              <div class="admin-form-title" id="admin-table-form-title">Tambah Meja</div>
+              <input id="atable-number" class="admin-input" type="text" placeholder="Nama/nomor meja (mis: VIP1, SMK2, 7)"/>
+              <div class="admin-form-row">
+                <input id="atable-pax" class="admin-input" type="number" placeholder="Kapasitas pax" style="flex:1;margin-bottom:0;" value="4"/>
+                <select id="atable-shape" class="admin-input" style="flex:1;margin-bottom:0;"><option value="square">◻ Kotak</option><option value="circle">◯ Bulat</option></select>
+              </div>
+              <div class="admin-form-btns" style="margin-top:8px;"><button class="btn-cancel" onclick="cancelTableForm()">Batal</button><button class="btn-primary" onclick="saveTableForm()">Simpan</button></div>
+              <input type="hidden" id="atable-edit-id" value=""/>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div><!-- /screen-container -->
     <nav id="bottom-nav">
       <div class="bottom-nav-item active" data-tab="beranda"><i class="ti ti-home"></i><span>Beranda</span></div>
       <div class="bottom-nav-item" data-tab="tugas"><i class="ti ti-checklist"></i><span>Tugas</span></div>
+      <div class="bottom-nav-item" data-tab="meja"><i class="ti ti-tools-kitchen-2"></i><span>Meja</span></div>
       <div class="bottom-nav-item" data-tab="staff"><i class="ti ti-users"></i><span>Staff</span></div>
-      <div class="bottom-nav-item" data-tab="riwayat"><i class="ti ti-history"></i><span>Riwayat</span></div>
       <div class="bottom-nav-item" data-tab="profil"><i class="ti ti-user-circle"></i><span>Profil</span></div>
       <div class="bottom-nav-item" data-tab="admin" id="bottom-admin-tab" style="display:none;"><i class="ti ti-settings"></i><span>Admin</span></div>
     </nav>
@@ -1498,6 +1705,7 @@ function switchTab(tabName){
   if(tabName==='tugas') renderModuleList();
   if(tabName==='cari') renderProsedurButtons('prosedur-btn-row-cari');
   if(tabName==='staff'){const st=presenceChannel?presenceChannel.presenceState():{};renderStaffList(st);}
+  if(tabName==='meja') renderMejaLiveView();
   if(tabName==='riwayat') renderHistoryScreen();
   if(tabName==='admin'){renderAdminModuleList();renderAdminProsedurList();renderAdminAnnList();}
 }
@@ -1510,13 +1718,559 @@ function initNavigation(){
   });
 }
 
+// ── MANAJEMEN MEJA (Table Group + Layout Map) ─────────────────────────
+// Skema:
+//  table_groups: id, name, order_index, is_active
+//  table_layout: id, group_id, table_number(unik, dipakai juga di table_orders.table_number),
+//                pax_capacity, shape('square'/'circle'), grid_row, grid_col, order_index
+//  table_orders: id, table_number, items(jsonb), total_price, pax_count, status, opened_at
+let tableProducts=[];          // cache produk untuk picker
+let tableOrdersCache=[];       // semua table_orders berstatus pending (live)
+let tableGroupsCache=[];       // semua grup meja
+let tableLayoutCache=[];       // semua layout meja (semua grup, di-filter per grup saat render)
+let activeTableNumber=null;    // meja yang sedang dibuka di overlay
+let activeMejaGroupId=null;    // grup yang sedang ditampilkan di live view
+let tableRealtimeChannel=null;
+let timerTickInterval=null;    // update durasi tiap menit tanpa reload data
+
+async function loadTableProducts(){
+  try{
+    const{data}=await db.from('products').select('id,name,price,stock,category,show_in_menu,order_index')
+      .eq('show_in_menu',true).order('order_index');
+    tableProducts=data||[];
+  }catch(e){console.warn('loadTableProducts:',e);tableProducts=[];}
+}
+async function loadTableGroups(){
+  try{
+    const{data,error}=await db.from('table_groups').select('*').order('order_index');
+    if(error) throw error;
+    tableGroupsCache=data||[];
+  }catch(e){console.warn('loadTableGroups:',e);tableGroupsCache=[];}
+}
+async function loadTableLayout(){
+  try{
+    const{data,error}=await db.from('table_layout').select('*').order('order_index');
+    if(error) throw error;
+    tableLayoutCache=data||[];
+  }catch(e){console.warn('loadTableLayout:',e);tableLayoutCache=[];}
+}
+async function loadActiveTableOrders(){
+  try{
+    const{data,error}=await db.from('table_orders').select('*').eq('status','pending').order('table_number');
+    if(error) throw error;
+    tableOrdersCache=data||[];
+  }catch(e){console.warn('loadActiveTableOrders:',e);tableOrdersCache=[];}
+}
+function subscribeTableRealtime(){
+  if(tableRealtimeChannel) return;
+  tableRealtimeChannel=db.channel('sop_table_orders_rt_v2')
+    .on('postgres_changes',{event:'*',schema:'public',table:'table_orders'},async()=>{
+      await loadActiveTableOrders();
+      if(S.activeTab==='meja') renderMejaLiveView();
+      if(document.getElementById('table-detail-overlay').classList.contains('active')) renderTableDetailBody();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'table_layout'},async()=>{
+      await loadTableLayout();
+      if(S.activeTab==='meja') renderMejaLiveView();
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'table_groups'},async()=>{
+      await loadTableGroups();
+      if(S.activeTab==='meja') renderMejaLiveView();
+    })
+    .subscribe();
+}
+
+function fmtDuration(openedAt){
+  if(!openedAt) return '';
+  const ms=Date.now()-new Date(openedAt).getTime();
+  if(ms<0) return '0 min';
+  const totalMin=Math.floor(ms/60000);
+  const h=Math.floor(totalMin/60),m=totalMin%60;
+  return h>0?`${h} j ${m} min`:`${m} min`;
+}
+
+// ── LIVE VIEW: GROUP TABS + FREE-POSITION CANVAS ───────────────────────
+async function renderMejaLiveView(){
+  const tabsEl=document.getElementById('meja-group-tabs');
+  const canvasEl=document.getElementById('table-canvas');
+  if(!tabsEl||!canvasEl) return;
+  await Promise.all([
+    loadTableGroups(),loadTableLayout(),loadActiveTableOrders(),
+    tableProducts.length?Promise.resolve():loadTableProducts()
+  ]);
+  subscribeTableRealtime();
+  const activeGroups=tableGroupsCache.filter(g=>g.is_active);
+  if(!activeGroups.length){
+    tabsEl.innerHTML='';
+    canvasEl.innerHTML='<div class="meja-empty-canvas"><i class="ti ti-tools-kitchen-2"></i><p>Belum ada grup meja.<br>Manajer bisa atur di Admin → Meja.</p></div>';
+    updateMejaSummary([]);
+    return;
+  }
+  if(!activeMejaGroupId||!activeGroups.some(g=>g.id===activeMejaGroupId)) activeMejaGroupId=activeGroups[0].id;
+  tabsEl.innerHTML=activeGroups.map(g=>{
+    const cnt=tableLayoutCache.filter(t=>t.group_id===g.id).length;
+    const activeCnt=tableLayoutCache.filter(t=>t.group_id===g.id&&tableOrdersCache.some(o=>o.table_number===t.table_number)).length;
+    return `<div class="meja-group-tab ${g.id===activeMejaGroupId?'active':''}" onclick="selectMejaGroup('${g.id}')">${g.name}<span class="meja-group-tab-sub">${activeCnt}/${cnt}</span></div>`;
+  }).join('');
+  renderMejaCanvas();
+  updateMejaSummary(tableLayoutCache);
+  startTimerTick();
+}
+function selectMejaGroup(groupId){
+  activeMejaGroupId=groupId;
+  document.querySelectorAll('.meja-group-tab').forEach((el,i)=>{});
+  renderMejaLiveView();
+}
+function renderMejaCanvas(){
+  const canvasEl=document.getElementById('table-canvas');
+  if(!canvasEl) return;
+  const tables=tableLayoutCache.filter(t=>t.group_id===activeMejaGroupId);
+  if(!tables.length){
+    canvasEl.innerHTML='<div class="meja-empty-canvas"><i class="ti ti-layout-grid"></i><p>Grup ini belum punya meja.<br>Atur di Admin → Meja → Layout Meja.</p></div>';
+    return;
+  }
+  const maxRow=Math.max(...tables.map(t=>t.grid_row||0),4);
+  const maxCol=Math.max(...tables.map(t=>t.grid_col||0),6);
+  canvasEl.style.width=Math.max(600,(maxCol+1)*100)+'px';
+  canvasEl.style.height=Math.max(280,(maxRow+1)*100)+'px';
+  canvasEl.innerHTML=tables.map(t=>{
+    const order=tableOrdersCache.find(o=>o.table_number===t.table_number);
+    const x=(t.grid_col||0)*90+8,y=(t.grid_row||0)*90+8;
+    let cls='empty',inner=`<div class="table-node-label">${t.table_number}</div><div class="table-node-pax">0/${t.pax_capacity} pax</div>`,timerHtml='';
+    if(order){
+      cls='open';
+      const items=getOrderItems(order);
+      const itemCnt=items.reduce((s,it)=>s+(it.qty||1),0);
+      inner=`<div class="table-node-label">${t.table_number}</div>
+             <div class="table-node-pax">${order.pax_count||0}/${t.pax_capacity} pax</div>
+             <div class="table-node-total">Rp ${Math.round((order.total_price||0)/1000)}k</div>`;
+      timerHtml=`<div class="table-node-timer" data-opened-at="${order.opened_at||order.created_at||''}">${fmtDuration(order.opened_at||order.created_at)}</div>`;
+    }
+    return `<div class="table-node shape-${t.shape} ${cls}" style="left:${x}px;top:${y}px;" onclick="openTableDetail('${t.table_number}','${t.id}')">${inner}${timerHtml}</div>`;
+  }).join('');
+}
+function startTimerTick(){
+  if(timerTickInterval) clearInterval(timerTickInterval);
+  timerTickInterval=setInterval(()=>{
+    if(S.activeTab!=='meja') return;
+    document.querySelectorAll('.table-node-timer[data-opened-at]').forEach(el=>{
+      const openedAt=el.dataset.openedAt;
+      if(openedAt) el.textContent=fmtDuration(openedAt);
+    });
+  },30000);
+}
+function updateMejaSummary(layoutList){
+  const total=layoutList.length;
+  const activeCnt=layoutList.filter(t=>tableOrdersCache.some(o=>o.table_number===t.table_number)).length;
+  const omzetMeja=tableOrdersCache.reduce((s,o)=>s+(o.total_price||0),0);
+  const sa=document.getElementById('meja-summary-aktif');if(sa) sa.textContent=activeCnt;
+  const sk=document.getElementById('meja-summary-kosong');if(sk) sk.textContent=Math.max(0,total-activeCnt);
+  const so=document.getElementById('meja-summary-omzet');if(so) so.textContent='Rp '+omzetMeja.toLocaleString('id-ID');
+}
+
+function getOrderItems(order){
+  if(!order) return [];
+  if(Array.isArray(order.items)) return order.items;
+  try{return JSON.parse(order.items||'[]');}catch{return [];}
+}
+function calcOrderTotal(items){
+  return items.reduce((s,it)=>s+(it.price||0)*(it.qty||1),0);
+}
+
+// ── TABLE DETAIL OVERLAY ────────────────────────────────────────────────
+let activeTableLayoutId=null;
+function openTableDetail(label,layoutId){
+  activeTableNumber=label;
+  activeTableLayoutId=layoutId||null;
+  document.getElementById('table-detail-title').textContent='Meja '+label;
+  document.getElementById('table-detail-overlay').classList.add('active');
+  renderTableDetailBody();
+}
+function closeTableDetail(){
+  document.getElementById('table-detail-overlay').classList.remove('active');
+  activeTableNumber=null;activeTableLayoutId=null;
+}
+function renderTableDetailBody(){
+  if(!activeTableNumber) return;
+  const order=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
+  const layout=tableLayoutCache.find(t=>t.table_number===activeTableNumber);
+  const items=getOrderItems(order);
+  document.getElementById('table-detail-pax-val').textContent=order?.pax_count||0;
+  document.getElementById('table-detail-pax-capacity').textContent=layout?`maks ${layout.pax_capacity}`:'';
+  const container=document.getElementById('table-order-items-list');
+  if(!items.length){
+    container.innerHTML='<div class="empty-state" style="padding:24px 0;"><i class="ti ti-receipt-off"></i><p>Belum ada pesanan.<br>Tambahkan menu di bawah.</p></div>';
+  }else{
+    container.innerHTML=items.map((it,idx)=>`
+      <div class="table-order-item">
+        <div style="flex:1;">
+          <div class="table-order-item-name">${it.name}</div>
+          <div class="table-order-item-price">Rp ${(it.price||0).toLocaleString('id-ID')} / pcs</div>
+        </div>
+        <div class="qty-stepper">
+          <button class="qty-btn" onclick="changeTableItemQty(${idx},-1)">−</button>
+          <div class="qty-val">${it.qty||1}</div>
+          <button class="qty-btn" onclick="changeTableItemQty(${idx},1)">+</button>
+        </div>
+      </div>`).join('');
+  }
+  const total=calcOrderTotal(items);
+  document.getElementById('table-detail-total').textContent='Rp '+total.toLocaleString('id-ID');
+}
+async function changeTablePax(delta){
+  if(!activeTableNumber) return;
+  const order=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
+  const items=order?getOrderItems(order):[];
+  const newPax=Math.max(0,(order?.pax_count||0)+delta);
+  await persistTableOrder(items,newPax);
+}
+async function changeTableItemQty(idx,delta){
+  const order=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
+  if(!order) return;
+  const items=getOrderItems(order);
+  if(!items[idx]) return;
+  items[idx].qty=(items[idx].qty||1)+delta;
+  if(items[idx].qty<=0) items.splice(idx,1);
+  await persistTableOrder(items,order.pax_count||0);
+}
+async function persistTableOrder(items,paxCount){
+  const total=calcOrderTotal(items);
+  try{
+    const existing=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
+    if(items.length===0&&(paxCount||0)===0){
+      // Tidak ada item & pax → hapus order (meja jadi kosong)
+      if(existing) await db.from('table_orders').delete().eq('id',existing.id);
+    }else if(existing){
+      await db.from('table_orders').update({items:JSON.stringify(items),total_price:total,pax_count:paxCount||0}).eq('id',existing.id);
+    }else{
+      await db.from('table_orders').insert({table_number:activeTableNumber,items:JSON.stringify(items),total_price:total,pax_count:paxCount||0,status:'pending',opened_at:new Date().toISOString()});
+    }
+    await loadActiveTableOrders();
+    renderTableDetailBody();
+    renderMejaCanvas();
+    updateMejaSummary(tableLayoutCache.filter(t=>t.group_id===activeMejaGroupId));
+  }catch(e){showToast('Gagal update pesanan: '+e.message,'error');}
+}
+
+// ── PRODUCT PICKER ─────────────────────────────────────────────────────
+function openProductPicker(){
+  document.getElementById('product-picker-overlay').classList.add('active');
+  document.getElementById('product-picker-search-input').value='';
+  renderProductPickerList(tableProducts);
+  setTimeout(()=>document.getElementById('product-picker-search-input').focus(),150);
+}
+function closeProductPicker(){document.getElementById('product-picker-overlay').classList.remove('active');}
+function filterProductPicker(q){
+  const ql=q.trim().toLowerCase();
+  const filtered=ql?tableProducts.filter(p=>p.name.toLowerCase().includes(ql)):tableProducts;
+  renderProductPickerList(filtered);
+}
+function renderProductPickerList(list){
+  const c=document.getElementById('product-picker-list');
+  if(!list.length){c.innerHTML='<div class="empty-state" style="padding:24px 0;"><i class="ti ti-mood-empty"></i><p>Menu tidak ditemukan.</p></div>';return;}
+  c.innerHTML=list.map(p=>{
+    const stockBadge=p.stock===0?'<span class="product-pick-stock" style="background:var(--danger-light);color:var(--danger);">Habis</span>':p.stock<=5?`<span class="product-pick-stock" style="background:var(--warning-light);color:var(--warning);">${p.stock}</span>`:'';
+    const disabled=p.stock===0?'opacity:.45;pointer-events:none;':'';
+    return `<div class="product-pick-item" style="${disabled}" onclick="addProductToTable('${p.id}','${p.name.replace(/'/g,"&#39;")}',${p.price})">
+      <div class="product-pick-name">${p.name}</div>
+      <div class="product-pick-price">Rp ${(p.price||0).toLocaleString('id-ID')}</div>
+      ${stockBadge}
+      <i class="ti ti-plus" style="color:var(--primary);font-size:18px;"></i>
+    </div>`;
+  }).join('');
+}
+async function addProductToTable(productId,name,price){
+  if(!activeTableNumber) return;
+  const order=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
+  const items=order?getOrderItems(order):[];
+  const existing=items.find(it=>it.product_id===productId);
+  if(existing) existing.qty=(existing.qty||1)+1;
+  else items.push({product_id:productId,name,price,qty:1});
+  closeProductPicker();
+  await persistTableOrder(items,order?.pax_count||0);
+  showToast(`${name} ditambahkan ke Meja ${activeTableNumber}`,'success');
+}
+
+// ── KOSONGKAN / CHECKOUT MEJA ───────────────────────────────────────────
+function confirmClearTable(){
+  if(!activeTableNumber) return;
+  openModal('Kosongkan Meja?',`Semua pesanan di Meja ${activeTableNumber} akan dihapus tanpa membuat transaksi.`,async()=>{
+    const order=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
+    if(order){try{await db.from('table_orders').delete().eq('id',order.id);}catch(e){showToast('Gagal: '+e.message,'error');}}
+    await loadActiveTableOrders();renderMejaCanvas();closeTableDetail();
+    showToast('Meja dikosongkan.','info');
+  });
+}
+function confirmCheckoutTable(){
+  if(!activeTableNumber) return;
+  const order=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
+  const items=getOrderItems(order);
+  if(!items.length){showToast('Belum ada pesanan untuk di-checkout.','info');return;}
+  const total=calcOrderTotal(items);
+  openModal('Checkout Meja?',`Meja ${activeTableNumber} — Total Rp ${total.toLocaleString('id-ID')} akan dicatat sebagai transaksi dan meja dikosongkan.`,()=>checkoutTable(order,items,total));
+}
+async function checkoutTable(order,items,total){
+  try{
+    const{data:trx,error:trxErr}=await db.from('transactions').insert({
+      total_price:total,payment_method:'Tunai'
+    }).select().single();
+    if(trxErr) throw trxErr;
+    const trxItems=items.map(it=>({
+      transaction_id:trx.id,product_id:it.product_id,quantity:it.qty||1,
+      price:it.price,notes:`Meja ${activeTableNumber}`
+    }));
+    const{error:itemErr}=await db.from('transaction_items').insert(trxItems);
+    if(itemErr) throw itemErr;
+    await db.from('table_orders').delete().eq('id',order.id);
+    omzetCache={date:null,data:null};
+    await loadActiveTableOrders();
+    renderMejaCanvas();updateMejaSummary(tableLayoutCache.filter(t=>t.group_id===activeMejaGroupId));closeTableDetail();
+    showToast(`Checkout Meja ${activeTableNumber} berhasil! Rp ${total.toLocaleString('id-ID')}`,'success');
+    if(S.activeTab==='beranda') loadOmzet(true);
+  }catch(e){showToast('Gagal checkout: '+e.message,'error');}
+}
+
+// ── ADMIN: MEJA — SUB TAB SWITCH ────────────────────────────────────────
+function switchMejaSubTab(tab){
+  document.querySelectorAll('#admin-panel-meja .admin-tab').forEach(t=>t.classList.toggle('active',t.dataset.mejaSubtab===tab));
+  const gp=document.getElementById('meja-subpanel-grup'),lp=document.getElementById('meja-subpanel-layout');
+  if(gp) gp.style.display=tab==='grup'?'block':'none';
+  if(lp) lp.style.display=tab==='layout'?'block':'none';
+  if(tab==='grup') renderAdminGroupList();
+  if(tab==='layout') populateLayoutGroupSelect();
+}
+
+// ── ADMIN: GRUP MEJA (CRUD) ──────────────────────────────────────────────
+async function renderAdminGroupList(){
+  await loadTableGroups();
+  const c=document.getElementById('admin-tgroup-list');
+  if(!c) return;
+  if(!tableGroupsCache.length){c.innerHTML='<p style="padding:24px 16px;color:var(--text-muted);">Belum ada grup meja. Tambah dulu, misalnya "Main Room" atau "Smoking Area".</p>';return;}
+  c.innerHTML=tableGroupsCache.map(g=>{
+    const cnt=tableLayoutCache.filter(t=>t.group_id===g.id).length;
+    return `<div class="tgroup-item">
+      <div class="tgroup-status-dot ${g.is_active?'active':'inactive'}"></div>
+      <div class="tgroup-item-info">
+        <div class="tgroup-item-name">${g.name}</div>
+        <div class="tgroup-item-sub">${cnt} meja · urutan ${g.order_index} · ${g.is_active?'Aktif':'Nonaktif'}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="admin-btn-sm" onclick="editGroupForm('${g.id}')">Edit</button>
+        <button class="admin-btn-sm danger" onclick="confirmDeleteGroup('${g.id}')">Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openAddGroupForm(){
+  document.getElementById('admin-tgroup-form-title').textContent='Tambah Grup';
+  document.getElementById('tgroup-name').value='';
+  document.getElementById('tgroup-order').value=tableGroupsCache.length;
+  document.getElementById('tgroup-active').checked=true;
+  document.getElementById('tgroup-edit-id').value='';
+  document.getElementById('admin-tgroup-form').style.display='block';
+  document.getElementById('tgroup-name').focus();
+}
+function editGroupForm(groupId){
+  const g=tableGroupsCache.find(x=>x.id===groupId);if(!g) return;
+  document.getElementById('admin-tgroup-form-title').textContent='Edit Grup';
+  document.getElementById('tgroup-name').value=g.name;
+  document.getElementById('tgroup-order').value=g.order_index;
+  document.getElementById('tgroup-active').checked=g.is_active;
+  document.getElementById('tgroup-edit-id').value=groupId;
+  document.getElementById('admin-tgroup-form').style.display='block';
+  document.getElementById('tgroup-name').focus();
+}
+function cancelGroupForm(){document.getElementById('admin-tgroup-form').style.display='none';}
+async function saveGroupForm(){
+  const name=document.getElementById('tgroup-name').value.trim();
+  const order=parseInt(document.getElementById('tgroup-order').value)||0;
+  const active=document.getElementById('tgroup-active').checked;
+  const editId=document.getElementById('tgroup-edit-id').value;
+  if(!name){showToast('Nama grup tidak boleh kosong.','error');return;}
+  try{
+    if(editId){
+      const{error}=await db.from('table_groups').update({name,order_index:order,is_active:active}).eq('id',editId);
+      if(error) throw error;
+      showToast('Grup diupdate!','success');
+    }else{
+      const{error}=await db.from('table_groups').insert({name,order_index:order,is_active:active});
+      if(error) throw error;
+      showToast('Grup ditambahkan!','success');
+    }
+    cancelGroupForm();await renderAdminGroupList();populateLayoutGroupSelect();
+  }catch(e){showToast('Gagal: '+e.message,'error');}
+}
+function confirmDeleteGroup(groupId){
+  const g=tableGroupsCache.find(x=>x.id===groupId);
+  const cnt=tableLayoutCache.filter(t=>t.group_id===groupId).length;
+  openModal('Hapus Grup?',`"${g?.name}" beserta ${cnt} meja di dalamnya akan dihapus permanen.`,async()=>{
+    try{
+      await db.from('table_layout').delete().eq('group_id',groupId);
+      await db.from('table_groups').delete().eq('id',groupId);
+      await renderAdminGroupList();await loadTableLayout();populateLayoutGroupSelect();
+      showToast('Grup dihapus.','info');
+    }catch(e){showToast('Gagal: '+e.message,'error');}
+  });
+}
+
+// ── ADMIN: LAYOUT MEJA (DRAG & DROP EDITOR) ─────────────────────────────
+let layoutEditingGroupId=null;
+let dragState=null; // {tableId, startX, startY, origLeft, origTop}
+const GRID_CELL=90;
+
+function populateLayoutGroupSelect(){
+  const sel=document.getElementById('layout-group-select');
+  if(!sel) return;
+  const prev=sel.value;
+  sel.innerHTML='<option value="">— Pilih grup meja —</option>'+tableGroupsCache.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  if(prev&&tableGroupsCache.some(g=>g.id===prev)){sel.value=prev;loadLayoutEditor(prev);}
+}
+async function loadLayoutEditor(groupId){
+  layoutEditingGroupId=groupId||null;
+  await loadTableLayout();
+  renderLayoutEditorCanvas();
+}
+function renderLayoutEditorCanvas(){
+  const canvas=document.getElementById('layout-editor-canvas');
+  if(!canvas) return;
+  if(!layoutEditingGroupId){
+    canvas.innerHTML='<div class="meja-empty-canvas" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;"><i class="ti ti-tools-kitchen-2"></i><p>Pilih grup meja di atas untuk mulai atur layout.</p></div>';
+    return;
+  }
+  const tables=tableLayoutCache.filter(t=>t.group_id===layoutEditingGroupId);
+  if(!tables.length){
+    canvas.innerHTML='<div class="meja-empty-canvas" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;"><i class="ti ti-plus"></i><p>Belum ada meja di grup ini.<br>Klik "Tambah Meja" untuk mulai.</p></div>';
+    return;
+  }
+  canvas.innerHTML=tables.map(t=>{
+    const x=(t.grid_col||0)*GRID_CELL+8,y=(t.grid_row||0)*GRID_CELL+8;
+    return `<div class="layout-table-node shape-${t.shape}" style="left:${x}px;top:${y}px;" data-id="${t.id}" data-row="${t.grid_row||0}" data-col="${t.grid_col||0}" onpointerdown="startDragTable(event,'${t.id}')" ondblclick="editTableForm('${t.id}')">
+      <div class="layout-table-node-label">${t.table_number}</div>
+      <div class="layout-table-node-pax">${t.pax_capacity} pax</div>
+      <button class="layout-table-node-del" onclick="event.stopPropagation();confirmDeleteTable('${t.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function startDragTable(evt,tableId){
+  evt.preventDefault();
+  const node=evt.currentTarget;
+  const canvas=document.getElementById('layout-editor-canvas');
+  const canvasRect=canvas.getBoundingClientRect();
+  dragState={
+    tableId,node,
+    startClientX:evt.clientX,startClientY:evt.clientY,
+    origLeft:parseInt(node.style.left)||0,origTop:parseInt(node.style.top)||0,
+    canvasRect
+  };
+  node.setPointerCapture(evt.pointerId);
+  node.addEventListener('pointermove',onDragTableMove);
+  node.addEventListener('pointerup',onDragTableEnd);
+}
+function onDragTableMove(evt){
+  if(!dragState) return;
+  const dx=evt.clientX-dragState.startClientX;
+  const dy=evt.clientY-dragState.startClientY;
+  let newLeft=Math.max(0,dragState.origLeft+dx);
+  let newTop=Math.max(0,dragState.origTop+dy);
+  dragState.node.style.left=newLeft+'px';
+  dragState.node.style.top=newTop+'px';
+}
+async function onDragTableEnd(evt){
+  if(!dragState) return;
+  dragState.node.removeEventListener('pointermove',onDragTableMove);
+  dragState.node.removeEventListener('pointerup',onDragTableEnd);
+  const finalLeft=parseInt(dragState.node.style.left)||0;
+  const finalTop=parseInt(dragState.node.style.top)||0;
+  // Snap ke grid
+  const col=Math.round((finalLeft-8)/GRID_CELL);
+  const row=Math.round((finalTop-8)/GRID_CELL);
+  const snappedLeft=Math.max(0,col)*GRID_CELL+8,snappedTop=Math.max(0,row)*GRID_CELL+8;
+  dragState.node.style.left=snappedLeft+'px';
+  dragState.node.style.top=snappedTop+'px';
+  const tableId=dragState.tableId;
+  dragState=null;
+  try{
+    await db.from('table_layout').update({grid_row:Math.max(0,row),grid_col:Math.max(0,col)}).eq('id',tableId);
+    const idx=tableLayoutCache.findIndex(t=>t.id===tableId);
+    if(idx>-1){tableLayoutCache[idx].grid_row=Math.max(0,row);tableLayoutCache[idx].grid_col=Math.max(0,col);}
+  }catch(e){showToast('Gagal simpan posisi: '+e.message,'error');}
+}
+function openAddTableForm(){
+  if(!layoutEditingGroupId){showToast('Pilih grup meja dulu.','info');return;}
+  document.getElementById('admin-table-form-title').textContent='Tambah Meja';
+  document.getElementById('atable-number').value='';
+  document.getElementById('atable-pax').value=4;
+  document.getElementById('atable-shape').value='square';
+  document.getElementById('atable-edit-id').value='';
+  document.getElementById('admin-table-form').style.display='block';
+  document.getElementById('atable-number').focus();
+}
+function editTableForm(tableId){
+  const t=tableLayoutCache.find(x=>x.id===tableId);if(!t) return;
+  document.getElementById('admin-table-form-title').textContent='Edit Meja';
+  document.getElementById('atable-number').value=t.table_number;
+  document.getElementById('atable-pax').value=t.pax_capacity;
+  document.getElementById('atable-shape').value=t.shape;
+  document.getElementById('atable-edit-id').value=tableId;
+  document.getElementById('admin-table-form').style.display='block';
+  document.getElementById('atable-number').focus();
+}
+function cancelTableForm(){document.getElementById('admin-table-form').style.display='none';}
+async function saveTableForm(){
+  const number=document.getElementById('atable-number').value.trim();
+  const pax=parseInt(document.getElementById('atable-pax').value)||4;
+  const shape=document.getElementById('atable-shape').value;
+  const editId=document.getElementById('atable-edit-id').value;
+  if(!number){showToast('Nama/nomor meja tidak boleh kosong.','error');return;}
+  try{
+    if(editId){
+      const{error}=await db.from('table_layout').update({table_number:number,pax_capacity:pax,shape}).eq('id',editId);
+      if(error){
+        if(error.code==='23505') showToast('Nomor meja sudah dipakai. Gunakan nama lain.','error');
+        else throw error;
+        return;
+      }
+    }else{
+      const existingInGroup=tableLayoutCache.filter(t=>t.group_id===layoutEditingGroupId);
+      const nextCol=existingInGroup.length%6,nextRow=Math.floor(existingInGroup.length/6);
+      const{error}=await db.from('table_layout').insert({
+        group_id:layoutEditingGroupId,table_number:number,pax_capacity:pax,shape,
+        grid_row:nextRow,grid_col:nextCol,order_index:existingInGroup.length
+      });
+      if(error){
+        if(error.code==='23505') showToast('Nomor meja sudah dipakai di grup lain. Gunakan nama unik, mis: VIP1, SMK2.','error');
+        else throw error;
+        return;
+      }
+    }
+    cancelTableForm();
+    await loadTableLayout();
+    renderLayoutEditorCanvas();
+    renderAdminGroupList();
+    showToast('Meja disimpan!','success');
+  }catch(e){showToast('Gagal: '+e.message,'error');}
+}
+function confirmDeleteTable(tableId){
+  const t=tableLayoutCache.find(x=>x.id===tableId);
+  openModal('Hapus Meja?',`Meja "${t?.table_number}" akan dihapus permanen dari layout.`,async()=>{
+    try{
+      await db.from('table_layout').delete().eq('id',tableId);
+      await loadTableLayout();
+      renderLayoutEditorCanvas();
+      renderAdminGroupList();
+      showToast('Meja dihapus.','info');
+    }catch(e){showToast('Gagal: '+e.message,'error');}
+  });
+}
+
 // ── ADMIN: MODUL ──────────────────────────────────────────────────────
 function switchAdminTab(tab){
-  document.querySelectorAll('.admin-tab').forEach(t=>t.classList.toggle('active',t.dataset.adminTab===tab));
-  ['modul','prosedur','pengumuman','tren'].forEach(p=>{
+  document.querySelectorAll('#admin-top-tab-bar .admin-tab').forEach(t=>t.classList.toggle('active',t.dataset.adminTab===tab));
+  ['modul','prosedur','pengumuman','tren','meja'].forEach(p=>{
     const el=document.getElementById('admin-panel-'+p);if(el) el.style.display=p===tab?'block':'none';
   });
   if(tab==='tren') renderTrenPanel();
+  if(tab==='meja') switchMejaSubTab('grup');
 }
 function renderAdminModuleList(){
   const c=document.getElementById('admin-module-list');if(!c) return;
