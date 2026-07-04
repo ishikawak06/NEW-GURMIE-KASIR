@@ -483,6 +483,62 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
 #loading-overlay-global{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9997;align-items:center;justify-content:center;}
 #loading-overlay-global.active{display:flex;}
 .kas-global-spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
+
+/* ══════════════ CAMPAIGN ══════════════ */
+.campaign-fab{position:fixed;right:16px;bottom:calc(var(--nav-height) + 20px);width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;border:none;box-shadow:var(--shadow-lg);font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:90;transition:transform 150ms ease;}
+.campaign-fab:active{transform:scale(.92);}
+@media(min-width:768px){.campaign-fab{bottom:24px;}}
+.campaign-status-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;position:sticky;top:57px;z-index:15;}
+.campaign-status-tab{padding:12px 16px;font-size:13px;font-weight:700;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color var(--transition);flex-shrink:0;display:flex;align-items:center;gap:6px;}
+.campaign-status-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+.campaign-status-count{font-size:10px;font-weight:700;background:var(--surface-2);color:var(--text-muted);padding:1px 7px;border-radius:99px;}
+.campaign-status-tab.active .campaign-status-count{background:var(--primary-light);color:var(--primary);}
+.campaign-list{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.campaign-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;cursor:pointer;transition:box-shadow var(--transition),transform var(--transition);-webkit-tap-highlight-color:transparent;}
+.campaign-card:active{transform:scale(.98);}
+.campaign-card:hover{box-shadow:var(--shadow-md);}
+.campaign-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.campaign-card-title{font-size:15px;font-weight:700;color:var(--text-primary);line-height:1.35;flex:1;}
+.campaign-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.campaign-cat-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;color:#fff;display:inline-flex;align-items:center;gap:4px;}
+.campaign-status-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:4px;}
+.campaign-status-badge.draft{background:var(--surface-2);color:var(--text-secondary);}
+.campaign-status-badge.aktif{background:var(--success-light);color:var(--success);}
+.campaign-status-badge.selesai{background:var(--info-light);color:var(--info);}
+.campaign-status-badge.batal{background:var(--danger-light);color:var(--danger);}
+.campaign-card-desc{font-size:13px;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:8px;}
+.campaign-card-meta{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text-muted);flex-wrap:wrap;}
+.campaign-card-meta span{display:flex;align-items:center;gap:4px;}
+.campaign-cat-promo{background:#D4521A;}
+.campaign-cat-kerjasama{background:#2980B9;}
+.campaign-cat-konten{background:#8E44AD;}
+.campaign-cat-event{background:#E67E22;}
+.campaign-cat-lainnya{background:#7F8C8D;}
+#campaign-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:6700;align-items:flex-end;}
+#campaign-detail-overlay.active{display:flex;}
+.campaign-detail-sheet{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;margin:0 auto;max-height:90vh;display:flex;flex-direction:column;animation:slideUp 200ms ease;}
+.campaign-detail-body{flex:1;overflow-y:auto;padding:4px 20px 20px;}
+.campaign-detail-section{margin-top:16px;}
+.campaign-detail-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.campaign-detail-value{font-size:14px;color:var(--text-primary);line-height:1.6;white-space:pre-wrap;}
+.campaign-detail-actions{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--border);background:var(--surface-1);}
+.campaign-detail-actions button{flex:1;padding:12px;border-radius:var(--radius-md);font-family:var(--font-body);font-size:13px;font-weight:700;cursor:pointer;min-height:44px;}
+.campaign-status-select-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.campaign-status-opt{padding:6px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--surface-1);color:var(--text-secondary);}
+.campaign-status-opt.selected.draft{background:var(--surface-2);color:var(--text-secondary);border-color:var(--text-secondary);}
+.campaign-status-opt.selected.aktif{background:var(--success-light);color:var(--success);border-color:var(--success);}
+.campaign-status-opt.selected.selesai{background:var(--info-light);color:var(--info);border-color:var(--info);}
+.campaign-status-opt.selected.batal{background:var(--danger-light);color:var(--danger);border-color:var(--danger);}
+#campaign-form-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:6800;align-items:flex-end;}
+#campaign-form-overlay.active{display:flex;}
+.campaign-form-sheet{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;margin:0 auto;max-height:92vh;display:flex;flex-direction:column;animation:slideUp 200ms ease;}
+.campaign-form-body{flex:1;overflow-y:auto;padding:16px 20px;}
+.campaign-cat-picker{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.campaign-cat-opt{padding:8px 12px;border-radius:99px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--surface-1);color:var(--text-secondary);display:flex;align-items:center;gap:5px;}
+.campaign-cat-opt.selected{color:#fff;border-color:transparent;}
+.campaign-form-daterow{display:flex;gap:8px;}
+.campaign-form-daterow>div{flex:1;}
+.campaign-form-daterow label{font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;display:block;}
 </style>
 </head>
 <body>
@@ -634,14 +690,81 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
   </div>
 </div>
 
+<!-- CAMPAIGN DETAIL OVERLAY -->
+<div id="campaign-detail-overlay">
+  <div class="campaign-detail-sheet">
+    <div class="table-detail-header">
+      <div class="table-detail-title" id="campaign-detail-title">Campaign</div>
+      <button class="table-detail-close" onclick="closeCampaignDetail()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="campaign-detail-body" id="campaign-detail-body"></div>
+    <div class="campaign-detail-actions">
+      <button onclick="confirmDeleteCampaign()" style="border:1px solid var(--danger);background:none;color:var(--danger);"><i class="ti ti-trash"></i> Hapus</button>
+      <button onclick="openEditCampaignForm()" style="border:none;background:var(--primary);color:#fff;"><i class="ti ti-edit"></i> Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- CAMPAIGN FORM OVERLAY -->
+<div id="campaign-form-overlay">
+  <div class="campaign-form-sheet">
+    <div class="table-detail-header">
+      <div class="table-detail-title" id="campaign-form-title">Campaign Baru</div>
+      <button class="table-detail-close" onclick="closeCampaignForm()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="campaign-form-body">
+      <label style="display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Judul Campaign</label>
+      <input id="camp-title" class="admin-input" type="text" placeholder="Contoh: Promo Beli 2 Gratis 1 / Ajukan Kerja Sama ke Kantor ABC"/>
+
+      <label style="display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Jenis Campaign</label>
+      <div class="campaign-cat-picker" id="camp-cat-picker"></div>
+      <input type="hidden" id="camp-category" value="promo"/>
+
+      <label style="display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Isi / Rencana Campaign</label>
+      <textarea id="camp-desc" class="admin-textarea" rows="5" placeholder="Jelaskan detail campaign: apa yang ditawarkan, bagaimana caranya, siapa yang dituju, dll."></textarea>
+
+      <label style="display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Target / Sasaran (opsional)</label>
+      <input id="camp-target" class="admin-input" type="text" placeholder="Contoh: Pelanggan sekitar kios / Karyawan Kantor ABC"/>
+
+      <div class="campaign-form-daterow">
+        <div><label>Tanggal Mulai (opsional)</label><input id="camp-start" class="admin-input" type="date"/></div>
+        <div><label>Tanggal Selesai (opsional)</label><input id="camp-end" class="admin-input" type="date"/></div>
+      </div>
+
+      <label style="display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Status</label>
+      <select id="camp-status" class="admin-select">
+        <option value="draft">📝 Draft</option>
+        <option value="aktif">🟢 Aktif</option>
+        <option value="selesai">✅ Selesai</option>
+        <option value="batal">❌ Batal</option>
+      </select>
+
+      <label style="display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Catatan Tambahan (opsional)</label>
+      <textarea id="camp-notes" class="admin-textarea" rows="3" placeholder="Progres diskusi, hasil follow-up, dll."></textarea>
+
+      <label style="display:block;font-size:13px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Foto Pendukung (opsional)</label>
+      <div id="camp-photo-preview" class="photo-grid"></div>
+      <input type="file" id="camp-photo-input" accept="image/*" multiple style="display:none;" onchange="handleCampaignPhotoUpload(event)"/>
+      <button onclick="document.getElementById('camp-photo-input').click()" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border:1.5px dashed var(--border-strong);border-radius:var(--radius-sm);background:none;color:var(--text-secondary);font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:16px;min-height:40px;"><i class="ti ti-camera"></i> Upload Foto (poster, dokumen, dll)</button>
+
+      <div class="admin-form-btns">
+        <button class="btn-cancel" onclick="closeCampaignForm()">Batal</button>
+        <button class="btn-primary" onclick="saveCampaignForm()">Simpan Campaign</button>
+      </div>
+      <input type="hidden" id="camp-edit-id" value=""/>
+    </div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <nav id="sidebar">
-    <div class="sidebar-logo"><div class="kios-name">🍜 Gurmie Ayam</div><div class="version">SOP v3.2</div></div>
+    <div class="sidebar-logo"><div class="kios-name">🍜 Gurmie Ayam</div><div class="version">SOP v3.3</div></div>
     <div class="sidebar-nav">
       <div class="sidebar-nav-item active" data-tab="beranda"><i class="ti ti-home"></i> Beranda</div>
       <div class="sidebar-nav-item" data-tab="tugas"><i class="ti ti-checklist"></i> Tugas</div>
       <div class="sidebar-nav-item" data-tab="kas"><i class="ti ti-cash"></i> Hitung Kas</div>
+      <div class="sidebar-nav-item" data-tab="campaign"><i class="ti ti-speakerphone"></i> Campaign</div>
       <div class="sidebar-nav-item" data-tab="cari"><i class="ti ti-search"></i> Cari SOP</div>
       <div class="sidebar-nav-item" data-tab="staff"><i class="ti ti-users"></i> Staff</div>
       <div class="sidebar-nav-item" data-tab="meja"><i class="ti ti-tools-kitchen-2"></i> Meja</div>
@@ -760,6 +883,14 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
         <div id="kas-mode-rumah" style="display:none;"></div>
       </div>
 
+      <!-- CAMPAIGN -->
+      <div id="screen-campaign" class="screen">
+        <div class="page-header"><h1>📣 Marketing Campaign</h1><div class="sub">Rencana promo, kerja sama, dan ide pemasaran kios</div></div>
+        <div class="campaign-status-tabs" id="campaign-status-tabs"></div>
+        <div class="campaign-list" id="campaign-list"></div>
+        <button class="campaign-fab" onclick="openAddCampaignForm()"><i class="ti ti-plus"></i></button>
+      </div>
+
       <!-- CARI -->
       <div id="screen-cari" class="screen">
         <div class="search-wrap">
@@ -826,12 +957,13 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
         <div class="profile-section">
           <div class="profile-section-title">Info Aplikasi</div>
           <div class="profile-row"><div class="profile-row-label">Nama Kios</div><div class="profile-row-value">🍜 Gurmie Ayam</div></div>
-          <div class="profile-row"><div class="profile-row-label">Versi App</div><div class="profile-row-value">v3.2.0</div></div>
+          <div class="profile-row"><div class="profile-row-label">Versi App</div><div class="profile-row-value">v3.3.0</div></div>
           <div class="profile-row"><div class="profile-row-label">Device ID</div><div class="profile-row-value" id="device-id-display" style="font-size:10px;word-break:break-all;max-width:180px;">—</div></div>
         </div>
         <div class="profile-section">
           <div class="profile-section-title">Lainnya</div>
           <div class="profile-row" style="cursor:pointer;" onclick="switchTab('kas')"><div class="profile-row-label"><i class="ti ti-cash" style="margin-right:6px;"></i>Hitung Kas</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
+          <div class="profile-row" style="cursor:pointer;" onclick="switchTab('campaign')"><div class="profile-row-label"><i class="ti ti-speakerphone" style="margin-right:6px;"></i>Marketing Campaign</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
           <div class="profile-row" style="cursor:pointer;" onclick="switchTab('riwayat')"><div class="profile-row-label"><i class="ti ti-history" style="margin-right:6px;"></i>Riwayat Checklist</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
         </div>
         <div class="profile-section" id="admin-access-section" style="display:none;">
@@ -1880,6 +2012,7 @@ function switchTab(tabName){
     initKasScreen();
     if(kasActiveMode==='toko'||kasActiveMode==='rumah') initPersistentKasScreen(kasActiveMode);
   }
+  if(tabName==='campaign') renderCampaignScreen();
   if(tabName==='cari') renderProsedurButtons('prosedur-btn-row-cari');
   if(tabName==='staff'){const st=presenceChannel?presenceChannel.presenceState():{};renderStaffList(st);}
   if(tabName==='meja') renderMejaLiveView();
@@ -3518,6 +3651,261 @@ function openPersistKasLogDetail(mode,logId){
     }).join('');
   }
   bodyEl.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ── MARKETING CAMPAIGN ──────────────────────────────────────────────────
+// Tabel Supabase: campaigns (lihat migration_campaigns.sql)
+//   id, title, category, description, status, start_date, end_date,
+//   target_audience, notes, photos(jsonb), created_by, created_at, updated_at
+// Semua role bebas buat/edit/hapus. Tidak ada tracking angka — murni
+// daftar rencana + status (draft/aktif/selesai/batal).
+// ══════════════════════════════════════════════════════════════════════
+
+const CAMPAIGN_CATEGORIES=[
+  {value:'promo',label:'Promo',icon:'ti-discount-2',cls:'campaign-cat-promo'},
+  {value:'kerjasama',label:'Kerja Sama',icon:'ti-handshake',cls:'campaign-cat-kerjasama'},
+  {value:'konten',label:'Konten',icon:'ti-camera',cls:'campaign-cat-konten'},
+  {value:'event',label:'Event',icon:'ti-calendar-event',cls:'campaign-cat-event'},
+  {value:'lainnya',label:'Lainnya',icon:'ti-dots',cls:'campaign-cat-lainnya'},
+];
+const CAMPAIGN_STATUSES=[
+  {value:'semua',label:'Semua',icon:'📋'},
+  {value:'draft',label:'Draft',icon:'📝'},
+  {value:'aktif',label:'Aktif',icon:'🟢'},
+  {value:'selesai',label:'Selesai',icon:'✅'},
+  {value:'batal',label:'Batal',icon:'❌'},
+];
+let campaignsCache=[];
+let campaignActiveStatusFilter='semua';
+let campaignActiveDetailId=null;
+let campaignPendingPhotos=[];
+
+function campaignCategoryInfo(catValue){
+  return CAMPAIGN_CATEGORIES.find(c=>c.value===catValue)||CAMPAIGN_CATEGORIES[CAMPAIGN_CATEGORIES.length-1];
+}
+function campaignFormatDateRange(row){
+  if(!row.start_date&&!row.end_date) return '';
+  const s=row.start_date?formatDateShort(row.start_date):'?';
+  const e=row.end_date?formatDateShort(row.end_date):'?';
+  if(row.start_date&&row.end_date) return `${s} – ${e}`;
+  if(row.start_date) return `Mulai ${s}`;
+  return `Sampai ${e}`;
+}
+
+async function renderCampaignScreen(){
+  await loadCampaigns();
+  renderCampaignStatusTabs();
+  renderCampaignList();
+}
+async function loadCampaigns(){
+  const listEl=document.getElementById('campaign-list');
+  try{
+    const{data,error}=await db.from('campaigns').select('*').order('created_at',{ascending:false});
+    if(error) throw error;
+    campaignsCache=data||[];
+  }catch(e){
+    console.warn('loadCampaigns:',e);
+    if(listEl) listEl.innerHTML=`<div class="empty-state"><i class="ti ti-alert-circle"></i><p>Gagal memuat campaign.${/relation .* does not exist/i.test(e.message||'')?'<br>Tabel campaigns belum ada di Supabase.<br>Jalankan migration_campaigns.sql dulu.':''}</p></div>`;
+    campaignsCache=[];
+  }
+}
+function renderCampaignStatusTabs(){
+  const el=document.getElementById('campaign-status-tabs');if(!el) return;
+  el.innerHTML=CAMPAIGN_STATUSES.map(s=>{
+    const count=s.value==='semua'?campaignsCache.length:campaignsCache.filter(c=>c.status===s.value).length;
+    return `<div class="campaign-status-tab ${campaignActiveStatusFilter===s.value?'active':''}" onclick="selectCampaignStatusFilter('${s.value}')">${s.icon} ${s.label} <span class="campaign-status-count">${count}</span></div>`;
+  }).join('');
+}
+function selectCampaignStatusFilter(status){
+  campaignActiveStatusFilter=status;
+  renderCampaignStatusTabs();
+  renderCampaignList();
+}
+function renderCampaignList(){
+  const listEl=document.getElementById('campaign-list');if(!listEl) return;
+  const filtered=campaignActiveStatusFilter==='semua'?campaignsCache:campaignsCache.filter(c=>c.status===campaignActiveStatusFilter);
+  if(!filtered.length){
+    listEl.innerHTML=`<div class="empty-state"><i class="ti ti-speakerphone"></i><p>Belum ada campaign${campaignActiveStatusFilter!=='semua'?' dengan status ini':''}.<br>Tap tombol + untuk buat campaign baru.</p></div>`;
+    return;
+  }
+  listEl.innerHTML=filtered.map(c=>{
+    const cat=campaignCategoryInfo(c.category);
+    const dateRange=campaignFormatDateRange(c);
+    let photos=[];try{photos=typeof c.photos==='string'?JSON.parse(c.photos):(c.photos||[]);}catch{photos=[];}
+    return `<div class="campaign-card" onclick="openCampaignDetail('${c.id}')">
+      <div class="campaign-card-top"><div class="campaign-card-title">${c.title}</div></div>
+      <div class="campaign-badges">
+        <span class="campaign-cat-badge ${cat.cls}"><i class="ti ${cat.icon}"></i> ${cat.label}</span>
+        <span class="campaign-status-badge ${c.status}">${CAMPAIGN_STATUSES.find(s=>s.value===c.status)?.icon||''} ${CAMPAIGN_STATUSES.find(s=>s.value===c.status)?.label||c.status}</span>
+      </div>
+      ${c.description?`<div class="campaign-card-desc">${c.description}</div>`:''}
+      <div class="campaign-card-meta">
+        ${dateRange?`<span><i class="ti ti-calendar"></i> ${dateRange}</span>`:''}
+        ${c.target_audience?`<span><i class="ti ti-target-arrow"></i> ${c.target_audience}</span>`:''}
+        ${photos.length?`<span><i class="ti ti-photo"></i> ${photos.length} foto</span>`:''}
+        ${c.created_by?`<span><i class="ti ti-user"></i> ${c.created_by}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── DETAIL CAMPAIGN ─────────────────────────────────────────────────────
+function openCampaignDetail(id){
+  const c=campaignsCache.find(x=>x.id===id);if(!c) return;
+  campaignActiveDetailId=id;
+  const cat=campaignCategoryInfo(c.category);
+  const statusInfo=CAMPAIGN_STATUSES.find(s=>s.value===c.status);
+  let photos=[];try{photos=typeof c.photos==='string'?JSON.parse(c.photos):(c.photos||[]);}catch{photos=[];}
+  document.getElementById('campaign-detail-title').textContent=c.title;
+  const dateRange=campaignFormatDateRange(c);
+  let html=`
+    <div class="campaign-badges" style="margin-top:12px;">
+      <span class="campaign-cat-badge ${cat.cls}"><i class="ti ${cat.icon}"></i> ${cat.label}</span>
+      <span class="campaign-status-badge ${c.status}">${statusInfo?.icon||''} ${statusInfo?.label||c.status}</span>
+    </div>
+    <div class="campaign-status-select-row">
+      ${CAMPAIGN_STATUSES.filter(s=>s.value!=='semua').map(s=>`<div class="campaign-status-opt ${c.status===s.value?'selected '+s.value:''}" onclick="quickChangeCampaignStatus('${c.id}','${s.value}')">${s.icon} ${s.label}</div>`).join('')}
+    </div>`;
+  if(c.description){
+    html+=`<div class="campaign-detail-section"><div class="campaign-detail-label">Isi / Rencana Campaign</div><div class="campaign-detail-value">${c.description}</div></div>`;
+  }
+  if(c.target_audience){
+    html+=`<div class="campaign-detail-section"><div class="campaign-detail-label">Target / Sasaran</div><div class="campaign-detail-value">${c.target_audience}</div></div>`;
+  }
+  if(dateRange){
+    html+=`<div class="campaign-detail-section"><div class="campaign-detail-label">Periode</div><div class="campaign-detail-value">${dateRange}</div></div>`;
+  }
+  if(c.notes){
+    html+=`<div class="campaign-detail-section"><div class="campaign-detail-label">Catatan</div><div class="campaign-detail-value">${c.notes}</div></div>`;
+  }
+  if(photos.length){
+    html+=`<div class="campaign-detail-section"><div class="campaign-detail-label">Foto Pendukung</div><div class="photo-grid">${photos.map(p=>`<img class="photo-thumb" src="${p}" onclick="openLightbox('${p}')" alt="foto"/>`).join('')}</div></div>`;
+  }
+  html+=`<div class="campaign-detail-section" style="font-size:11px;color:var(--text-muted);">Dibuat oleh ${c.created_by||'—'} · ${c.created_at?new Date(c.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}):''}</div>`;
+  document.getElementById('campaign-detail-body').innerHTML=html;
+  document.getElementById('campaign-detail-overlay').classList.add('active');
+}
+function closeCampaignDetail(){document.getElementById('campaign-detail-overlay').classList.remove('active');campaignActiveDetailId=null;}
+async function quickChangeCampaignStatus(id,status){
+  try{
+    const{error}=await db.from('campaigns').update({status,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error) throw error;
+    const idx=campaignsCache.findIndex(c=>c.id===id);
+    if(idx>-1) campaignsCache[idx].status=status;
+    openCampaignDetail(id);
+    renderCampaignStatusTabs();renderCampaignList();
+    showToast('Status campaign diperbarui ✓','success');
+  }catch(e){showToast('Gagal ubah status: '+e.message,'error');}
+}
+function confirmDeleteCampaign(){
+  const c=campaignsCache.find(x=>x.id===campaignActiveDetailId);if(!c) return;
+  openModal('Hapus Campaign?',`"${c.title}" akan dihapus permanen.`,async()=>{
+    try{
+      await db.from('campaigns').delete().eq('id',c.id);
+      campaignsCache=campaignsCache.filter(x=>x.id!==c.id);
+      closeCampaignDetail();renderCampaignStatusTabs();renderCampaignList();
+      showToast('Campaign dihapus.','info');
+    }catch(e){showToast('Gagal hapus: '+e.message,'error');}
+  });
+}
+
+// ── FORM TAMBAH/EDIT CAMPAIGN ────────────────────────────────────────────
+function renderCampaignCatPicker(selected){
+  const el=document.getElementById('camp-cat-picker');if(!el) return;
+  el.innerHTML=CAMPAIGN_CATEGORIES.map(c=>`<div class="campaign-cat-opt ${selected===c.value?'selected':''}" style="${selected===c.value?`background:${getComputedCampCatColor(c.cls)};`:''}" onclick="selectCampaignCategory('${c.value}')" data-cat="${c.value}"><i class="ti ${c.icon}"></i> ${c.label}</div>`).join('');
+}
+function getComputedCampCatColor(cls){
+  const map={'campaign-cat-promo':'#D4521A','campaign-cat-kerjasama':'#2980B9','campaign-cat-konten':'#8E44AD','campaign-cat-event':'#E67E22','campaign-cat-lainnya':'#7F8C8D'};
+  return map[cls]||'#7F8C8D';
+}
+function selectCampaignCategory(value){
+  document.getElementById('camp-category').value=value;
+  renderCampaignCatPicker(value);
+}
+function openAddCampaignForm(){
+  document.getElementById('campaign-form-title').textContent='Campaign Baru';
+  document.getElementById('camp-title').value='';
+  document.getElementById('camp-desc').value='';
+  document.getElementById('camp-target').value='';
+  document.getElementById('camp-start').value='';
+  document.getElementById('camp-end').value='';
+  document.getElementById('camp-status').value='draft';
+  document.getElementById('camp-notes').value='';
+  document.getElementById('camp-edit-id').value='';
+  campaignPendingPhotos=[];
+  renderCampaignPhotoPreview();
+  selectCampaignCategory('promo');
+  document.getElementById('campaign-form-overlay').classList.add('active');
+  setTimeout(()=>document.getElementById('camp-title').focus(),100);
+}
+function openEditCampaignForm(){
+  const c=campaignsCache.find(x=>x.id===campaignActiveDetailId);if(!c) return;
+  closeCampaignDetail();
+  document.getElementById('campaign-form-title').textContent='Edit Campaign';
+  document.getElementById('camp-title').value=c.title||'';
+  document.getElementById('camp-desc').value=c.description||'';
+  document.getElementById('camp-target').value=c.target_audience||'';
+  document.getElementById('camp-start').value=c.start_date||'';
+  document.getElementById('camp-end').value=c.end_date||'';
+  document.getElementById('camp-status').value=c.status||'draft';
+  document.getElementById('camp-notes').value=c.notes||'';
+  document.getElementById('camp-edit-id').value=c.id;
+  try{campaignPendingPhotos=typeof c.photos==='string'?JSON.parse(c.photos):(c.photos||[]);}catch{campaignPendingPhotos=[];}
+  renderCampaignPhotoPreview();
+  selectCampaignCategory(c.category||'promo');
+  document.getElementById('campaign-form-overlay').classList.add('active');
+}
+function closeCampaignForm(){document.getElementById('campaign-form-overlay').classList.remove('active');campaignPendingPhotos=[];}
+function handleCampaignPhotoUpload(evt){
+  Array.from(evt.target.files).forEach(f=>{const r=new FileReader();r.onload=e=>{campaignPendingPhotos.push(e.target.result);renderCampaignPhotoPreview();};r.readAsDataURL(f);});
+  evt.target.value='';
+}
+function renderCampaignPhotoPreview(){
+  const c=document.getElementById('camp-photo-preview');if(!c) return;
+  c.innerHTML=campaignPendingPhotos.map((src,i)=>`<div class="photo-thumb-wrap"><img class="photo-thumb" src="${src}" onclick="openLightbox('${src}')" alt="foto"/><button class="photo-thumb-del" onclick="campaignPendingPhotos.splice(${i},1);renderCampaignPhotoPreview();">✕</button></div>`).join('');
+}
+async function saveCampaignForm(){
+  const title=document.getElementById('camp-title').value.trim();
+  const category=document.getElementById('camp-category').value||'promo';
+  const description=document.getElementById('camp-desc').value.trim();
+  const target_audience=document.getElementById('camp-target').value.trim();
+  const start_date=document.getElementById('camp-start').value||null;
+  const end_date=document.getElementById('camp-end').value||null;
+  const status=document.getElementById('camp-status').value||'draft';
+  const notes=document.getElementById('camp-notes').value.trim();
+  const editId=document.getElementById('camp-edit-id').value;
+  if(!title){showToast('Judul campaign tidak boleh kosong.','error');return;}
+  const payload={
+    title,category,description:description||null,target_audience:target_audience||null,
+    start_date,end_date,status,notes:notes||null,
+    photos:JSON.stringify(campaignPendingPhotos)
+  };
+  showGlobalLoading(true);
+  try{
+    if(editId){
+      payload.updated_at=new Date().toISOString();
+      const{error}=await db.from('campaigns').update(payload).eq('id',editId);
+      if(error) throw error;
+      showToast('Campaign diperbarui!','success');
+    }else{
+      payload.created_by=S.staffName||'Staf';
+      const{error}=await db.from('campaigns').insert(payload);
+      if(error) throw error;
+      showToast('Campaign baru dibuat! 📣','success');
+    }
+    closeCampaignForm();
+    await loadCampaigns();
+    renderCampaignStatusTabs();renderCampaignList();
+  }catch(e){
+    if(/relation .* does not exist/i.test(e.message||'')){
+      showToast('Tabel campaigns belum ada di Supabase. Jalankan migration_campaigns.sql dulu.','error');
+    }else{
+      showToast('Gagal simpan campaign: '+e.message,'error');
+    }
+  }finally{
+    showGlobalLoading(false);
+  }
 }
 
 // MAIN INIT ─────────────────────────────────────────────────────────
