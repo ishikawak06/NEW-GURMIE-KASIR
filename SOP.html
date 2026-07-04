@@ -364,6 +364,7 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
 .toast.success{background:var(--success);color:white;}
 .toast.error{background:var(--danger);color:white;}
 .toast.info{background:var(--info);color:white;}
+.toast.warning{background:var(--warning);color:white;}
 .toast i{font-size:18px;}
 @keyframes toastIn{from{opacity:0;transform:translateY(-10px);}to{opacity:1;transform:translateY(0);}}
 .skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:var(--radius-sm);}
@@ -389,6 +390,99 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
 #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:8000;display:none;}
 @media(min-width:768px){#sidebar{display:flex;}#bottom-nav{display:none;}#screen-container{padding-bottom:16px;}.module-grid{grid-template-columns:repeat(3,1fr);}}
 @media(min-width:1024px){#sidebar{width:240px;}}
+
+/* ══════════════ HITUNG KAS ══════════════ */
+.kas-total-card{margin:12px 16px 0;border-radius:var(--radius-lg);padding:20px 18px;position:relative;overflow:hidden;transition:background 400ms ease,border-color 400ms ease;border:1.5px solid var(--border);background:var(--surface);}
+.kas-total-card.kas-empty{background:var(--surface-2);}
+.kas-total-card.kas-higher{background:linear-gradient(135deg,var(--success) 0%,#1f5c29 100%);border-color:var(--success);}
+.kas-total-card.kas-lower{background:linear-gradient(135deg,var(--danger) 0%,#8e2a20 100%);border-color:var(--danger);}
+.kas-total-card.kas-same{background:var(--surface);border-color:var(--border-strong);}
+.kas-total-card.kas-higher .kas-total-label,.kas-total-card.kas-higher .kas-total-value,.kas-total-card.kas-higher .kas-total-sub,.kas-total-card.kas-lower .kas-total-label,.kas-total-card.kas-lower .kas-total-value,.kas-total-card.kas-lower .kas-total-sub{color:#fff;}
+.kas-total-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;}
+.kas-total-value{font-family:var(--font-heading);font-size:30px;font-weight:700;color:var(--text-primary);margin-top:4px;line-height:1.15;}
+.kas-total-sub{font-size:12px;color:var(--text-secondary);margin-top:4px;}
+.kas-diff-badge{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:5px 12px;border-radius:99px;font-size:12px;font-weight:700;background:rgba(255,255,255,.22);}
+.kas-total-card.kas-empty .kas-diff-badge,.kas-total-card.kas-same .kas-diff-badge{background:var(--surface-2);color:var(--text-secondary);}
+.kas-unsaved-badge{position:absolute;top:14px;right:14px;background:var(--warning);color:#fff;font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;display:flex;align-items:center;gap:4px;}
+.kas-saved-time{font-size:11px;color:var(--text-muted);margin-top:8px;display:flex;align-items:center;gap:4px;}
+.kas-yesterday-card{margin:10px 16px 0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.kas-yesterday-label{font-size:12px;color:var(--text-muted);font-weight:600;}
+.kas-yesterday-value{font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);}
+.kas-persist-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;background:var(--info-light);color:var(--info);margin-top:8px;}
+.kas-log-row{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--border);}
+.kas-log-date{flex:1;min-width:0;}
+.kas-log-date-main{font-size:13px;font-weight:700;color:var(--text-primary);}
+.kas-log-date-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.kas-log-total{font-family:var(--font-heading);font-size:14px;font-weight:700;color:var(--text-primary);text-align:right;}
+.kas-log-diff{font-size:11px;font-weight:700;text-align:right;margin-top:2px;}
+.kas-denom-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:12px 16px 0;}
+.kas-denom-card{position:relative;border-radius:var(--radius-md);padding:14px 10px;cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;-webkit-tap-highlight-color:transparent;transition:transform 100ms ease;overflow:hidden;min-height:88px;border:none;}
+.kas-denom-card:active{transform:scale(.95);}
+.kas-denom-icon{font-size:22px;}
+.kas-denom-label{font-family:var(--font-heading);font-size:14px;font-weight:700;}
+.kas-denom-sub{font-size:10px;opacity:.85;}
+.kas-denom-badge{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.35);color:#fff;font-size:12px;font-weight:700;min-width:22px;height:22px;padding:0 5px;border-radius:99px;display:flex;align-items:center;justify-content:center;}
+.kas-pulse-ring{position:absolute;inset:0;border-radius:var(--radius-md);border:3px solid rgba(255,255,255,.9);opacity:0;pointer-events:none;}
+.kas-pulse-ring.animate{animation:kasPulse 450ms ease-out;}
+@keyframes kasPulse{0%{opacity:1;transform:scale(.85);}100%{opacity:0;transform:scale(1.15);}}
+.kas-denom-100{background:linear-gradient(135deg,#8B8B8B,#5c5c5c);}
+.kas-denom-200{background:linear-gradient(135deg,#B98A3A,#8a621f);}
+.kas-denom-500{background:linear-gradient(135deg,#8B7355,#5e4a35);}
+.kas-denom-1000{background:linear-gradient(135deg,#4A90D9,#2c5a8a);}
+.kas-denom-2000{background:linear-gradient(135deg,#6BB55C,#3d7d31);}
+.kas-denom-5000{background:linear-gradient(135deg,#C77B3D,#95531f);}
+.kas-denom-10000{background:linear-gradient(135deg,#5B8FB9,#345670);}
+.kas-denom-20000{background:linear-gradient(135deg,#5DAA6E,#2f6b3d);}
+.kas-denom-50000{background:linear-gradient(135deg,#4A9B7F,#296b52);}
+.kas-denom-100000{background:linear-gradient(135deg,#C0392B,#7d2015);}
+.kas-section-toggle{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.kas-section-toggle .section-title{padding:0;}
+.kas-section-toggle i{color:var(--text-muted);font-size:18px;transition:transform var(--transition);}
+.kas-section-toggle.collapsed i{transform:rotate(-90deg);}
+.kas-manual-list{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.kas-manual-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);}
+.kas-manual-row:last-child{border-bottom:none;}
+.kas-manual-icon{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0;}
+.kas-manual-label{flex:1;font-size:13px;font-weight:700;color:var(--text-primary);min-width:60px;}
+.kas-manual-stepper{display:flex;align-items:center;gap:6px;}
+.kas-manual-input{width:52px;text-align:center;padding:6px 4px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;font-weight:700;background:var(--surface-1);color:var(--text-primary);outline:none;}
+.kas-manual-subtotal{font-size:12px;font-weight:700;color:var(--text-secondary);width:88px;text-align:right;flex-shrink:0;}
+.kas-rincian-panel{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.kas-rincian-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;}
+.kas-rincian-row:last-child{border-bottom:none;}
+.kas-rincian-name{color:var(--text-secondary);font-weight:600;}
+.kas-rincian-val{font-weight:700;color:var(--text-primary);}
+.kas-rincian-total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--primary-light);}
+.kas-rincian-total-row .kas-rincian-name{color:var(--primary);font-weight:700;font-size:14px;}
+.kas-rincian-total-row .kas-rincian-val{color:var(--primary);font-size:17px;font-family:var(--font-heading);}
+.kas-action-row{display:flex;gap:8px;padding:16px;}
+.kas-action-row button{flex:1;padding:13px;border-radius:var(--radius-md);font-family:var(--font-body);font-size:14px;font-weight:700;cursor:pointer;min-height:46px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.kas-btn-reset{border:1px solid var(--danger);background:none;color:var(--danger);}
+.kas-btn-history{border:1px solid var(--border);background:var(--surface-1);color:var(--text-primary);}
+.kas-btn-save{border:none;background:var(--primary);color:#fff;}
+.kas-toggle-coin-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:8px;}
+.kas-toggle-coin-row .profile-row-label{font-size:13px;}
+#kas-history-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:6500;align-items:flex-end;}
+#kas-history-overlay.active{display:flex;}
+.kas-history-sheet{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:560px;margin:0 auto;max-height:88vh;display:flex;flex-direction:column;animation:slideUp 200ms ease;}
+.kas-history-list{flex:1;overflow-y:auto;padding:8px 0 16px;}
+.kas-history-filter-row{display:flex;gap:8px;padding:0 20px 12px;flex-wrap:wrap;}
+.kas-history-filter-row input[type="month"]{flex:1;min-width:120px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;background:var(--surface-1);color:var(--text-primary);min-height:38px;outline:none;}
+.kas-history-row{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background var(--transition);}
+.kas-history-row:hover{background:var(--surface-1);}
+.kas-history-row.is-today{background:var(--primary-light);}
+.kas-history-date{flex:1;min-width:0;}
+.kas-history-date-main{font-size:13px;font-weight:700;color:var(--text-primary);}
+.kas-history-date-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
+.kas-history-total{font-family:var(--font-heading);font-size:14px;font-weight:700;color:var(--text-primary);text-align:right;}
+.kas-history-diff{font-size:11px;font-weight:700;text-align:right;margin-top:2px;}
+.kas-history-today-tag{font-size:9px;font-weight:700;background:var(--primary);color:#fff;padding:2px 7px;border-radius:99px;margin-left:6px;}
+#kas-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:6600;align-items:flex-end;}
+#kas-detail-overlay.active{display:flex;}
+.kas-detail-sheet{background:var(--surface);border-radius:var(--radius-xl) var(--radius-xl) 0 0;width:100%;max-width:500px;margin:0 auto;max-height:80vh;display:flex;flex-direction:column;animation:slideUp 200ms ease;}
+#loading-overlay-global{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9997;align-items:center;justify-content:center;}
+#loading-overlay-global.active{display:flex;}
+.kas-global-spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;}
 </style>
 </head>
 <body>
@@ -432,6 +526,7 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
 <div id="toast-container"></div>
 <canvas id="confetti-canvas"></canvas>
 <div id="lightbox"><button id="lightbox-close" onclick="closeLightbox()"><i class="ti ti-x"></i></button><img id="lightbox-img" src="" alt="foto"/></div>
+<div id="loading-overlay-global"><div class="kas-global-spinner"></div></div>
 <div id="emergency-overlay">
   <button class="emergency-close" onclick="closeEmergency()"><i class="ti ti-x"></i></button>
   <div id="emergency-title" class="emergency-title"></div>
@@ -513,13 +608,40 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
   </div>
 </div>
 
+<!-- KAS HISTORY OVERLAY -->
+<div id="kas-history-overlay">
+  <div class="kas-history-sheet">
+    <div class="table-detail-header">
+      <div class="table-detail-title"><i class="ti ti-history" style="margin-right:6px;"></i>Riwayat Kas</div>
+      <button class="table-detail-close" onclick="closeKasHistory()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="kas-history-filter-row">
+      <input type="month" id="kas-history-month-filter" onchange="loadKasHistory()"/>
+      <button class="admin-btn-sm" onclick="resetKasHistoryFilter()">30 Hari Terakhir</button>
+    </div>
+    <div class="kas-history-list" id="kas-history-list"></div>
+  </div>
+</div>
+
+<!-- KAS DETAIL (riwayat 1 hari) OVERLAY -->
+<div id="kas-detail-overlay">
+  <div class="kas-detail-sheet">
+    <div class="table-detail-header">
+      <div class="table-detail-title" id="kas-detail-title">Rincian Kas</div>
+      <button class="table-detail-close" onclick="closeKasDetail()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="kas-detail-body" style="flex:1;overflow-y:auto;padding:8px 0 16px;"></div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <nav id="sidebar">
-    <div class="sidebar-logo"><div class="kios-name">🍜 Gurmie Ayam</div><div class="version">SOP v3.0</div></div>
+    <div class="sidebar-logo"><div class="kios-name">🍜 Gurmie Ayam</div><div class="version">SOP v3.2</div></div>
     <div class="sidebar-nav">
       <div class="sidebar-nav-item active" data-tab="beranda"><i class="ti ti-home"></i> Beranda</div>
       <div class="sidebar-nav-item" data-tab="tugas"><i class="ti ti-checklist"></i> Tugas</div>
+      <div class="sidebar-nav-item" data-tab="kas"><i class="ti ti-cash"></i> Hitung Kas</div>
       <div class="sidebar-nav-item" data-tab="cari"><i class="ti ti-search"></i> Cari SOP</div>
       <div class="sidebar-nav-item" data-tab="staff"><i class="ti ti-users"></i> Staff</div>
       <div class="sidebar-nav-item" data-tab="meja"><i class="ti ti-tools-kitchen-2"></i> Meja</div>
@@ -573,6 +695,69 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
           </div>
           <div id="checklist-items-container"></div>
         </div>
+      </div>
+
+      <!-- HITUNG KAS -->
+      <div id="screen-kas" class="screen">
+        <div class="page-header"><h1>💵 Hitung Kas</h1><div class="sub" id="kas-page-sub">Hitung & catat uang kas</div></div>
+
+        <div class="admin-tab-bar" id="kas-mode-tab-bar">
+          <div class="admin-tab active" data-kas-mode="harian" onclick="switchKasMode('harian')">📅 Harian</div>
+          <div class="admin-tab" data-kas-mode="toko" onclick="switchKasMode('toko')">🏪 Kas Toko</div>
+          <div class="admin-tab" data-kas-mode="rumah" onclick="switchKasMode('rumah')">🏠 Kas Rumah</div>
+        </div>
+
+        <!-- MODE: HARIAN (reset tiap hari) -->
+        <div id="kas-mode-harian">
+          <div class="kas-total-card kas-empty" id="kas-total-card">
+            <div id="kas-unsaved-badge" class="kas-unsaved-badge" style="display:none;"><i class="ti ti-point-filled"></i> Belum disimpan</div>
+            <div class="kas-total-label">Total Kas Hari Ini</div>
+            <div class="kas-total-value" id="kas-total-value">Rp 0</div>
+            <div class="kas-total-sub" id="kas-total-sub">0 lembar/keping</div>
+            <div class="kas-diff-badge" id="kas-diff-badge" style="display:none;"></div>
+            <div class="kas-saved-time" id="kas-saved-time" style="display:none;"><i class="ti ti-clock"></i> <span></span></div>
+          </div>
+
+          <div class="kas-yesterday-card" id="kas-yesterday-card" style="display:none;">
+            <div>
+              <div class="kas-yesterday-label">📅 Kas Kemarin</div>
+              <div class="kas-yesterday-value" id="kas-yesterday-value">Rp 0</div>
+            </div>
+            <button class="admin-btn-sm" onclick="openKasDetailFor(kasYesterdayDate)"><i class="ti ti-eye"></i> Lihat Rincian</button>
+          </div>
+
+          <div class="kas-toggle-coin-row">
+            <div class="profile-row-label"><i class="ti ti-coin" style="margin-right:6px;"></i>Tampilkan Koin 100 & 200</div>
+            <label class="toggle-wrap"><input type="checkbox" id="kas-coin-toggle" onchange="toggleKasCoin(this.checked)"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+
+          <div class="section-title">Tap Pecahan Uang</div>
+          <div class="kas-denom-grid" id="kas-denom-grid"></div>
+
+          <div class="kas-section-toggle" id="kas-manual-toggle" onclick="toggleKasSection('manual')">
+            <div class="section-title">✍️ Input Manual</div>
+            <i class="ti ti-chevron-down"></i>
+          </div>
+          <div class="kas-manual-list" id="kas-manual-list" style="display:none;"></div>
+
+          <div class="kas-section-toggle collapsed" id="kas-rincian-toggle" onclick="toggleKasSection('rincian')">
+            <div class="section-title">📋 Rincian Hitungan</div>
+            <i class="ti ti-chevron-down"></i>
+          </div>
+          <div class="kas-rincian-panel" id="kas-rincian-panel" style="display:none;"></div>
+
+          <div class="kas-action-row">
+            <button class="kas-btn-reset" onclick="confirmResetKas()"><i class="ti ti-refresh"></i> Reset</button>
+            <button class="kas-btn-history" onclick="openKasHistory()"><i class="ti ti-history"></i> Riwayat</button>
+          </div>
+          <div style="padding:0 16px 16px;">
+            <button class="kas-btn-save" style="width:100%;" onclick="saveKasCount()"><i class="ti ti-device-floppy"></i> Simpan Hitungan Kas</button>
+          </div>
+        </div>
+
+        <!-- MODE: KAS TOKO / KAS RUMAH (persisten, tidak reset) -->
+        <div id="kas-mode-toko" style="display:none;"></div>
+        <div id="kas-mode-rumah" style="display:none;"></div>
       </div>
 
       <!-- CARI -->
@@ -641,11 +826,12 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
         <div class="profile-section">
           <div class="profile-section-title">Info Aplikasi</div>
           <div class="profile-row"><div class="profile-row-label">Nama Kios</div><div class="profile-row-value">🍜 Gurmie Ayam</div></div>
-          <div class="profile-row"><div class="profile-row-label">Versi App</div><div class="profile-row-value">v3.0.0</div></div>
+          <div class="profile-row"><div class="profile-row-label">Versi App</div><div class="profile-row-value">v3.2.0</div></div>
           <div class="profile-row"><div class="profile-row-label">Device ID</div><div class="profile-row-value" id="device-id-display" style="font-size:10px;word-break:break-all;max-width:180px;">—</div></div>
         </div>
         <div class="profile-section">
           <div class="profile-section-title">Lainnya</div>
+          <div class="profile-row" style="cursor:pointer;" onclick="switchTab('kas')"><div class="profile-row-label"><i class="ti ti-cash" style="margin-right:6px;"></i>Hitung Kas</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
           <div class="profile-row" style="cursor:pointer;" onclick="switchTab('riwayat')"><div class="profile-row-label"><i class="ti ti-history" style="margin-right:6px;"></i>Riwayat Checklist</div><i class="ti ti-chevron-right" style="color:var(--text-muted);"></i></div>
         </div>
         <div class="profile-section" id="admin-access-section" style="display:none;">
@@ -790,8 +976,8 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
     <nav id="bottom-nav">
       <div class="bottom-nav-item active" data-tab="beranda"><i class="ti ti-home"></i><span>Beranda</span></div>
       <div class="bottom-nav-item" data-tab="tugas"><i class="ti ti-checklist"></i><span>Tugas</span></div>
+      <div class="bottom-nav-item" data-tab="kas"><i class="ti ti-cash"></i><span>Kas</span></div>
       <div class="bottom-nav-item" data-tab="meja"><i class="ti ti-tools-kitchen-2"></i><span>Meja</span></div>
-      <div class="bottom-nav-item" data-tab="staff"><i class="ti ti-users"></i><span>Staff</span></div>
       <div class="bottom-nav-item" data-tab="profil"><i class="ti ti-user-circle"></i><span>Profil</span></div>
       <div class="bottom-nav-item" data-tab="admin" id="bottom-admin-tab" style="display:none;"><i class="ti ti-settings"></i><span>Admin</span></div>
     </nav>
@@ -818,7 +1004,7 @@ let stockCache={}; // cache stok dari products/raw_materials
 
 // ── UTILS ──────────────────────────────────────────────────────────────
 function showToast(m,t='info'){
-  const ic={success:'ti-circle-check',error:'ti-circle-x',info:'ti-info-circle'};
+  const ic={success:'ti-circle-check',error:'ti-circle-x',info:'ti-info-circle',warning:'ti-alert-triangle'};
   const c=document.getElementById('toast-container');
   const el=document.createElement('div');
   el.className=`toast ${t}`;
@@ -826,6 +1012,7 @@ function showToast(m,t='info'){
   c.appendChild(el);
   setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity 300ms';setTimeout(()=>el.remove(),300);},3200);
 }
+function showGlobalLoading(on){const el=document.getElementById('loading-overlay-global');if(el) el.classList.toggle('active',!!on);}
 // FIX BUG #6: gunakan tanggal lokal, bukan UTC untuk filter DB
 function getTodayISO(){
   const d=new Date();
@@ -955,6 +1142,7 @@ function doLogout(){
     sessionStorage.removeItem('sop_device_id');localStorage.removeItem('sop_device_id_persist');
     if(presenceChannel) db.removeChannel(presenceChannel);
     clearAllTimers();if(reminderInterval) clearInterval(reminderInterval);
+    if(kasMidnightTimeout) clearTimeout(kasMidnightTimeout);
     location.reload();
   });
 }
@@ -1003,14 +1191,11 @@ async function loadSteps(){const{data,error}=await db.from('sop_steps').select('
 // FIX BUG #1&#2: Progress hanya milik device ini + filter device_id
 async function loadProgress(){
   const today=getTodayISO();
-  // Ambil SEMUA progress hari ini untuk realtime display (done_by siapa)
-  // tapi myProgress hanya milik device kita sendiri
   const{data,error}=await db.from('checklist_progress').select('*')
     .eq('shift_date',today).eq('shift_type',S.activeShift);
   if(error) throw error;
   S.myProgress={};
   (data||[]).forEach(p=>{
-    // Hanya simpan progress milik device ini ke S.myProgress
     if(p.device_id===S.deviceId){
       S.myProgress[p.step_id]={id:p.id,is_done:p.is_done,done_by:p.done_by,done_at:p.done_at,notes:p.notes||''};
     }
@@ -1030,7 +1215,6 @@ async function loadOmzet(force=false){
     return;
   }
   try{
-    // Gunakan range tanggal lokal (bukan hardcode +07:00)
     const startOfDay=new Date();startOfDay.setHours(0,0,0,0);
     const endOfDay=new Date();endOfDay.setHours(23,59,59,999);
     const{data:trx}=await db.from('transactions').select('total_price')
@@ -1117,7 +1301,6 @@ async function loadAnnouncements(){
       .or(`expires_at.is.null,expires_at.gt.${now}`)
       .order('created_at',{ascending:false}).limit(5);
     if(!data||!data.length){container.innerHTML='';return;}
-    // Cek dismiss per device
     const{data:dismissed}=await db.from('announcement_dismissals')
       .select('announcement_id').eq('device_id',S.deviceId);
     const dismissedIds=new Set((dismissed||[]).map(d=>d.announcement_id));
@@ -1145,19 +1328,16 @@ async function dismissAnnouncement(annId){
 }
 
 // ── REALTIME ──────────────────────────────────────────────────────────
-// FIX BUG #5: Realtime hanya update myProgress jika device_id cocok
 function subscribeRealtime(){
   db.channel('sop_rt_v3')
     .on('postgres_changes',{event:'*',schema:'public',table:'checklist_progress'},payload=>{
       const rec=payload.new||payload.old;
       if(!rec) return;
       if(rec.shift_date!==getTodayISO()||rec.shift_type!==S.activeShift) return;
-      // Hanya update state lokal jika ini progress milik saya
       if(rec.device_id===S.deviceId){
         if(payload.eventType==='DELETE') delete S.myProgress[rec.step_id];
         else S.myProgress[rec.step_id]={id:rec.id,is_done:rec.is_done,done_by:rec.done_by,done_at:rec.done_at,notes:rec.notes||''};
       }
-      // Selalu refresh UI (tampilkan siapa yang centang, termasuk staff lain)
       refreshProgressUI();
       if(S.activeModuleId&&!S.viewingMode) renderChecklistDetail(S.activeModuleId);
       checkAllDoneConfetti();
@@ -1278,7 +1458,7 @@ function renderDashboard(){
     </div>`;
   }).join('');
   updateHeroProgress();
-  loadOmzet(); // FIX BUG #7: cached, tidak spam query
+  loadOmzet();
   renderProsedurButtons('prosedur-btn-row-beranda');
   loadAnnouncements();
 }
@@ -1411,20 +1591,18 @@ async function saveNote(){
   const today=getTodayISO();
   const prog=S.myProgress[noteTargetStepId];
   if(prog) S.myProgress[noteTargetStepId].notes=note;
-  // Simpan foto jika ada (base64 → step_photos table)
   if(notePhotos.length>0&&!isGuest){
     try{
       const inserts=notePhotos.map(photoB64=>({
         step_id:noteTargetStepId,shift_date:today,shift_type:S.activeShift,
         device_id:S.deviceId,done_by:S.staffName,
-        photo_url:photoB64, // base64, idealnya upload ke Storage
+        photo_url:photoB64,
         notes:note
       }));
       await db.from('step_photos').insert(inserts);
     }catch(e){console.warn('step_photos insert:',e);}
   }
   try{
-    // FIX BUG #1&#2: upsert dengan device_id, constraint UNIQUE(step_id,shift_date,shift_type) sudah ada via migration
     await db.from('checklist_progress').upsert({
       step_id:noteTargetStepId,shift_date:today,shift_type:S.activeShift,
       is_done:prog?.is_done||false,done_by:prog?.done_by||null,done_at:prog?.done_at||null,
@@ -1509,11 +1687,9 @@ let historyShift='pagi_sore';
 async function renderHistoryScreen(){
   const chipContainer=document.getElementById('history-date-chips');
   if(!chipContainer) return;
-  // Buat chip 7 hari terakhir
   const dates=[];
   for(let i=1;i<=7;i++){const d=new Date();d.setDate(d.getDate()-i);dates.push(getDateISO(d));}
   chipContainer.innerHTML=dates.map(dt=>`<span class="history-date-chip" data-date="${dt}" onclick="selectHistoryDate('${dt}',this)">${formatDateShort(dt)}</span>`).join('');
-  // Shift chips
   const sc=document.getElementById('history-shift-chips');
   if(sc) sc.innerHTML=['pagi_sore','sore_malam'].map(sh=>`<div class="shift-chip ${historyShift===sh?'active':''}" onclick="selectHistoryShift('${sh}',this)">${shiftLabel(sh)}</div>`).join('');
   document.getElementById('history-content').innerHTML='<div class="empty-state"><i class="ti ti-history"></i><p>Pilih tanggal untuk melihat riwayat</p></div>';
@@ -1578,7 +1754,6 @@ async function exportShiftReport(){
     const doneAt=p.done_at?new Date(p.done_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'';
     csv+=`"${today}","${shiftLabel(S.activeShift)}","${mod?.name||'—'}","${step?.title||p.step_id}","${step?.is_critical?'Ya':'Tidak'}","${p.is_done?'Ya':'Tidak'}","${p.done_by||'—'}","${doneAt}","${(p.notes||'').replace(/"/g,"'")}"\n`;
   });
-  // Tambah ringkasan omzet
   if(omzetCache.date===today&&omzetCache.data){
     const d=omzetCache.data;
     csv+=`\nRingkasan Omzet\nOmzet,"Rp ${d.omzet.toLocaleString('id-ID')}"\nTransaksi,${d.trxCnt}\nPengeluaran,"Rp ${d.expense.toLocaleString('id-ID')}"\n`;
@@ -1590,7 +1765,6 @@ async function exportShiftReport(){
   showToast('Laporan berhasil diunduh!','success');
 }
 async function exportShiftReportAll(){
-  // Export semua progress hari ini dari semua staff
   const today=getTodayISO();
   const{data}=await db.from('checklist_progress').select('*').eq('shift_date',today).eq('shift_type',S.activeShift);
   if(!data||!data.length){showToast('Tidak ada data hari ini.','info');return;}
@@ -1619,13 +1793,11 @@ async function renderTrenPanel(){
     dates.forEach(d=>{trenByDate[d]={done:0,total:totalSteps};});
     (data||[]).forEach(p=>{if(p.is_done&&trenByDate[p.shift_date]) trenByDate[p.shift_date].done++;});
 
-    // Langkah paling sering terlewat
     const{data:allProg}=await db.from('checklist_progress').select('step_id,is_done').in('shift_date',dates).eq('shift_type',S.activeShift).eq('is_done',false);
     const missCount={};
     (allProg||[]).forEach(p=>{missCount[p.step_id]=(missCount[p.step_id]||0)+1;});
     const topMissed=Object.entries(missCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
 
-    // Konsistensi per staff
     const{data:staffProg}=await db.from('checklist_progress').select('device_id,done_by,is_done').in('shift_date',dates).eq('shift_type',S.activeShift);
     const staffStats={};
     (staffProg||[]).forEach(p=>{
@@ -1635,14 +1807,12 @@ async function renderTrenPanel(){
     });
 
     let html='<div class="chart-wrap">';
-    // Bar chart tren per hari
     html+='<div style="font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:10px;">📈 Completion 7 Hari Terakhir</div>';
     dates.forEach(d=>{
       const td=trenByDate[d];const pct=td.total?Math.round(td.done/td.total*100):0;
       html+=`<div class="chart-bar-row"><div class="chart-bar-label">${formatDateShort(d)}</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%;background:${pct>=80?'var(--success)':pct>=50?'var(--warning)':'var(--danger)'};"></div></div><div class="chart-bar-pct">${pct}%</div></div>`;
     });
 
-    // Top missed steps
     if(topMissed.length){
       html+='<div style="font-size:13px;font-weight:700;color:var(--text-primary);margin:16px 0 8px;">❌ Langkah Paling Sering Terlewat</div>';
       topMissed.forEach(([sid,cnt])=>{
@@ -1652,7 +1822,6 @@ async function renderTrenPanel(){
       });
     }
 
-    // Staff konsistensi
     const staffArr=Object.entries(staffStats).filter(([k])=>k&&k!=='null'&&k!=='undefined').sort((a,b)=>(b[1].done/b[1].total)-(a[1].done/a[1].total)).slice(0,6);
     if(staffArr.length){
       html+='<div style="font-size:13px;font-weight:700;color:var(--text-primary);margin:16px 0 8px;">🏆 Konsistensi Staff</div>';
@@ -1677,7 +1846,7 @@ async function saveProfile(){
   catch(e){showToast('Gagal: '+e.message,'error');}
 }
 async function setShift(shift){
-  S.activeShift=shift;updateShiftChips();omzetCache={date:null,data:null}; // reset cache saat ganti shift
+  S.activeShift=shift;updateShiftChips();omzetCache={date:null,data:null};
   await loadProgress();renderDashboard();renderModuleList();
   if(!isGuest){try{await db.from('user_sessions').update({active_shift:shift}).eq('device_id',S.deviceId);}catch{}}
   showToast(`Beralih ke ${shiftLabel(shift)}`,'info');
@@ -1703,6 +1872,14 @@ function switchTab(tabName){
   const scr=document.getElementById('screen-container');if(scr) scr.scrollTop=0;
   if(tabName==='beranda') renderDashboard();
   if(tabName==='tugas') renderModuleList();
+  if(tabName==='kas'){
+    document.querySelectorAll('#kas-mode-tab-bar .admin-tab').forEach(t=>t.classList.toggle('active',t.dataset.kasMode===kasActiveMode));
+    document.getElementById('kas-mode-harian').style.display=kasActiveMode==='harian'?'block':'none';
+    document.getElementById('kas-mode-toko').style.display=kasActiveMode==='toko'?'block':'none';
+    document.getElementById('kas-mode-rumah').style.display=kasActiveMode==='rumah'?'block':'none';
+    initKasScreen();
+    if(kasActiveMode==='toko'||kasActiveMode==='rumah') initPersistentKasScreen(kasActiveMode);
+  }
   if(tabName==='cari') renderProsedurButtons('prosedur-btn-row-cari');
   if(tabName==='staff'){const st=presenceChannel?presenceChannel.presenceState():{};renderStaffList(st);}
   if(tabName==='meja') renderMejaLiveView();
@@ -1719,19 +1896,14 @@ function initNavigation(){
 }
 
 // ── MANAJEMEN MEJA (Table Group + Layout Map) ─────────────────────────
-// Skema:
-//  table_groups: id, name, order_index, is_active
-//  table_layout: id, group_id, table_number(unik, dipakai juga di table_orders.table_number),
-//                pax_capacity, shape('square'/'circle'), grid_row, grid_col, order_index
-//  table_orders: id, table_number, items(jsonb), total_price, pax_count, status, opened_at
-let tableProducts=[];          // cache produk untuk picker
-let tableOrdersCache=[];       // semua table_orders berstatus pending (live)
-let tableGroupsCache=[];       // semua grup meja
-let tableLayoutCache=[];       // semua layout meja (semua grup, di-filter per grup saat render)
-let activeTableNumber=null;    // meja yang sedang dibuka di overlay
-let activeMejaGroupId=null;    // grup yang sedang ditampilkan di live view
+let tableProducts=[];
+let tableOrdersCache=[];
+let tableGroupsCache=[];
+let tableLayoutCache=[];
+let activeTableNumber=null;
+let activeMejaGroupId=null;
 let tableRealtimeChannel=null;
-let timerTickInterval=null;    // update durasi tiap menit tanpa reload data
+let timerTickInterval=null;
 
 async function loadTableProducts(){
   try{
@@ -1789,7 +1961,6 @@ function fmtDuration(openedAt){
   return h>0?`${h} j ${m} min`:`${m} min`;
 }
 
-// ── LIVE VIEW: GROUP TABS + FREE-POSITION CANVAS ───────────────────────
 async function renderMejaLiveView(){
   const tabsEl=document.getElementById('meja-group-tabs');
   const canvasEl=document.getElementById('table-canvas');
@@ -1818,7 +1989,6 @@ async function renderMejaLiveView(){
 }
 function selectMejaGroup(groupId){
   activeMejaGroupId=groupId;
-  document.querySelectorAll('.meja-group-tab').forEach((el,i)=>{});
   renderMejaLiveView();
 }
 function renderMejaCanvas(){
@@ -1839,8 +2009,6 @@ function renderMejaCanvas(){
     let cls='empty',inner=`<div class="table-node-label">${t.table_number}</div><div class="table-node-pax">0/${t.pax_capacity} pax</div>`,timerHtml='';
     if(order){
       cls='open';
-      const items=getOrderItems(order);
-      const itemCnt=items.reduce((s,it)=>s+(it.qty||1),0);
       inner=`<div class="table-node-label">${t.table_number}</div>
              <div class="table-node-pax">${order.pax_count||0}/${t.pax_capacity} pax</div>
              <div class="table-node-total">Rp ${Math.round((order.total_price||0)/1000)}k</div>`;
@@ -1877,7 +2045,6 @@ function calcOrderTotal(items){
   return items.reduce((s,it)=>s+(it.price||0)*(it.qty||1),0);
 }
 
-// ── TABLE DETAIL OVERLAY ────────────────────────────────────────────────
 let activeTableLayoutId=null;
 function openTableDetail(label,layoutId){
   activeTableNumber=label;
@@ -1938,7 +2105,6 @@ async function persistTableOrder(items,paxCount){
   try{
     const existing=tableOrdersCache.find(o=>o.table_number===activeTableNumber);
     if(items.length===0&&(paxCount||0)===0){
-      // Tidak ada item & pax → hapus order (meja jadi kosong)
       if(existing) await db.from('table_orders').delete().eq('id',existing.id);
     }else if(existing){
       await db.from('table_orders').update({items:JSON.stringify(items),total_price:total,pax_count:paxCount||0}).eq('id',existing.id);
@@ -1952,7 +2118,6 @@ async function persistTableOrder(items,paxCount){
   }catch(e){showToast('Gagal update pesanan: '+e.message,'error');}
 }
 
-// ── PRODUCT PICKER ─────────────────────────────────────────────────────
 function openProductPicker(){
   document.getElementById('product-picker-overlay').classList.add('active');
   document.getElementById('product-picker-search-input').value='';
@@ -1991,7 +2156,6 @@ async function addProductToTable(productId,name,price){
   showToast(`${name} ditambahkan ke Meja ${activeTableNumber}`,'success');
 }
 
-// ── KOSONGKAN / CHECKOUT MEJA ───────────────────────────────────────────
 function confirmClearTable(){
   if(!activeTableNumber) return;
   openModal('Kosongkan Meja?',`Semua pesanan di Meja ${activeTableNumber} akan dihapus tanpa membuat transaksi.`,async()=>{
@@ -2030,7 +2194,6 @@ async function checkoutTable(order,items,total){
   }catch(e){showToast('Gagal checkout: '+e.message,'error');}
 }
 
-// ── ADMIN: MEJA — SUB TAB SWITCH ────────────────────────────────────────
 function switchMejaSubTab(tab){
   document.querySelectorAll('#admin-panel-meja .admin-tab').forEach(t=>t.classList.toggle('active',t.dataset.mejaSubtab===tab));
   const gp=document.getElementById('meja-subpanel-grup'),lp=document.getElementById('meja-subpanel-layout');
@@ -2040,7 +2203,6 @@ function switchMejaSubTab(tab){
   if(tab==='layout') populateLayoutGroupSelect();
 }
 
-// ── ADMIN: GRUP MEJA (CRUD) ──────────────────────────────────────────────
 async function renderAdminGroupList(){
   await loadTableGroups();
   const c=document.getElementById('admin-tgroup-list');
@@ -2113,9 +2275,8 @@ function confirmDeleteGroup(groupId){
   });
 }
 
-// ── ADMIN: LAYOUT MEJA (DRAG & DROP EDITOR) ─────────────────────────────
 let layoutEditingGroupId=null;
-let dragState=null; // {tableId, startX, startY, origLeft, origTop}
+let dragState=null;
 const GRID_CELL=90;
 
 function populateLayoutGroupSelect(){
@@ -2181,7 +2342,6 @@ async function onDragTableEnd(evt){
   dragState.node.removeEventListener('pointerup',onDragTableEnd);
   const finalLeft=parseInt(dragState.node.style.left)||0;
   const finalTop=parseInt(dragState.node.style.top)||0;
-  // Snap ke grid
   const col=Math.round((finalLeft-8)/GRID_CELL);
   const row=Math.round((finalTop-8)/GRID_CELL);
   const snappedLeft=Math.max(0,col)*GRID_CELL+8,snappedTop=Math.max(0,row)*GRID_CELL+8;
@@ -2322,7 +2482,6 @@ function renderAdminStepList(modId){
 function openAddStepForm(){document.getElementById('admin-step-form-title').textContent='Tambah Langkah';['astep-title','astep-desc','astep-edit-id','astep-stock-name'].forEach(id=>document.getElementById(id).value='');document.getElementById('astep-order').value=S.steps.filter(s=>s.module_id===adminActiveModuleId).length;document.getElementById('astep-critical').checked=false;document.getElementById('astep-show-stock').checked=false;document.getElementById('astep-stock-name').style.display='none';document.getElementById('astep-module-id').value=adminActiveModuleId;document.getElementById('admin-step-form').style.display='block';document.getElementById('astep-title').focus();}
 function editStepForm(stepId){const step=S.steps.find(s=>s.id===stepId);if(!step) return;document.getElementById('admin-step-form-title').textContent='Edit Langkah';document.getElementById('astep-title').value=step.title;document.getElementById('astep-desc').value=step.description||'';document.getElementById('astep-order').value=step.order_index;document.getElementById('astep-critical').checked=step.is_critical||false;document.getElementById('astep-show-stock').checked=step.show_stock||false;document.getElementById('astep-stock-name').value=step.stock_name||'';document.getElementById('astep-stock-name').style.display=step.show_stock?'block':'none';document.getElementById('astep-edit-id').value=stepId;document.getElementById('astep-module-id').value=step.module_id;document.getElementById('admin-step-form').style.display='block';document.getElementById('astep-title').focus();}
 function cancelStepForm(){document.getElementById('admin-step-form').style.display='none';}
-// Toggle stok input visibility
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('astep-show-stock')?.addEventListener('change',function(){
     document.getElementById('astep-stock-name').style.display=this.checked?'block':'none';
@@ -2392,19 +2551,16 @@ async function saveProsedurForm(){
   const editId=document.getElementById('apros-edit-id').value;
   if(!name){showToast('Nama prosedur tidak boleh kosong.','error');return;}
   if(!steps.length){showToast('Minimal 1 langkah.','error');return;}
-  // FIX BUG #4: Selalu gunakan UUID baru, jangan compare panjang ID
   const stepsJson=JSON.stringify(steps);
   const photosJson=JSON.stringify(pendingPhotos);
   const obj={name,icon,color_hex:color,subtitle,steps:stepsJson,photos:photosJson};
   let finalId=editId;
   try{
     if(editId){
-      // Cek apakah editId adalah UUID (dari DB) atau ID pendek (default)
       const isUUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(editId);
       if(isUUID){
         await db.from('procedures').update(obj).eq('id',editId);
       }else{
-        // Default procedure: insert baru di DB, ganti ID
         const{data,error}=await db.from('procedures').insert({...obj,order_index:S.procedures.findIndex(p=>p.id===editId)}).select().single();
         if(!error&&data) finalId=data.id;
         else throw error;
@@ -2415,7 +2571,6 @@ async function saveProsedurForm(){
       else throw error;
     }
   }catch{
-    // Fallback ke localStorage
     finalId=editId||('proc-'+Date.now());
     const lsKey='sop_procedures_v2';
     let lsProcs=[];try{lsProcs=JSON.parse(localStorage.getItem(lsKey)||'[]');}catch{}
@@ -2498,7 +2653,874 @@ function startReminderCheck(){
   },30*60*1000);
 }
 
-// ── MAIN INIT ─────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════
+// ── HITUNG KAS ───────────────────────────────────────────────────────
+// Skema tabel `cash_counts` (Supabase, sudah ada):
+//   date (text, PK) | total (int8) | counts (jsonb) | saved_at (timestamptz)
+// counts disimpan sebagai: { denoms:{ "1000":3, "5000":2, ... }, manual:{...sama...} }
+// Karena tap-grid dan input manual mengacu ke pecahan yang sama, kita simpan
+// satu peta qty per pecahan (gabungan tap + manual, keduanya mengedit qty yang sama).
+// ══════════════════════════════════════════════════════════════════════
+
+const KAS_DENOMS=[
+  {value:100,label:'Rp100',sub:'Koin',icon:'ti-coin',cls:'kas-denom-100',coin:true},
+  {value:200,label:'Rp200',sub:'Koin',icon:'ti-coin',cls:'kas-denom-200',coin:true},
+  {value:500,label:'Rp500',sub:'Koin',icon:'ti-coin',cls:'kas-denom-500',coin:false},
+  {value:1000,label:'Rp1rb',sub:'Koin/Lembar',icon:'ti-coin',cls:'kas-denom-1000',coin:false},
+  {value:2000,label:'Rp2rb',sub:'Lembar',icon:'ti-cash-banknote',cls:'kas-denom-2000',coin:false},
+  {value:5000,label:'Rp5rb',sub:'Lembar',icon:'ti-cash-banknote',cls:'kas-denom-5000',coin:false},
+  {value:10000,label:'Rp10rb',sub:'Lembar',icon:'ti-cash-banknote',cls:'kas-denom-10000',coin:false},
+  {value:20000,label:'Rp20rb',sub:'Lembar',icon:'ti-cash-banknote',cls:'kas-denom-20000',coin:false},
+  {value:50000,label:'Rp50rb',sub:'Lembar',icon:'ti-cash-banknote',cls:'kas-denom-50000',coin:false},
+  {value:100000,label:'Rp100rb',sub:'Lembar',icon:'ti-cash-banknote',cls:'kas-denom-100000',coin:false},
+];
+const KAS_LS_KEY='sop_kas_counts_draft'; // autosave localStorage (per hari)
+
+let kasCounts={};          // { "1000": 3, "5000": 2, ... } — state qty aktif (hari ini)
+let kasShowCoin=false;     // toggle tampilkan koin 100 & 200
+let kasLastSavedCounts=null; // snapshot terakhir yang berhasil disimpan ke server (untuk badge belum-disimpan)
+let kasLastSavedAt=null;   // timestamp terakhir simpan
+let kasYesterdayTotal=null;
+let kasYesterdayDate=null;
+let kasMidnightTimeout=null;
+let kasSectionState={manual:false,rincian:false}; // collapsed state (false=collapsed utk rincian, manual juga collapsed default)
+let kasHistoryCache=[];
+
+function kasTodayKey(){return getTodayISO();}
+function kasLocalStorageKey(dateStr){return `${KAS_LS_KEY}:${dateStr}`;}
+
+function kasVisibleDenoms(){
+  return kasShowCoin?KAS_DENOMS:KAS_DENOMS.filter(d=>!d.coin);
+}
+function kasCalcTotal(counts){
+  return KAS_DENOMS.reduce((sum,d)=>sum+(counts[d.value]||0)*d.value,0);
+}
+function kasCalcPieces(counts){
+  return KAS_DENOMS.reduce((sum,d)=>sum+(counts[d.value]||0),0);
+}
+
+// ── INIT SCREEN ─────────────────────────────────────────────────────────
+async function initKasScreen(){
+  showGlobalLoading(true);
+  try{
+    // load toggle koin dari localStorage (preferensi tampilan, bukan data kas)
+    kasShowCoin=localStorage.getItem('sop_kas_show_coin')==='1';
+    const coinToggle=document.getElementById('kas-coin-toggle');
+    if(coinToggle) coinToggle.checked=kasShowCoin;
+
+    // load draft lokal dulu (biar instan & tidak hilang saat refresh)
+    const todayKey=kasTodayKey();
+    let draft=null;
+    try{draft=JSON.parse(localStorage.getItem(kasLocalStorageKey(todayKey))||'null');}catch{}
+
+    // load dari server (sumber kebenaran terakhir tersimpan)
+    const{data:serverRow}=await db.from('cash_counts').select('*').eq('date',todayKey).maybeSingle();
+    let serverCounts=null;
+    if(serverRow?.counts){
+      try{
+        const parsed=typeof serverRow.counts==='string'?JSON.parse(serverRow.counts):serverRow.counts;
+        serverCounts=parsed?.denoms||parsed||{};
+      }catch{serverCounts={};}
+    }
+    if(serverRow){
+      kasLastSavedCounts=serverCounts||{};
+      kasLastSavedAt=serverRow.saved_at||null;
+    }else{
+      kasLastSavedCounts=null;
+      kasLastSavedAt=null;
+    }
+
+    // Prioritas: draft lokal (jika ada & lebih relevan) > data server > kosong
+    if(draft&&typeof draft==='object'){
+      kasCounts={...draft};
+    }else if(serverCounts){
+      kasCounts={...serverCounts};
+    }else{
+      kasCounts={};
+    }
+
+    // load kas kemarin
+    await loadKasYesterday();
+
+    renderKasDenomGrid();
+    renderKasManualList();
+    renderKasRincian();
+    updateKasTotalDisplay();
+    scheduleKasMidnightReset();
+  }catch(e){
+    console.warn('initKasScreen:',e);
+    showToast('Gagal memuat data kas.','error');
+  }finally{
+    showGlobalLoading(false);
+  }
+}
+
+async function loadKasYesterday(){
+  const d=new Date();d.setDate(d.getDate()-1);
+  kasYesterdayDate=getDateISO(d);
+  try{
+    const{data}=await db.from('cash_counts').select('*').eq('date',kasYesterdayDate).maybeSingle();
+    const card=document.getElementById('kas-yesterday-card');
+    if(data){
+      kasYesterdayTotal=data.total||0;
+      document.getElementById('kas-yesterday-value').textContent='Rp '+kasYesterdayTotal.toLocaleString('id-ID');
+      if(card) card.style.display='flex';
+    }else{
+      kasYesterdayTotal=null;
+      if(card) card.style.display='none';
+    }
+  }catch(e){
+    kasYesterdayTotal=null;
+    const card=document.getElementById('kas-yesterday-card');if(card) card.style.display='none';
+  }
+}
+
+// ── RENDER: GRID PECAHAN ─────────────────────────────────────────────────
+function renderKasDenomGrid(){
+  const grid=document.getElementById('kas-denom-grid');if(!grid) return;
+  const denoms=kasVisibleDenoms();
+  grid.innerHTML=denoms.map(d=>{
+    const qty=kasCounts[d.value]||0;
+    return `<button type="button" class="kas-denom-card ${d.cls}" id="kas-denom-${d.value}"
+      onclick="kasTapDenom(${d.value})" oncontextmenu="kasRightClickDenom(event,${d.value})">
+      <div class="kas-pulse-ring" id="kas-pulse-${d.value}"></div>
+      ${qty>0?`<div class="kas-denom-badge" id="kas-badge-${d.value}">${qty}</div>`:''}
+      <div class="kas-denom-icon"><i class="ti ${d.icon}"></i></div>
+      <div class="kas-denom-label">${d.label}</div>
+      <div class="kas-denom-sub">${d.sub}</div>
+    </button>`;
+  }).join('');
+}
+function toggleKasCoin(on){
+  kasShowCoin=on;
+  localStorage.setItem('sop_kas_show_coin',on?'1':'0');
+  renderKasDenomGrid();
+  renderKasManualList();
+}
+function kasTapDenom(value){
+  kasCounts[value]=(kasCounts[value]||0)+1;
+  kasPulseAnimation(value);
+  kasAfterChange();
+}
+function kasRightClickDenom(evt,value){
+  evt.preventDefault();
+  if((kasCounts[value]||0)<=0) return;
+  kasCounts[value]=Math.max(0,(kasCounts[value]||0)-1);
+  kasAfterChange();
+  return false;
+}
+function kasPulseAnimation(value){
+  const ring=document.getElementById('kas-pulse-'+value);
+  if(!ring) return;
+  ring.classList.remove('animate');
+  void ring.offsetWidth; // reflow biar animasi bisa retrigger
+  ring.classList.add('animate');
+}
+function kasSetManualQty(value,qty){
+  const n=Math.max(0,parseInt(qty)||0);
+  kasCounts[value]=n;
+  kasAfterChange();
+}
+function kasStepManual(value,delta){
+  const cur=kasCounts[value]||0;
+  kasCounts[value]=Math.max(0,cur+delta);
+  kasAfterChange();
+}
+function kasAfterChange(){
+  updateKasBadgesAndInputs();
+  updateKasTotalDisplay();
+  renderKasRincian();
+  kasAutosaveLocal();
+}
+function updateKasBadgesAndInputs(){
+  KAS_DENOMS.forEach(d=>{
+    const qty=kasCounts[d.value]||0;
+    const badge=document.getElementById('kas-badge-'+d.value);
+    const card=document.getElementById('kas-denom-'+d.value);
+    if(card){
+      if(qty>0&&!badge){
+        const b=document.createElement('div');
+        b.className='kas-denom-badge';b.id='kas-badge-'+d.value;b.textContent=qty;
+        card.insertBefore(b,card.firstChild.nextSibling);
+      }else if(qty>0&&badge){
+        badge.textContent=qty;
+      }else if(qty<=0&&badge){
+        badge.remove();
+      }
+    }
+    const input=document.getElementById('kas-manual-input-'+d.value);
+    if(input&&document.activeElement!==input) input.value=qty;
+    const subtotalEl=document.getElementById('kas-manual-subtotal-'+d.value);
+    if(subtotalEl) subtotalEl.textContent='Rp '+(qty*d.value).toLocaleString('id-ID');
+  });
+}
+
+// ── RENDER: INPUT MANUAL ──────────────────────────────────────────────────
+function renderKasManualList(){
+  const list=document.getElementById('kas-manual-list');if(!list) return;
+  const denoms=kasVisibleDenoms();
+  list.innerHTML=denoms.map(d=>{
+    const qty=kasCounts[d.value]||0;
+    return `<div class="kas-manual-row">
+      <div class="kas-manual-icon ${d.cls}"><i class="ti ${d.icon}"></i></div>
+      <div class="kas-manual-label">${d.label}</div>
+      <div class="kas-manual-stepper">
+        <button class="qty-btn" onclick="kasStepManual(${d.value},-1)">−</button>
+        <input class="kas-manual-input" id="kas-manual-input-${d.value}" type="number" min="0" value="${qty}"
+          oninput="kasSetManualQty(${d.value},this.value)"/>
+        <button class="qty-btn" onclick="kasStepManual(${d.value},1)">+</button>
+      </div>
+      <div class="kas-manual-subtotal" id="kas-manual-subtotal-${d.value}">Rp ${(qty*d.value).toLocaleString('id-ID')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── RENDER: RINCIAN (collapsible) ─────────────────────────────────────────
+function renderKasRincian(){
+  const panel=document.getElementById('kas-rincian-panel');if(!panel) return;
+  const filled=KAS_DENOMS.filter(d=>(kasCounts[d.value]||0)>0);
+  const total=kasCalcTotal(kasCounts);
+  if(!filled.length){
+    panel.innerHTML='<div class="empty-state" style="padding:24px 0;"><i class="ti ti-receipt-off"></i><p>Belum ada pecahan yang diisi.</p></div>';
+    return;
+  }
+  let html=filled.map(d=>{
+    const qty=kasCounts[d.value]||0;
+    return `<div class="kas-rincian-row">
+      <div class="kas-rincian-name">${d.label} × ${qty}</div>
+      <div class="kas-rincian-val">Rp ${(qty*d.value).toLocaleString('id-ID')}</div>
+    </div>`;
+  }).join('');
+  html+=`<div class="kas-rincian-total-row"><div class="kas-rincian-name">Grand Total</div><div class="kas-rincian-val">Rp ${total.toLocaleString('id-ID')}</div></div>`;
+  panel.innerHTML=html;
+}
+function toggleKasSection(section){
+  kasSectionState[section]=!kasSectionState[section];
+  const toggleEl=document.getElementById(section==='manual'?'kas-manual-toggle':'kas-rincian-toggle');
+  const listEl=document.getElementById(section==='manual'?'kas-manual-list':'kas-rincian-panel');
+  if(toggleEl) toggleEl.classList.toggle('collapsed',!kasSectionState[section]);
+  if(listEl) listEl.style.display=kasSectionState[section]?'block':'none';
+}
+
+// ── TOTAL CARD (warna otomatis + badge belum disimpan) ────────────────────
+function updateKasTotalDisplay(){
+  const total=kasCalcTotal(kasCounts);
+  const pieces=kasCalcPieces(kasCounts);
+  const card=document.getElementById('kas-total-card');
+  const valueEl=document.getElementById('kas-total-value');
+  const subEl=document.getElementById('kas-total-sub');
+  const diffBadge=document.getElementById('kas-diff-badge');
+  const savedTimeEl=document.getElementById('kas-saved-time');
+  const unsavedBadge=document.getElementById('kas-unsaved-badge');
+
+  if(valueEl) valueEl.textContent='Rp '+total.toLocaleString('id-ID');
+  if(subEl) subEl.textContent=`${pieces} lembar/keping`;
+
+  // Warna kartu: abu-abu (kosong), hijau (>kemarin), merah (<kemarin), putih/netral (sama)
+  card.classList.remove('kas-empty','kas-higher','kas-lower','kas-same');
+  if(total===0){
+    card.classList.add('kas-empty');
+    if(diffBadge) diffBadge.style.display='none';
+  }else if(kasYesterdayTotal===null||kasYesterdayTotal===undefined){
+    card.classList.add('kas-same');
+    if(diffBadge) diffBadge.style.display='none';
+  }else{
+    const diff=total-kasYesterdayTotal;
+    if(diff>0){
+      card.classList.add('kas-higher');
+      if(diffBadge){diffBadge.style.display='inline-flex';diffBadge.innerHTML=`▲ Rp ${diff.toLocaleString('id-ID')} — Lebih banyak dari kemarin 📈`;}
+    }else if(diff<0){
+      card.classList.add('kas-lower');
+      if(diffBadge){diffBadge.style.display='inline-flex';diffBadge.innerHTML=`▼ Rp ${Math.abs(diff).toLocaleString('id-ID')} — Lebih sedikit dari kemarin 📉`;}
+    }else{
+      card.classList.add('kas-same');
+      if(diffBadge){diffBadge.style.display='inline-flex';diffBadge.innerHTML=`= Sama seperti kemarin`;}
+    }
+  }
+
+  // Badge "belum disimpan": bandingkan kasCounts saat ini dengan kasLastSavedCounts
+  const isDirty=JSON.stringify(kasNormalize(kasCounts))!==JSON.stringify(kasNormalize(kasLastSavedCounts||{}));
+  if(unsavedBadge) unsavedBadge.style.display=isDirty&&pieces>0?'flex':'none';
+
+  // Timestamp terakhir simpan
+  if(kasLastSavedAt){
+    const t=new Date(kasLastSavedAt).toLocaleString('id-ID',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
+    if(savedTimeEl){savedTimeEl.style.display='flex';savedTimeEl.querySelector('span').textContent='Terakhir disimpan: '+t;}
+  }else{
+    if(savedTimeEl) savedTimeEl.style.display='none';
+  }
+}
+function kasNormalize(counts){
+  // Buang entri qty=0 supaya perbandingan dirty-check konsisten
+  const out={};
+  Object.entries(counts||{}).forEach(([k,v])=>{if(v>0) out[k]=v;});
+  return out;
+}
+
+// ── AUTOSAVE LOCALSTORAGE ─────────────────────────────────────────────────
+function kasAutosaveLocal(){
+  try{localStorage.setItem(kasLocalStorageKey(kasTodayKey()),JSON.stringify(kasCounts));}catch{}
+}
+
+// ── AUTO-RESET SAAT PERGANTIAN HARI ────────────────────────────────────────
+function scheduleKasMidnightReset(){
+  if(kasMidnightTimeout) clearTimeout(kasMidnightTimeout);
+  const now=new Date();
+  const nextMidnight=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,5,0);
+  const ms=nextMidnight.getTime()-now.getTime();
+  kasMidnightTimeout=setTimeout(async()=>{
+    showToast('Hari baru dimulai — hitungan kas direset otomatis 🕛','info');
+    kasCounts={};
+    kasLastSavedCounts=null;
+    kasLastSavedAt=null;
+    if(S.activeTab==='kas'){
+      await initKasScreen();
+    }
+    scheduleKasMidnightReset(); // jadwalkan ulang untuk hari berikutnya
+  },Math.max(1000,ms));
+}
+
+// ── RESET MANUAL (dengan konfirmasi) ───────────────────────────────────────
+function confirmResetKas(){
+  const pieces=kasCalcPieces(kasCounts);
+  if(pieces===0){showToast('Hitungan sudah kosong.','info');return;}
+  openModal('Reset Hitungan Kas?','Semua pecahan yang sudah kamu tap/isi hari ini akan dikosongkan. Data yang sudah tersimpan di server tidak akan terhapus sampai kamu menekan Simpan lagi.',()=>{
+    kasCounts={};
+    localStorage.removeItem(kasLocalStorageKey(kasTodayKey()));
+    renderKasDenomGrid();renderKasManualList();renderKasRincian();updateKasTotalDisplay();
+    showToast('Hitungan kas direset.','success');
+  });
+}
+
+// ── SIMPAN KE SUPABASE (upsert by date) ───────────────────────────────────
+async function saveKasCount(){
+  const total=kasCalcTotal(kasCounts);
+  const pieces=kasCalcPieces(kasCounts);
+  if(pieces===0){showToast('Belum ada pecahan yang diisi.','warning');return;}
+  showGlobalLoading(true);
+  try{
+    const today=kasTodayKey();
+    const payload={
+      date:today,
+      total,
+      counts:JSON.stringify({denoms:kasNormalize(kasCounts)}),
+      saved_at:new Date().toISOString()
+    };
+    const{error}=await db.from('cash_counts').upsert(payload,{onConflict:'date'});
+    if(error) throw error;
+    kasLastSavedCounts={...kasCounts};
+    kasLastSavedAt=payload.saved_at;
+    updateKasTotalDisplay();
+    showToast(`Kas hari ini tersimpan: Rp ${total.toLocaleString('id-ID')} ✓`,'success');
+  }catch(e){
+    showToast('Gagal simpan kas: '+e.message,'error');
+  }finally{
+    showGlobalLoading(false);
+  }
+}
+
+// ── RIWAYAT KAS (30 hari terakhir / filter bulan custom) ──────────────────
+function openKasHistory(){
+  document.getElementById('kas-history-overlay').classList.add('active');
+  document.getElementById('kas-history-overlay').dataset.mode='harian';
+  document.getElementById('kas-history-month-filter').value='';
+  const filterRow=document.querySelector('#kas-history-overlay .kas-history-filter-row');
+  if(filterRow) filterRow.style.display='flex';
+  document.querySelector('#kas-history-overlay .table-detail-title').innerHTML='<i class="ti ti-history" style="margin-right:6px;"></i>Riwayat Kas';
+  loadKasHistory();
+}
+function closeKasHistory(){document.getElementById('kas-history-overlay').classList.remove('active');document.getElementById('kas-history-overlay').dataset.mode='';}
+function resetKasHistoryFilter(){
+  document.getElementById('kas-history-month-filter').value='';
+  loadKasHistory();
+}
+async function loadKasHistory(){
+  const listEl=document.getElementById('kas-history-list');
+  listEl.innerHTML='<div class="empty-state" style="padding:24px 0;"><i class="ti ti-loader" style="animation:spin .8s linear infinite;"></i><p>Memuat riwayat…</p></div>';
+  const monthFilter=document.getElementById('kas-history-month-filter').value; // format YYYY-MM
+  try{
+    let query=db.from('cash_counts').select('*').order('date',{ascending:false});
+    if(monthFilter){
+      const startDate=monthFilter+'-01';
+      const[y,m]=monthFilter.split('-').map(Number);
+      const endDate=new Date(y,m,0); // hari terakhir bulan itu
+      const endStr=getDateISO(endDate);
+      query=query.gte('date',startDate).lte('date',endStr);
+    }else{
+      query=query.limit(30);
+    }
+    const{data,error}=await query;
+    if(error) throw error;
+    kasHistoryCache=data||[];
+    if(!kasHistoryCache.length){
+      listEl.innerHTML='<div class="empty-state" style="padding:32px 0;"><i class="ti ti-calendar-off"></i><p>Belum ada riwayat kas'+(monthFilter?' untuk bulan ini':'')+'.</p></div>';
+      return;
+    }
+    const today=kasTodayKey();
+    listEl.innerHTML=kasHistoryCache.map((row,idx)=>{
+      const isToday=row.date===today;
+      const prevRow=kasHistoryCache[idx+1]; // baris di bawahnya = hari sebelumnya (karena sort desc)
+      let diffHtml='';
+      if(prevRow){
+        const diff=(row.total||0)-(prevRow.total||0);
+        if(diff>0) diffHtml=`<div class="kas-history-diff" style="color:var(--success);">▲ Rp ${diff.toLocaleString('id-ID')}</div>`;
+        else if(diff<0) diffHtml=`<div class="kas-history-diff" style="color:var(--danger);">▼ Rp ${Math.abs(diff).toLocaleString('id-ID')}</div>`;
+        else diffHtml=`<div class="kas-history-diff" style="color:var(--text-muted);">= Sama</div>`;
+      }
+      const savedTime=row.saved_at?new Date(row.saved_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'';
+      return `<div class="kas-history-row ${isToday?'is-today':''}" onclick="openKasDetailFor('${row.date}')">
+        <div class="kas-history-date">
+          <div class="kas-history-date-main">${formatDateShort(row.date)}${isToday?'<span class="kas-history-today-tag">HARI INI</span>':''}</div>
+          <div class="kas-history-date-sub">${formatDate(row.date)}${savedTime?' · tersimpan '+savedTime:''}</div>
+        </div>
+        <div>
+          <div class="kas-history-total">Rp ${(row.total||0).toLocaleString('id-ID')}</div>
+          ${diffHtml}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    listEl.innerHTML='<div class="empty-state"><i class="ti ti-alert-circle"></i><p>Gagal memuat riwayat.</p></div>';
+  }
+}
+
+// ── DETAIL RINCIAN 1 HARI (dari riwayat / dari kartu kemarin) ─────────────
+async function openKasDetailFor(dateStr){
+  if(!dateStr) return;
+  const bodyEl=document.getElementById('kas-detail-body');
+  document.getElementById('kas-detail-title').textContent='Rincian Kas — '+formatDateShort(dateStr);
+  document.getElementById('kas-detail-overlay').classList.add('active');
+  bodyEl.innerHTML='<div class="empty-state" style="padding:24px 0;"><i class="ti ti-loader" style="animation:spin .8s linear infinite;"></i><p>Memuat…</p></div>';
+  try{
+    let row=kasHistoryCache.find(r=>r.date===dateStr);
+    if(!row){
+      const{data}=await db.from('cash_counts').select('*').eq('date',dateStr).maybeSingle();
+      row=data;
+    }
+    if(!row){
+      bodyEl.innerHTML='<div class="empty-state"><i class="ti ti-calendar-off"></i><p>Tidak ada data untuk tanggal ini.</p></div>';
+      return;
+    }
+    let counts={};
+    try{
+      const parsed=typeof row.counts==='string'?JSON.parse(row.counts):row.counts;
+      counts=parsed?.denoms||parsed||{};
+    }catch{counts={};}
+    const filled=KAS_DENOMS.filter(d=>(counts[d.value]||0)>0);
+    let html=`<div style="padding:12px 20px;">
+      <div style="font-family:var(--font-heading);font-size:22px;font-weight:700;color:var(--text-primary);">Rp ${(row.total||0).toLocaleString('id-ID')}</div>
+      <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${formatDate(row.date)}${row.saved_at?' · tersimpan '+new Date(row.saved_at).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):''}</div>
+    </div>`;
+    if(!filled.length){
+      html+='<div class="empty-state" style="padding:16px 0;"><p>Tidak ada rincian pecahan tersimpan.</p></div>';
+    }else{
+      html+=filled.map(d=>{
+        const qty=counts[d.value]||0;
+        return `<div class="kas-rincian-row" style="padding:10px 20px;">
+          <div class="kas-rincian-name">${d.label} × ${qty}</div>
+          <div class="kas-rincian-val">Rp ${(qty*d.value).toLocaleString('id-ID')}</div>
+        </div>`;
+      }).join('');
+    }
+    bodyEl.innerHTML=html;
+  }catch(e){
+    bodyEl.innerHTML='<div class="empty-state"><i class="ti ti-alert-circle"></i><p>Gagal memuat rincian.</p></div>';
+  }
+}
+function closeKasDetail(){document.getElementById('kas-detail-overlay').classList.remove('active');}
+
+// ══════════════════════════════════════════════════════════════════════
+// ── KAS TOKO & KAS RUMAH (PERSISTEN — TIDAK RESET HARIAN) ──────────────
+// Skema Supabase:
+//   cash_home     : id (int8, PK, selalu 1) | total | counts (jsonb) | saved_at
+//   cash_home_log : id (auto) | total | counts (jsonb) | saved_at   (riwayat perubahan)
+//   cash_toko     : SAMA seperti cash_home (tabel baru, lihat migration_cash_toko.sql)
+//   cash_toko_log : SAMA seperti cash_home_log (tabel baru)
+// Kedua mode ini TIDAK auto-reset. Setiap ada perubahan dan ditekan Simpan,
+// baris tunggal (id=1) di-upsert, dan satu baris baru ditambahkan ke tabel _log.
+// ══════════════════════════════════════════════════════════════════════
+
+const KAS_PERSIST_CONFIG={
+  toko:{table:'cash_toko',logTable:'cash_toko_log',label:'Kas Toko',icon:'🏪',lsKey:'sop_kas_toko_draft'},
+  rumah:{table:'cash_home',logTable:'cash_home_log',label:'Kas Rumah',icon:'🏠',lsKey:'sop_kas_rumah_draft'},
+};
+let kasActiveMode='harian'; // 'harian' | 'toko' | 'rumah'
+let kasPersistState={
+  toko:{counts:{},lastSavedCounts:null,lastSavedAt:null,tableMissing:false},
+  rumah:{counts:{},lastSavedCounts:null,lastSavedAt:null,tableMissing:false},
+};
+let kasPersistLogCache={toko:[],rumah:[]};
+
+function switchKasMode(mode){
+  kasActiveMode=mode;
+  document.querySelectorAll('#kas-mode-tab-bar .admin-tab').forEach(t=>t.classList.toggle('active',t.dataset.kasMode===mode));
+  document.getElementById('kas-mode-harian').style.display=mode==='harian'?'block':'none';
+  document.getElementById('kas-mode-toko').style.display=mode==='toko'?'block':'none';
+  document.getElementById('kas-mode-rumah').style.display=mode==='rumah'?'block':'none';
+  const sub=document.getElementById('kas-page-sub');
+  if(sub) sub.textContent=mode==='harian'?'Hitung & catat uang kas hari ini':mode==='toko'?'Saldo kas toko — tidak reset otomatis, selalu tersimpan':'Saldo kas rumah — tidak reset otomatis, selalu tersimpan';
+  if(mode==='toko'||mode==='rumah') initPersistentKasScreen(mode);
+}
+
+async function initPersistentKasScreen(mode){
+  const container=document.getElementById('kas-mode-'+mode);
+  if(!container) return;
+  const cfg=KAS_PERSIST_CONFIG[mode];
+  container.innerHTML=`
+    <div class="kas-total-card kas-same" id="kas-persist-total-card-${mode}">
+      <div id="kas-persist-unsaved-badge-${mode}" class="kas-unsaved-badge" style="display:none;"><i class="ti ti-point-filled"></i> Belum disimpan</div>
+      <div class="kas-total-label">Saldo ${cfg.label} Saat Ini</div>
+      <div class="kas-total-value" id="kas-persist-total-value-${mode}">Rp 0</div>
+      <div class="kas-total-sub" id="kas-persist-total-sub-${mode}">0 lembar/keping</div>
+      <div class="kas-persist-badge"><i class="ti ti-infinity"></i> Tidak reset otomatis — saldo tetap sampai diubah</div>
+      <div class="kas-saved-time" id="kas-persist-saved-time-${mode}" style="display:none;"><i class="ti ti-clock"></i> <span></span></div>
+    </div>
+
+    <div class="kas-toggle-coin-row">
+      <div class="profile-row-label"><i class="ti ti-coin" style="margin-right:6px;"></i>Tampilkan Koin 100 & 200</div>
+      <label class="toggle-wrap"><input type="checkbox" id="kas-persist-coin-toggle-${mode}" onchange="togglePersistKasCoin('${mode}',this.checked)"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+
+    <div class="section-title">Tap Pecahan Uang</div>
+    <div class="kas-denom-grid" id="kas-persist-denom-grid-${mode}"></div>
+
+    <div class="kas-section-toggle" id="kas-persist-manual-toggle-${mode}" onclick="togglePersistKasSection('${mode}','manual')">
+      <div class="section-title">✍️ Input Manual</div>
+      <i class="ti ti-chevron-down"></i>
+    </div>
+    <div class="kas-manual-list" id="kas-persist-manual-list-${mode}" style="display:none;"></div>
+
+    <div class="kas-section-toggle collapsed" id="kas-persist-rincian-toggle-${mode}" onclick="togglePersistKasSection('${mode}','rincian')">
+      <div class="section-title">📋 Rincian Saldo</div>
+      <i class="ti ti-chevron-down"></i>
+    </div>
+    <div class="kas-rincian-panel" id="kas-persist-rincian-panel-${mode}" style="display:none;"></div>
+
+    <div class="kas-action-row">
+      <button class="kas-btn-reset" onclick="confirmResetPersistKas('${mode}')"><i class="ti ti-refresh"></i> Reset ke 0</button>
+      <button class="kas-btn-history" onclick="openPersistKasHistory('${mode}')"><i class="ti ti-history"></i> Riwayat</button>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <button class="kas-btn-save" style="width:100%;" onclick="savePersistKasCount('${mode}')"><i class="ti ti-device-floppy"></i> Simpan Saldo ${cfg.label}</button>
+    </div>`;
+
+  showGlobalLoading(true);
+  try{
+    // draft lokal dulu biar instan
+    let draft=null;
+    try{draft=JSON.parse(localStorage.getItem(cfg.lsKey)||'null');}catch{}
+
+    const{data:row,error}=await db.from(cfg.table).select('*').eq('id',1).maybeSingle();
+    if(error&&(error.code==='42P01'||/relation .* does not exist/i.test(error.message||''))){
+      kasPersistState[mode].tableMissing=true;
+      showToast(`Tabel ${cfg.table} belum ada di Supabase. Jalankan migration_cash_toko.sql dulu.`,'warning');
+    }else{
+      kasPersistState[mode].tableMissing=false;
+    }
+
+    let serverCounts=null;
+    if(row?.counts){
+      try{
+        const parsed=typeof row.counts==='string'?JSON.parse(row.counts):row.counts;
+        serverCounts=parsed?.denoms||parsed||{};
+      }catch{serverCounts={};}
+    }
+    kasPersistState[mode].lastSavedCounts=row?(serverCounts||{}):null;
+    kasPersistState[mode].lastSavedAt=row?.saved_at||null;
+
+    if(draft&&typeof draft==='object'){
+      kasPersistState[mode].counts={...draft};
+    }else if(serverCounts){
+      kasPersistState[mode].counts={...serverCounts};
+    }else{
+      kasPersistState[mode].counts={};
+    }
+
+    const coinToggle=document.getElementById('kas-persist-coin-toggle-'+mode);
+    if(coinToggle) coinToggle.checked=localStorage.getItem('sop_kas_show_coin')==='1';
+
+    renderPersistKasDenomGrid(mode);
+    renderPersistKasManualList(mode);
+    renderPersistKasRincian(mode);
+    updatePersistKasTotalDisplay(mode);
+  }catch(e){
+    console.warn('initPersistentKasScreen:',mode,e);
+    showToast('Gagal memuat data '+cfg.label+'.','error');
+  }finally{
+    showGlobalLoading(false);
+  }
+}
+
+function togglePersistKasCoin(mode,on){
+  localStorage.setItem('sop_kas_show_coin',on?'1':'0');
+  // sinkronkan toggle koin di mode lain juga (preferensi tampilan global)
+  ['kas-coin-toggle','kas-persist-coin-toggle-toko','kas-persist-coin-toggle-rumah'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.checked=on;
+  });
+  kasShowCoin=on;
+  renderKasDenomGrid();renderKasManualList();
+  renderPersistKasDenomGrid('toko');renderPersistKasManualList('toko');
+  renderPersistKasDenomGrid('rumah');renderPersistKasManualList('rumah');
+}
+
+function renderPersistKasDenomGrid(mode){
+  const grid=document.getElementById('kas-persist-denom-grid-'+mode);if(!grid) return;
+  const denoms=kasVisibleDenoms();
+  const counts=kasPersistState[mode].counts;
+  grid.innerHTML=denoms.map(d=>{
+    const qty=counts[d.value]||0;
+    return `<button type="button" class="kas-denom-card ${d.cls}" id="kas-persist-denom-${mode}-${d.value}"
+      onclick="kasPersistTapDenom('${mode}',${d.value})" oncontextmenu="kasPersistRightClickDenom(event,'${mode}',${d.value})">
+      <div class="kas-pulse-ring" id="kas-persist-pulse-${mode}-${d.value}"></div>
+      ${qty>0?`<div class="kas-denom-badge" id="kas-persist-badge-${mode}-${d.value}">${qty}</div>`:''}
+      <div class="kas-denom-icon"><i class="ti ${d.icon}"></i></div>
+      <div class="kas-denom-label">${d.label}</div>
+      <div class="kas-denom-sub">${d.sub}</div>
+    </button>`;
+  }).join('');
+}
+function kasPersistTapDenom(mode,value){
+  const counts=kasPersistState[mode].counts;
+  counts[value]=(counts[value]||0)+1;
+  const ring=document.getElementById(`kas-persist-pulse-${mode}-${value}`);
+  if(ring){ring.classList.remove('animate');void ring.offsetWidth;ring.classList.add('animate');}
+  kasPersistAfterChange(mode);
+}
+function kasPersistRightClickDenom(evt,mode,value){
+  evt.preventDefault();
+  const counts=kasPersistState[mode].counts;
+  if((counts[value]||0)<=0) return false;
+  counts[value]=Math.max(0,(counts[value]||0)-1);
+  kasPersistAfterChange(mode);
+  return false;
+}
+function kasPersistSetManualQty(mode,value,qty){
+  const n=Math.max(0,parseInt(qty)||0);
+  kasPersistState[mode].counts[value]=n;
+  kasPersistAfterChange(mode);
+}
+function kasPersistStepManual(mode,value,delta){
+  const counts=kasPersistState[mode].counts;
+  counts[value]=Math.max(0,(counts[value]||0)+delta);
+  kasPersistAfterChange(mode);
+}
+function kasPersistAfterChange(mode){
+  updatePersistKasBadgesAndInputs(mode);
+  updatePersistKasTotalDisplay(mode);
+  renderPersistKasRincian(mode);
+  try{localStorage.setItem(KAS_PERSIST_CONFIG[mode].lsKey,JSON.stringify(kasPersistState[mode].counts));}catch{}
+}
+function updatePersistKasBadgesAndInputs(mode){
+  const counts=kasPersistState[mode].counts;
+  KAS_DENOMS.forEach(d=>{
+    const qty=counts[d.value]||0;
+    const badge=document.getElementById(`kas-persist-badge-${mode}-${d.value}`);
+    const card=document.getElementById(`kas-persist-denom-${mode}-${d.value}`);
+    if(card){
+      if(qty>0&&!badge){
+        const b=document.createElement('div');
+        b.className='kas-denom-badge';b.id=`kas-persist-badge-${mode}-${d.value}`;b.textContent=qty;
+        card.insertBefore(b,card.firstChild.nextSibling);
+      }else if(qty>0&&badge){badge.textContent=qty;}
+      else if(qty<=0&&badge){badge.remove();}
+    }
+    const input=document.getElementById(`kas-persist-manual-input-${mode}-${d.value}`);
+    if(input&&document.activeElement!==input) input.value=qty;
+    const subtotalEl=document.getElementById(`kas-persist-manual-subtotal-${mode}-${d.value}`);
+    if(subtotalEl) subtotalEl.textContent='Rp '+(qty*d.value).toLocaleString('id-ID');
+  });
+}
+function renderPersistKasManualList(mode){
+  const list=document.getElementById('kas-persist-manual-list-'+mode);if(!list) return;
+  const denoms=kasVisibleDenoms();
+  const counts=kasPersistState[mode].counts;
+  list.innerHTML=denoms.map(d=>{
+    const qty=counts[d.value]||0;
+    return `<div class="kas-manual-row">
+      <div class="kas-manual-icon ${d.cls}"><i class="ti ${d.icon}"></i></div>
+      <div class="kas-manual-label">${d.label}</div>
+      <div class="kas-manual-stepper">
+        <button class="qty-btn" onclick="kasPersistStepManual('${mode}',${d.value},-1)">−</button>
+        <input class="kas-manual-input" id="kas-persist-manual-input-${mode}-${d.value}" type="number" min="0" value="${qty}"
+          oninput="kasPersistSetManualQty('${mode}',${d.value},this.value)"/>
+        <button class="qty-btn" onclick="kasPersistStepManual('${mode}',${d.value},1)">+</button>
+      </div>
+      <div class="kas-manual-subtotal" id="kas-persist-manual-subtotal-${mode}-${d.value}">Rp ${(qty*d.value).toLocaleString('id-ID')}</div>
+    </div>`;
+  }).join('');
+}
+function renderPersistKasRincian(mode){
+  const panel=document.getElementById('kas-persist-rincian-panel-'+mode);if(!panel) return;
+  const counts=kasPersistState[mode].counts;
+  const filled=KAS_DENOMS.filter(d=>(counts[d.value]||0)>0);
+  const total=kasCalcTotal(counts);
+  if(!filled.length){
+    panel.innerHTML='<div class="empty-state" style="padding:24px 0;"><i class="ti ti-receipt-off"></i><p>Belum ada pecahan yang diisi.</p></div>';
+    return;
+  }
+  let html=filled.map(d=>{
+    const qty=counts[d.value]||0;
+    return `<div class="kas-rincian-row"><div class="kas-rincian-name">${d.label} × ${qty}</div><div class="kas-rincian-val">Rp ${(qty*d.value).toLocaleString('id-ID')}</div></div>`;
+  }).join('');
+  html+=`<div class="kas-rincian-total-row"><div class="kas-rincian-name">Grand Total</div><div class="kas-rincian-val">Rp ${total.toLocaleString('id-ID')}</div></div>`;
+  panel.innerHTML=html;
+}
+function togglePersistKasSection(mode,section){
+  const key=mode+'_'+section;
+  kasSectionState[key]=!kasSectionState[key];
+  const toggleEl=document.getElementById(`kas-persist-${section}-toggle-${mode}`);
+  const listEl=document.getElementById(`kas-persist-${section}-list-${mode}`)||document.getElementById(`kas-persist-${section}-panel-${mode}`);
+  if(toggleEl) toggleEl.classList.toggle('collapsed',!kasSectionState[key]);
+  if(listEl) listEl.style.display=kasSectionState[key]?'block':'none';
+}
+function updatePersistKasTotalDisplay(mode){
+  const counts=kasPersistState[mode].counts;
+  const total=kasCalcTotal(counts);
+  const pieces=kasCalcPieces(counts);
+  const valueEl=document.getElementById('kas-persist-total-value-'+mode);
+  const subEl=document.getElementById('kas-persist-total-sub-'+mode);
+  const unsavedBadge=document.getElementById('kas-persist-unsaved-badge-'+mode);
+  const savedTimeEl=document.getElementById('kas-persist-saved-time-'+mode);
+  if(valueEl) valueEl.textContent='Rp '+total.toLocaleString('id-ID');
+  if(subEl) subEl.textContent=`${pieces} lembar/keping`;
+  const isDirty=JSON.stringify(kasNormalize(counts))!==JSON.stringify(kasNormalize(kasPersistState[mode].lastSavedCounts||{}));
+  if(unsavedBadge) unsavedBadge.style.display=isDirty?'flex':'none';
+  const lastSavedAt=kasPersistState[mode].lastSavedAt;
+  if(lastSavedAt&&savedTimeEl){
+    const t=new Date(lastSavedAt).toLocaleString('id-ID',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
+    savedTimeEl.style.display='flex';savedTimeEl.querySelector('span').textContent='Terakhir disimpan: '+t;
+  }else if(savedTimeEl){
+    savedTimeEl.style.display='none';
+  }
+}
+
+function confirmResetPersistKas(mode){
+  const cfg=KAS_PERSIST_CONFIG[mode];
+  const pieces=kasCalcPieces(kasPersistState[mode].counts);
+  if(pieces===0){showToast('Saldo sudah kosong.','info');return;}
+  openModal(`Reset ${cfg.label} ke 0?`,`Saldo ${cfg.label} akan dikosongkan di layar. Perubahan permanen baru terjadi setelah kamu menekan Simpan.`,()=>{
+    kasPersistState[mode].counts={};
+    localStorage.removeItem(cfg.lsKey);
+    renderPersistKasDenomGrid(mode);renderPersistKasManualList(mode);renderPersistKasRincian(mode);updatePersistKasTotalDisplay(mode);
+    showToast(`${cfg.label} direset di layar. Jangan lupa Simpan.`,'success');
+  });
+}
+
+async function savePersistKasCount(mode){
+  const cfg=KAS_PERSIST_CONFIG[mode];
+  const counts=kasPersistState[mode].counts;
+  const total=kasCalcTotal(counts);
+  showGlobalLoading(true);
+  try{
+    const savedAt=new Date().toISOString();
+    const countsJson=JSON.stringify({denoms:kasNormalize(counts)});
+    // 1) upsert baris tunggal (id=1) — saldo TERKINI, tidak reset
+    const{error:upErr}=await db.from(cfg.table).upsert({id:1,total,counts:countsJson,saved_at:savedAt},{onConflict:'id'});
+    if(upErr) throw upErr;
+    // 2) insert ke tabel log — riwayat perubahan (untuk ditampilkan di modal Riwayat)
+    try{
+      await db.from(cfg.logTable).insert({total,counts:countsJson,saved_at:savedAt});
+    }catch(logErr){
+      console.warn(`${cfg.logTable} insert gagal (lanjut, saldo utama tetap tersimpan):`,logErr);
+    }
+    kasPersistState[mode].lastSavedCounts={...counts};
+    kasPersistState[mode].lastSavedAt=savedAt;
+    updatePersistKasTotalDisplay(mode);
+    showToast(`${cfg.label} tersimpan: Rp ${total.toLocaleString('id-ID')} ✓`,'success');
+  }catch(e){
+    if(e.code==='42P01'||/relation .* does not exist/i.test(e.message||'')){
+      showToast(`Tabel ${cfg.table} belum ada di Supabase. Jalankan migration_cash_toko.sql terlebih dahulu.`,'error');
+    }else{
+      showToast(`Gagal simpan ${cfg.label}: `+e.message,'error');
+    }
+  }finally{
+    showGlobalLoading(false);
+  }
+}
+
+// ── RIWAYAT PERUBAHAN (Kas Toko / Kas Rumah) ───────────────────────────
+function openPersistKasHistory(mode){
+  const cfg=KAS_PERSIST_CONFIG[mode];
+  document.getElementById('kas-history-overlay').classList.add('active');
+  document.getElementById('kas-history-overlay').dataset.mode=mode;
+  const filterRow=document.querySelector('#kas-history-overlay .kas-history-filter-row');
+  if(filterRow) filterRow.style.display='none'; // filter bulan hanya relevan utk histori harian
+  document.querySelector('#kas-history-overlay .table-detail-title').innerHTML=`<i class="ti ti-history" style="margin-right:6px;"></i>Riwayat ${cfg.label}`;
+  loadPersistKasHistory(mode);
+}
+async function loadPersistKasHistory(mode){
+  const cfg=KAS_PERSIST_CONFIG[mode];
+  const listEl=document.getElementById('kas-history-list');
+  listEl.innerHTML='<div class="empty-state" style="padding:24px 0;"><i class="ti ti-loader" style="animation:spin .8s linear infinite;"></i><p>Memuat riwayat…</p></div>';
+  try{
+    const{data,error}=await db.from(cfg.logTable).select('*').order('saved_at',{ascending:false}).limit(50);
+    if(error) throw error;
+    kasPersistLogCache[mode]=data||[];
+    if(!kasPersistLogCache[mode].length){
+      listEl.innerHTML=`<div class="empty-state" style="padding:32px 0;"><i class="ti ti-calendar-off"></i><p>Belum ada riwayat perubahan ${cfg.label}.</p></div>`;
+      return;
+    }
+    listEl.innerHTML=kasPersistLogCache[mode].map((row,idx)=>{
+      const nextRow=kasPersistLogCache[mode][idx+1]; // baris sesudahnya = perubahan sebelumnya (karena sort desc)
+      let diffHtml='';
+      if(nextRow){
+        const diff=(row.total||0)-(nextRow.total||0);
+        if(diff>0) diffHtml=`<div class="kas-log-diff" style="color:var(--success);">▲ Rp ${diff.toLocaleString('id-ID')}</div>`;
+        else if(diff<0) diffHtml=`<div class="kas-log-diff" style="color:var(--danger);">▼ Rp ${Math.abs(diff).toLocaleString('id-ID')}</div>`;
+        else diffHtml=`<div class="kas-log-diff" style="color:var(--text-muted);">= Sama</div>`;
+      }
+      const dt=row.saved_at?new Date(row.saved_at):null;
+      const dateMain=dt?dt.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}):'—';
+      const timeSub=dt?dt.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'';
+      return `<div class="kas-log-row" style="cursor:pointer;" onclick="openPersistKasLogDetail('${mode}',${row.id})">
+        <div class="kas-log-date">
+          <div class="kas-log-date-main">${dateMain}</div>
+          <div class="kas-log-date-sub">Disimpan pukul ${timeSub}</div>
+        </div>
+        <div>
+          <div class="kas-log-total">Rp ${(row.total||0).toLocaleString('id-ID')}</div>
+          ${diffHtml}
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){
+    if(e.code==='42P01'||/relation .* does not exist/i.test(e.message||'')){
+      listEl.innerHTML=`<div class="empty-state"><i class="ti ti-alert-circle"></i><p>Tabel ${cfg.logTable} belum ada di Supabase.<br>Jalankan migration_cash_toko.sql dulu.</p></div>`;
+    }else{
+      listEl.innerHTML='<div class="empty-state"><i class="ti ti-alert-circle"></i><p>Gagal memuat riwayat.</p></div>';
+    }
+  }
+}
+function openPersistKasLogDetail(mode,logId){
+  const cfg=KAS_PERSIST_CONFIG[mode];
+  const row=kasPersistLogCache[mode].find(r=>r.id===logId);
+  if(!row) return;
+  const bodyEl=document.getElementById('kas-detail-body');
+  const dt=row.saved_at?new Date(row.saved_at):null;
+  document.getElementById('kas-detail-title').textContent=`Rincian ${cfg.label}`;
+  document.getElementById('kas-detail-overlay').classList.add('active');
+  let counts={};
+  try{
+    const parsed=typeof row.counts==='string'?JSON.parse(row.counts):row.counts;
+    counts=parsed?.denoms||parsed||{};
+  }catch{counts={};}
+  const filled=KAS_DENOMS.filter(d=>(counts[d.value]||0)>0);
+  let html=`<div style="padding:12px 20px;">
+    <div style="font-family:var(--font-heading);font-size:22px;font-weight:700;color:var(--text-primary);">Rp ${(row.total||0).toLocaleString('id-ID')}</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-top:2px;">${dt?dt.toLocaleString('id-ID',{dateStyle:'full',timeStyle:'short'}):''}</div>
+  </div>`;
+  if(!filled.length){
+    html+='<div class="empty-state" style="padding:16px 0;"><p>Tidak ada rincian pecahan tersimpan.</p></div>';
+  }else{
+    html+=filled.map(d=>{
+      const qty=counts[d.value]||0;
+      return `<div class="kas-rincian-row" style="padding:10px 20px;"><div class="kas-rincian-name">${d.label} × ${qty}</div><div class="kas-rincian-val">Rp ${(qty*d.value).toLocaleString('id-ID')}</div></div>`;
+    }).join('');
+  }
+  bodyEl.innerHTML=html;
+}
+
+// MAIN INIT ─────────────────────────────────────────────────────────
 async function init(){
   if(localStorage.getItem('sop_dark_mode')==='1'){document.documentElement.setAttribute('data-theme','dark');const dmt=document.getElementById('dark-mode-toggle');if(dmt) dmt.checked=true;}
   try{const ls=JSON.parse(localStorage.getItem('sop_procedures_v2')||'null');if(ls&&ls.length) S.procedures=ls;}catch{}
@@ -2515,6 +3537,7 @@ async function init(){
   document.getElementById('pw-password')?.addEventListener('keydown',e=>{if(e.key==='Enter') doPasswordLogin();});
   document.getElementById('reg-confirm')?.addEventListener('keydown',e=>{if(e.key==='Enter') doRegister();});
   initNavigation();
+  scheduleKasMidnightReset();
   const ls=document.getElementById('loading-screen');ls.classList.add('fade-out');setTimeout(()=>ls.remove(),350);
 }
 window.addEventListener('DOMContentLoaded',init);
