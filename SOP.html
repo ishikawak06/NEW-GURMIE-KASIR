@@ -539,6 +539,36 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
 .campaign-form-daterow{display:flex;gap:8px;}
 .campaign-form-daterow>div{flex:1;}
 .campaign-form-daterow label{font-size:12px;font-weight:700;color:var(--text-secondary);margin-bottom:4px;display:block;}
+
+/* Follow-up badge di kartu */
+.campaign-followup-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;background:var(--warning-light);color:var(--warning);display:inline-flex;align-items:center;gap:4px;}
+/* Omzet card di detail */
+.campaign-omzet-card{background:linear-gradient(135deg,var(--success) 0%,#1f5c29 100%);border-radius:var(--radius-md);padding:14px;color:#fff;margin-top:6px;}
+.campaign-omzet-label{font-size:11px;font-weight:700;opacity:.9;text-transform:uppercase;letter-spacing:.5px;}
+.campaign-omzet-value{font-family:var(--font-heading);font-size:22px;font-weight:700;margin-top:2px;}
+.campaign-omzet-sub{font-size:11px;opacity:.85;margin-top:4px;line-height:1.5;}
+.campaign-omzet-empty{background:var(--surface-2);border-radius:var(--radius-md);padding:14px;text-align:center;color:var(--text-muted);font-size:12px;margin-top:6px;}
+/* Follow-up section di detail */
+.campaign-followup-section{background:var(--warning-light);border:1px solid rgba(230,126,34,.25);border-radius:var(--radius-md);padding:12px 14px;margin-top:6px;}
+.campaign-followup-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.campaign-followup-row input[type="date"]{flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;background:var(--surface);color:var(--text-primary);min-height:38px;outline:none;}
+.campaign-followup-row textarea{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;background:var(--surface);color:var(--text-primary);resize:vertical;outline:none;margin-bottom:8px;}
+.campaign-followup-current{font-size:12px;color:var(--warning);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+/* Jurnal harian */
+.campaign-log-add-row{display:flex;gap:8px;margin-top:6px;margin-bottom:12px;flex-wrap:wrap;}
+.campaign-log-add-row input[type="date"]{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;background:var(--surface-1);color:var(--text-primary);min-height:40px;outline:none;flex-shrink:0;}
+.campaign-log-add-row textarea{flex:1;min-width:150px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:13px;background:var(--surface-1);color:var(--text-primary);resize:vertical;outline:none;min-height:40px;}
+.campaign-log-add-btn{padding:8px 14px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);font-family:var(--font-body);font-size:12px;font-weight:700;cursor:pointer;min-height:40px;white-space:nowrap;}
+.campaign-log-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.campaign-log-item:last-child{border-bottom:none;}
+.campaign-log-date-badge{flex-shrink:0;width:52px;text-align:center;background:var(--surface-2);border-radius:var(--radius-sm);padding:4px 2px;}
+.campaign-log-date-day{font-family:var(--font-heading);font-size:16px;font-weight:700;color:var(--text-primary);line-height:1.1;}
+.campaign-log-date-month{font-size:9px;color:var(--text-muted);text-transform:uppercase;font-weight:700;}
+.campaign-log-content{flex:1;min-width:0;}
+.campaign-log-note{font-size:13px;color:var(--text-primary);line-height:1.5;white-space:pre-wrap;}
+.campaign-log-meta{font-size:11px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:8px;}
+.campaign-log-del{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px;flex-shrink:0;}
+.campaign-log-del:hover{color:var(--danger);}
 </style>
 </head>
 <body>
@@ -759,7 +789,7 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
 <!-- APP -->
 <div id="app">
   <nav id="sidebar">
-    <div class="sidebar-logo"><div class="kios-name">🍜 Gurmie Ayam</div><div class="version">SOP v3.3</div></div>
+    <div class="sidebar-logo"><div class="kios-name">🍜 Gurmie Ayam</div><div class="version">SOP v3.4</div></div>
     <div class="sidebar-nav">
       <div class="sidebar-nav-item active" data-tab="beranda"><i class="ti ti-home"></i> Beranda</div>
       <div class="sidebar-nav-item" data-tab="tugas"><i class="ti ti-checklist"></i> Tugas</div>
@@ -957,7 +987,7 @@ html,body{height:100%;font-family:var(--font-body);font-size:15px;color:var(--te
         <div class="profile-section">
           <div class="profile-section-title">Info Aplikasi</div>
           <div class="profile-row"><div class="profile-row-label">Nama Kios</div><div class="profile-row-value">🍜 Gurmie Ayam</div></div>
-          <div class="profile-row"><div class="profile-row-label">Versi App</div><div class="profile-row-value">v3.3.0</div></div>
+          <div class="profile-row"><div class="profile-row-label">Versi App</div><div class="profile-row-value">v3.4.0</div></div>
           <div class="profile-row"><div class="profile-row-label">Device ID</div><div class="profile-row-value" id="device-id-display" style="font-size:10px;word-break:break-all;max-width:180px;">—</div></div>
         </div>
         <div class="profile-section">
@@ -3733,11 +3763,13 @@ function renderCampaignList(){
     const cat=campaignCategoryInfo(c.category);
     const dateRange=campaignFormatDateRange(c);
     let photos=[];try{photos=typeof c.photos==='string'?JSON.parse(c.photos):(c.photos||[]);}catch{photos=[];}
+    const needsFollowup=c.next_followup_date&&c.next_followup_date<=getTodayISO()&&c.status!=='selesai'&&c.status!=='batal';
     return `<div class="campaign-card" onclick="openCampaignDetail('${c.id}')">
       <div class="campaign-card-top"><div class="campaign-card-title">${c.title}</div></div>
       <div class="campaign-badges">
         <span class="campaign-cat-badge ${cat.cls}"><i class="ti ${cat.icon}"></i> ${cat.label}</span>
         <span class="campaign-status-badge ${c.status}">${CAMPAIGN_STATUSES.find(s=>s.value===c.status)?.icon||''} ${CAMPAIGN_STATUSES.find(s=>s.value===c.status)?.label||c.status}</span>
+        ${needsFollowup?`<span class="campaign-followup-badge"><i class="ti ti-bell-ringing"></i> Perlu Follow-up</span>`:''}
       </div>
       ${c.description?`<div class="campaign-card-desc">${c.description}</div>`:''}
       <div class="campaign-card-meta">
@@ -3782,9 +3814,38 @@ function openCampaignDetail(id){
   if(photos.length){
     html+=`<div class="campaign-detail-section"><div class="campaign-detail-label">Foto Pendukung</div><div class="photo-grid">${photos.map(p=>`<img class="photo-thumb" src="${p}" onclick="openLightbox('${p}')" alt="foto"/>`).join('')}</div></div>`;
   }
+  // ── Omzet selama campaign (opsional, hanya jika periode lengkap) ──
+  html+=`<div class="campaign-detail-section"><div class="campaign-detail-label">💰 Omzet Selama Campaign</div><div id="campaign-omzet-slot">${c.start_date&&c.end_date?`<div class="campaign-omzet-card"><div class="campaign-omzet-label">Memuat…</div></div>`:`<div class="campaign-omzet-empty">Isi tanggal mulai & selesai di form edit untuk melihat estimasi omzet kios pada periode ini.</div>`}</div></div>`;
+  // ── Follow-up ──
+  html+=`<div class="campaign-detail-section">
+    <div class="campaign-detail-label">🔔 Follow-up</div>
+    <div class="campaign-followup-section">
+      ${c.next_followup_date?`<div class="campaign-followup-current"><i class="ti ti-calendar-event"></i> Follow-up berikutnya: ${formatDateShort(c.next_followup_date)}${c.next_followup_date<=getTodayISO()?' — <b>sudah waktunya!</b>':''}</div>`:''}
+      ${c.followup_note?`<div class="campaign-detail-value" style="margin-bottom:8px;font-size:13px;">${c.followup_note}</div>`:''}
+      <div class="campaign-followup-row">
+        <input type="date" id="camp-followup-date-${c.id}" value="${c.next_followup_date||''}"/>
+      </div>
+      <textarea id="camp-followup-note-${c.id}" rows="2" placeholder="Catatan follow-up berikutnya (mis: telepon lagi, kirim proposal, dll)">${c.followup_note||''}</textarea>
+      <button class="campaign-log-add-btn" style="width:100%;" onclick="saveCampaignFollowup('${c.id}')"><i class="ti ti-device-floppy"></i> Simpan Follow-up</button>
+    </div>
+  </div>`;
+  // ── Jurnal Harian ──
+  html+=`<div class="campaign-detail-section">
+    <div class="campaign-detail-label">📓 Jurnal Harian</div>
+    <div class="campaign-log-add-row">
+      <input type="date" id="camp-log-date" value="${getTodayISO()}"/>
+      <textarea id="camp-log-note" rows="1" placeholder="Catat progres hari ini… (mis: bagi brosur ke 20 kantor)"></textarea>
+      <button class="campaign-log-add-btn" onclick="addCampaignLog('${c.id}')"><i class="ti ti-plus"></i> Catat</button>
+    </div>
+    <div id="campaign-log-list">
+      <div class="empty-state" style="padding:16px 0;"><i class="ti ti-loader" style="animation:spin .8s linear infinite;"></i></div>
+    </div>
+  </div>`;
   html+=`<div class="campaign-detail-section" style="font-size:11px;color:var(--text-muted);">Dibuat oleh ${c.created_by||'—'} · ${c.created_at?new Date(c.created_at).toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'}):''}</div>`;
   document.getElementById('campaign-detail-body').innerHTML=html;
   document.getElementById('campaign-detail-overlay').classList.add('active');
+  if(c.start_date&&c.end_date) loadCampaignOmzet(c);
+  loadCampaignLogs(c.id);
 }
 function closeCampaignDetail(){document.getElementById('campaign-detail-overlay').classList.remove('active');campaignActiveDetailId=null;}
 async function quickChangeCampaignStatus(id,status){
@@ -3806,6 +3867,120 @@ function confirmDeleteCampaign(){
       campaignsCache=campaignsCache.filter(x=>x.id!==c.id);
       closeCampaignDetail();renderCampaignStatusTabs();renderCampaignList();
       showToast('Campaign dihapus.','info');
+    }catch(e){showToast('Gagal hapus: '+e.message,'error');}
+  });
+}
+
+// ── OMZET SELAMA CAMPAIGN (opsional, dari tabel transactions) ────────────
+// Catatan penting: ini adalah TOTAL OMZET KIOS pada rentang tanggal campaign,
+// bukan omzet yang murni diatribusikan ke campaign tsb (tabel transactions
+// tidak punya penanda "berasal dari campaign mana"). Dipakai sebagai konteks
+// kasar untuk membandingkan performa penjualan selama periode campaign berjalan.
+async function loadCampaignOmzet(c){
+  const slot=document.getElementById('campaign-omzet-slot');
+  if(!slot) return;
+  try{
+    const startOfPeriod=new Date(c.start_date+'T00:00:00');
+    const endOfPeriod=new Date(c.end_date+'T23:59:59');
+    const{data,error}=await db.from('transactions').select('total_price')
+      .gte('created_at',startOfPeriod.toISOString()).lte('created_at',endOfPeriod.toISOString());
+    if(error) throw error;
+    const omzet=(data||[]).reduce((s,t)=>s+(t.total_price||0),0);
+    const trxCnt=(data||[]).length;
+    slot.innerHTML=`<div class="campaign-omzet-card">
+      <div class="campaign-omzet-label">Total Omzet Kios ${formatDateShort(c.start_date)} – ${formatDateShort(c.end_date)}</div>
+      <div class="campaign-omzet-value">Rp ${omzet.toLocaleString('id-ID')}</div>
+      <div class="campaign-omzet-sub">${trxCnt} transaksi tercatat · Ini omzet keseluruhan kios pada periode ini, bukan atribusi langsung ke campaign.</div>
+    </div>`;
+  }catch(e){
+    slot.innerHTML=`<div class="campaign-omzet-empty">Gagal memuat data omzet.</div>`;
+  }
+}
+
+// ── FOLLOW-UP ────────────────────────────────────────────────────────────
+async function saveCampaignFollowup(id){
+  const dateEl=document.getElementById('camp-followup-date-'+id);
+  const noteEl=document.getElementById('camp-followup-note-'+id);
+  const next_followup_date=dateEl?.value||null;
+  const followup_note=noteEl?.value.trim()||null;
+  try{
+    const{error}=await db.from('campaigns').update({next_followup_date,followup_note,updated_at:new Date().toISOString()}).eq('id',id);
+    if(error) throw error;
+    const idx=campaignsCache.findIndex(c=>c.id===id);
+    if(idx>-1){campaignsCache[idx].next_followup_date=next_followup_date;campaignsCache[idx].followup_note=followup_note;}
+    showToast('Follow-up disimpan ✓','success');
+    openCampaignDetail(id);
+    renderCampaignList();
+  }catch(e){showToast('Gagal simpan follow-up: '+e.message,'error');}
+}
+
+// ── JURNAL HARIAN (campaign_logs) ────────────────────────────────────────
+let campaignLogsCache=[];
+async function loadCampaignLogs(campaignId){
+  const listEl=document.getElementById('campaign-log-list');
+  if(!listEl) return;
+  try{
+    const{data,error}=await db.from('campaign_logs').select('*').eq('campaign_id',campaignId).order('log_date',{ascending:false}).order('created_at',{ascending:false});
+    if(error) throw error;
+    campaignLogsCache=data||[];
+    renderCampaignLogList();
+  }catch(e){
+    if(/relation .* does not exist/i.test(e.message||'')){
+      listEl.innerHTML='<div class="empty-state" style="padding:16px 0;"><i class="ti ti-alert-circle"></i><p>Tabel campaign_logs belum ada di Supabase.<br>Jalankan migration_campaign_logs.sql dulu.</p></div>';
+    }else{
+      listEl.innerHTML='<div class="empty-state" style="padding:16px 0;"><p>Gagal memuat jurnal.</p></div>';
+    }
+    campaignLogsCache=[];
+  }
+}
+function renderCampaignLogList(){
+  const listEl=document.getElementById('campaign-log-list');if(!listEl) return;
+  if(!campaignLogsCache.length){
+    listEl.innerHTML='<div class="empty-state" style="padding:16px 0;"><i class="ti ti-notebook"></i><p>Belum ada catatan jurnal.<br>Catat progres harian di atas.</p></div>';
+    return;
+  }
+  const monthNames=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  listEl.innerHTML=campaignLogsCache.map(log=>{
+    const d=new Date(log.log_date+'T00:00:00');
+    return `<div class="campaign-log-item">
+      <div class="campaign-log-date-badge">
+        <div class="campaign-log-date-day">${d.getDate()}</div>
+        <div class="campaign-log-date-month">${monthNames[d.getMonth()]}</div>
+      </div>
+      <div class="campaign-log-content">
+        <div class="campaign-log-note">${log.note}</div>
+        <div class="campaign-log-meta"><span>${log.created_by||'—'}</span></div>
+      </div>
+      <button class="campaign-log-del" onclick="confirmDeleteCampaignLog('${log.id}','${campaignActiveDetailId}')"><i class="ti ti-trash"></i></button>
+    </div>`;
+  }).join('');
+}
+async function addCampaignLog(campaignId){
+  const dateEl=document.getElementById('camp-log-date');
+  const noteEl=document.getElementById('camp-log-note');
+  const log_date=dateEl?.value||getTodayISO();
+  const note=noteEl?.value.trim();
+  if(!note){showToast('Isi catatan jurnal dulu.','error');return;}
+  try{
+    const{error}=await db.from('campaign_logs').insert({campaign_id:campaignId,log_date,note,created_by:S.staffName||'Staf'});
+    if(error) throw error;
+    if(noteEl) noteEl.value='';
+    showToast('Catatan jurnal ditambahkan ✓','success');
+    await loadCampaignLogs(campaignId);
+  }catch(e){
+    if(/relation .* does not exist/i.test(e.message||'')){
+      showToast('Tabel campaign_logs belum ada di Supabase. Jalankan migration_campaign_logs.sql dulu.','error');
+    }else{
+      showToast('Gagal tambah catatan: '+e.message,'error');
+    }
+  }
+}
+function confirmDeleteCampaignLog(logId,campaignId){
+  openModal('Hapus Catatan Jurnal?','Catatan ini akan dihapus permanen.',async()=>{
+    try{
+      await db.from('campaign_logs').delete().eq('id',logId);
+      await loadCampaignLogs(campaignId);
+      showToast('Catatan dihapus.','info');
     }catch(e){showToast('Gagal hapus: '+e.message,'error');}
   });
 }
